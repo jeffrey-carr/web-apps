@@ -1,0 +1,4 @@
+go 1.23.1
+
+use ./packages/go-common
+use ./apps/web_games/backend

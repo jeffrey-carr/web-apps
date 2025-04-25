@@ -1,7 +1,9 @@
 <script lang="ts">
 	type ServerResponse = {
 		status: number;
-		message: string;
+		data: {
+			message: string;
+		};
 	};
 
 	console.log('hello world!');
@@ -19,7 +21,7 @@
 		}
 
 		clearTimeout(timeout);
-		message = json.message;
+		message = json.data.message;
 		timeout = setTimeout(() => {
 			message = '';
 		}, 5000);
@@ -28,3 +30,4 @@
 
 <h1>Hello World!</h1>
 <button onclick={pingPong}>Ping!</button>
+<p>{message}</p>

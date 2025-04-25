@@ -10,7 +10,6 @@
   "packageManager": "npm@11.1.0",
   "scripts": {
     "prettier": "prettier --write .",
-    "dev:recipe-book": "turbo run dev --filter=recipe-book-frontend --filter=recipe-book-backend",
     "dev:web-games": "turbo run dev --filter=web-games-frontend --filter=web-games-backend --no-cache --parallel"
   },
   "devDependencies": {
