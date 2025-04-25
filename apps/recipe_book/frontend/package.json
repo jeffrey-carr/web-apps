@@ -1,0 +1,9 @@
+{
+  "name": "recipe-book-frontend",
+  "version": "3.0.0",
+  "scripts": {
+    "dev": "svelte-kit dev",
+    "build": "svelte-kit build",
+    "lint": "eslint ."
+  }
+}

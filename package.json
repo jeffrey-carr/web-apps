@@ -1,0 +1,21 @@
+{
+  "name": "web-apps",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "apps/*/frontend",
+    "apps/*/backend",
+    "packages/*"
+  ],
+  "packageManager": "npm@11.1.0",
+  "scripts": {
+    "prettier": "prettier --write .",
+    "dev:recipe-book": "turbo run dev --filter=recipe-book-frontend --filter=recipe-book-backend",
+    "dev:web-games": "turbo run dev --filter=web-games-frontend --filter=web-games-backend --no-cache --parallel"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "prettier-plugin-svelte": "^3.3.3",
+    "svelte": "^5.28.2"
+  }
+}

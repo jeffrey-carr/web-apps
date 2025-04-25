@@ -1,0 +1,12 @@
+# Deployment workflow for recipe_book
+name: Deploy Recipe Book
+on:
+  push:
+    tags:
+      - 'recipe_book-v*'
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
