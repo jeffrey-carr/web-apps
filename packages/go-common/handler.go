@@ -9,10 +9,10 @@ import (
 )
 
 // HandlerFunction is a function that can handle a request
-type HandlerFunction[T any] func(*http.Request) HTTPResponse[T]
+type HandlerFunction func(*http.Request) HTTPResponse
 
 // NewHandler creates a new handler
-func NewHandler[T any](slug string, f HandlerFunction[T], method string, middlewares ...middlewares.Middleware) (string, func(w http.ResponseWriter, r *http.Request)) {
+func NewHandler(slug string, f HandlerFunction, method string, middlewares ...middlewares.Middleware) (string, func(w http.ResponseWriter, r *http.Request)) {
 	return slug, func(w http.ResponseWriter, r *http.Request) {
 		for _, mw := range middlewares {
 			w, r = mw.Apply(w, r)

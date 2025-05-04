@@ -10,11 +10,11 @@
   "packageManager": "npm@11.1.0",
   "scripts": {
     "prettier": "prettier --write .",
-    "dev:web-games": "turbo run dev --filter=web-games-frontend --filter=web-games-backend --no-cache --parallel"
+    "test-page": "turbo run dev --filter=@jeffrey-carr/frontend-common --filter=test-page",
+    "dev:web-games": "turbo run dev --filter=web-games-frontend --filter=web-games-backend --filter=test-page --no-cache --parallel"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
-    "prettier-plugin-svelte": "^3.3.3",
-    "svelte": "^5.28.2"
+    "prettier-plugin-svelte": "^3.3.3"
   }
 }

@@ -1,0 +1,39 @@
+:root {
+  /* Main theme colors */
+  --theme-primary: var(--app-theme-primary, #000000);
+  --theme-secondary: var(--app-theme-secondary, #ffffff);
+  --theme-tertiary: var(--app-theme-tertiary, #c7c7c7);
+  --theme-text-primary: var(--app-theme-text-primary, #000000);
+  --theme-text-secondary: var(--app-theme-text-secondary, #ffffff);
+  
+  /* Special colors */
+  --theme-success: var(--app-theme-success, #77DD77);
+  --theme-success-light: var(--app-theme-success-light, #346134);
+  --theme-warning: var(--app-theme-warning, #FDFD96);
+  --theme-warning-light: var(--app-theme-warning-light, #69693E);
+  --theme-danger: var(--app-theme-danger, #FF6961);
+  --theme-danger-light: var(--app-theme-danger-light, #6e242a);
+  --theme-subtle: var(--app-theme-subtle, #838ba7);
+  --theme-link: var(--app-theme-link, #8CAAEE);
+  --theme-overlay: var(--app-theme-overlay, gray);
+  --theme-overlay-light: var(--app-theme-overlay-light, lightgray);
+  --theme-disabled: var(--app-theme-disabled, lightgray);
+  --theme-disabled-text: var(--app-theme-disabled-text, gray);
+  
+  /* This is the font used for special headers like custom banners, h1, etc. */
+  --theme-header-font: var(--app-theme-header-font, serif);
+  /* This is the main font for the app. Used for paragraphs, labels, etc. */
+  --theme-font: var(--app-theme-font, Arial, sans-serif);
+  /* The readable font is meant to be easy to read for utility. Used for button text, etc. */
+  --theme-readable-font: var(--app-readable-font, Arial, sans-serif);
+  
+  --default-border-radius: 5px;
+}
+
+* {
+  font-family: var(--theme-font);
+}
+
+h1 {
+  font-family: var(--theme-header-font);
+}

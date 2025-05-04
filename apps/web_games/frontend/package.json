@@ -13,10 +13,12 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check ."
 	},
+	"dependencies": {
+		"@jeffrey-carr/frontend-common": "file:../../../packages/frontend-common"
+	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^6.0.0",
-		"@sveltejs/kit": "^2.16.0",
-		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"@sveltejs/kit": "^2.20.7",
 		"prettier": "^3.4.2",
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "^5.0.0",

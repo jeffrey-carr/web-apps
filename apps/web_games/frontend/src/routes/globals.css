@@ -1,0 +1,94 @@
+:root {
+  /* App colors */
+  --bg-color: #303446;
+  --bg-color-light: #232634;
+  --bg-color-surface: #737994;
+  --bg-color-overlay: #838ba7;
+  --red: #e78284;
+  --green: #a6d189;
+  --yellow: #e5c890;
+  --blue: #8caaee;
+  --rosewater: #f2d5cf;
+  --sky: #99d1db;
+  --periwinkle: #c6d0f5;
+  --ebony-clay: #292c3c;
+  
+  --default-transition-ms: 100ms;
+  
+  /* Main theme colors */
+  --app-theme-primary: var(--rosewater);
+  --app-theme-secondary: var(--blue);
+  --app-theme-tertiary: var(--yellow);
+  --app-theme-text-primary: var(--periwinkle);
+  --app-theme-text-secondary: var(--ebony-clay);
+  
+  /* Special colors */
+  --app-theme-success: var(--green);
+  --app-theme-success-light: #c0f29d;
+  --app-theme-warning: var(--yellow);
+  --app-theme-warning-light: #f7d89c;
+  --app-theme-danger: var(--red);
+  --app-theme-danger-light: #ea999c;
+  --app-theme-subtle: #838ba7;
+  --app-theme-link: #8caaee;
+  --app-theme-overlay: var(--bg-color-overlay);
+  --app-theme-overlay-light: var(--bg-color-overlay);
+  
+  /* This is the font used for special headers like custom banners, h1, etc. */
+  --app-theme-header-font: 'Tagesschrift';
+  /* This is the main font for the app. Used for paragraphs, labels, etc. */
+  --app-theme-font: 'Comic Relief';
+  /* The readable font is meant to be easy to read for utility. Used for button text, etc. */
+  --app-theme-readable-font: 'Raleway';
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  
+  color: var(--app-theme-text-primary);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+  
+  background-color: var(--bg-color);
+  
+  line-height: 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--app-theme-header-font);
+}
+h1 {
+  font-size: 3rem;  
+}
+h2 {
+  font-size: 2rem;
+}
+h3 {
+  font-size: 1.5rem;
+}
+h4 {
+  font-size: 1.2rem;
+}
+
+body, div, p, a, label, li {
+  font-family: var(--app-theme-font);
+}
+
+a {
+  color: var(--app-theme-link);
+}
+
+ol, ul {
+ padding: 0.5rem 0.5rem;
+}
+
+button {
+  font-family: var(--app-theme-readable-font);
+}

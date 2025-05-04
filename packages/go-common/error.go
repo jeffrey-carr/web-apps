@@ -3,19 +3,19 @@ package gocommon
 import "net/http"
 
 // HTTPResponse is the struct for an HTTP Response
-type HTTPResponse[T any] struct {
+type HTTPResponse struct {
 	Status int `json:"status"`
-	Data   T   `json:"data"`
+	Data   any `json:"data,omitempty"`
 }
 
-// GenericMessage is the format for when we are just sending a message
+// GenericMessage is the type for a generic message
 type GenericMessage struct {
 	Message string `json:"message"`
 }
 
 // NewBadRequestError creates a new BadRequest error
-func NewBadRequestError(message string) HTTPResponse[GenericMessage] {
-	return HTTPResponse[GenericMessage]{
+func NewBadRequestError(message string) HTTPResponse {
+	return HTTPResponse{
 		Status: http.StatusBadRequest,
 		Data: GenericMessage{
 			Message: message,
@@ -23,12 +23,21 @@ func NewBadRequestError(message string) HTTPResponse[GenericMessage] {
 	}
 }
 
+// ErrorMessageData is the response type for an error message
+type ErrorMessageData struct {
+	FriendlyErr string `json:"friendlyErr"`
+	Err         error  `json:"err"`
+	ErrMessage  string `json:"errMessage"`
+}
+
 // NewInternalServerError creates a new internal server error
-func NewInternalServerError(err error) HTTPResponse[GenericMessage] {
-	return HTTPResponse[GenericMessage]{
+func NewInternalServerError(err error, message string) HTTPResponse {
+	return HTTPResponse{
 		Status: http.StatusInternalServerError,
-		Data: GenericMessage{
-			Message: err.Error(),
+		Data: ErrorMessageData{
+			FriendlyErr: message,
+			Err:         err,
+			ErrMessage:  err.Error(),
 		},
 	}
 }
