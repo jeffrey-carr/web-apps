@@ -28,13 +28,8 @@
   };
 </script>
 
-<div
-  class={`container ${open ? 'open' : ''}`}
-  role="button"
-  onclick={close}
-  aria-roledescription="overlay background"
-  aria-hidden="true"
->
+<div class={`container ${open ? 'open' : ''}`}>
+  <button class="background" onclick={close} aria-label="Close modal"></button>
   <div class="content-container">
     <div class="close-button">
       <Button onclick={close} size="fill">X</Button>
@@ -48,7 +43,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 1000;
+    z-index: var(--base-z-index);
 
     height: 100vh;
     width: 100vw;
@@ -56,7 +51,7 @@
     margin: 0;
     padding: 0;
 
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.3);
 
     transition: opacity 100ms linear;
 
@@ -70,6 +65,19 @@
       opacity: 1;
       pointer-events: all;
     }
+  }
+
+  .background {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    height: 100vh;
+    width: 100vw;
+
+    background: transparent;
+    border: none;
+    box-shadow: none;
   }
 
   .content-container {
@@ -92,7 +100,7 @@
     position: absolute;
     top: var(--gap);
     left: calc(100% - var(--size) - var(--gap));
-    z-index: 2;
+    z-index: 1002;
 
     height: var(--size);
     width: var(--size);

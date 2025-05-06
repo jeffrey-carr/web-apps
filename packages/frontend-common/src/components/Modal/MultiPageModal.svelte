@@ -18,7 +18,7 @@
     pages: MultiPageModalContent[];
   } = $props();
 
-  // $inspect(currentPage);
+  $inspect(currentPage);
 
   $effect(() => {
     if (currentPage < 0 || currentPage >= pages.length) {
@@ -31,7 +31,7 @@
     if (allowWrapping) {
       currentPage = (currentPage + 1) % pages.length;
     } else {
-      currentPage = Math.min(pages.length, currentPage + 1);
+      currentPage = Math.min(pages.length - 1, currentPage + 1);
     }
   };
 
@@ -63,7 +63,7 @@
         </div>
         <div class="footer">
           <Button class="page-button" size="small" onclick={previousPage}>
-            <ReactiveIcon class="arrow-icon" icon={'left-arrow'} />
+            <ReactiveIcon icon="left-arrow" />
           </Button>
           {#each pages as _, i}
             <div class={`dot ${currentPage === i ? 'highlighted' : ''}`}></div>

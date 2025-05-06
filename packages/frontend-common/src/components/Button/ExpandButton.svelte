@@ -15,7 +15,7 @@
 <div class="container">
   <button class="button" {onclick}>
     {#if icon === 'left-arrow'}
-      <ReactiveIcon class="icon" {icon} />
+      <ReactiveIcon {icon} />
     {/if}
     <!-- <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="icon" viewBox="0 0 16 16">
       {#if icon === 'left-arrow'}
@@ -37,6 +37,9 @@
   .button {
     --transition-ms: 300ms;
     --transition-delay-ms: 50ms;
+
+    --reactive-icon-fill: var(--theme-primary);
+    --reactive-icon-width: 100%;
 
     position: relative;
     display: flex;
@@ -61,13 +64,6 @@
       color var(--transition-ms) ease-in-out,
       border-radius var(--transition-ms) ease-in-out var(--transition-delay-ms);
 
-    .icon {
-      width: 100%;
-      height: 1.5rem;
-      flex-shrink: 0;
-      margin-right: 0;
-    }
-
     .text {
       opacity: 0;
       white-space: nowrap;
@@ -79,6 +75,10 @@
     }
 
     &:hover {
+      --reactive-icon-width: 1.5rem;
+      --reactive-icon-fill: var(--theme-text-secondary);
+      --reactive-icon-margin: 0 0.5rem 0 0;
+
       max-width: 10rem;
       padding-left: 0.75rem;
       padding-right: 0.75rem;
@@ -90,13 +90,6 @@
         max-width var(--transition-ms) ease-in-out var(--transition-delay-ms),
         padding var(--transition-ms) ease-in-out var(--transition-delay-ms),
         border-radius var(--transition-ms) ease-in-out;
-
-      .icon {
-        height: 1.5rem;
-        width: 1.5rem;
-        margin-right: 0.5rem;
-        fill: var(--theme-text-secondary);
-      }
 
       .text {
         opacity: 1;
