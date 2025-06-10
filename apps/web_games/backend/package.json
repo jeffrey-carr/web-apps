@@ -2,8 +2,7 @@
   "name": "web-games-backend",
   "version": "1.2.7",
   "scripts": {
-    "dev": "go run main.go",
-    "build": "go build -o main main.go",
-    "lint": "golangci-lint run"
+    "dev": "mvn spring-boot:run",
+    "build": "mvn install"
   }
 }

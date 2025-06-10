@@ -7,9 +7,11 @@
 
 <svelte:head>
   <link
-    href="https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=Raleway:ital,wght@0,100..900;1,100..900&family=Tagesschrift&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Comic+Relief:wght@400;700&family=Underdog&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
     rel="stylesheet"
   />
+
+  <title>Jeff's Web Games</title>
 </svelte:head>
 
 <main class="container">

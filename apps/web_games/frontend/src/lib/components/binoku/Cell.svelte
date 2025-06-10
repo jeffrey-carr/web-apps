@@ -1,146 +1,151 @@
 <script lang="ts">
-	import lock from '$lib/assets/lock.svg';
-	import type { Coordinate } from '$lib/types';
+  import lock from '$lib/assets/binoku/lock.svg';
+  import type { Coordinate } from '$lib/types/binoku';
 
-	const buildClassStr = (value: number, isHint?: boolean): string => {
-		let str = '';
+  const buildClassStr = (value: number, isHint?: boolean): string => {
+    let str = '';
 
-		if (value >= 0) {
-			str = `${str} ${value === 0 ? 'zero' : 'one'}`;
-		}
+    if (value >= 0) {
+      str = `${str} ${value === 0 ? 'zero' : 'one'}`;
+    }
 
-		if (isHint) {
-			str = `${str} hint`;
-		}
+    if (isHint) {
+      str = `${str} hint`;
+    }
 
-		return str.trim();
-	};
+    return str.trim();
+  };
 
-	let {
-		value = $bindable(),
-		updateValue,
-		coord,
-		isHint = false,
-		locked = false,
-		zeroColor,
-		oneColor,
-		children
-	}: {
-		value: number;
-		updateValue: (row: number, col: number, v: number) => void;
-		coord: Coordinate;
-		isHint?: boolean;
-		zeroColor?: string;
-		oneColor?: string;
-		locked?: boolean;
-		children?: () => any;
-	} = $props();
+  let {
+    value = $bindable(),
+    updateValue,
+    coord,
+    isHint = false,
+    locked = false,
+    zeroColor,
+    oneColor,
+    children,
+  }: {
+    value: number;
+    updateValue: (row: number, col: number, v: number) => void;
+    coord: Coordinate;
+    isHint?: boolean;
+    zeroColor?: string;
+    oneColor?: string;
+    locked?: boolean;
+    children?: () => any;
+  } = $props();
 
-	let containerClassStr = $derived(buildClassStr(value, isHint));
+  let containerClassStr = $derived(buildClassStr(value, isHint));
 
-	const change = () => {
-		let newValue: number;
-		if (value === 1) {
-			newValue = -1;
-		} else {
-			newValue = value + 1;
-		}
+  const change = () => {
+    let newValue: number;
+    if (value === 1) {
+      newValue = -1;
+    } else {
+      newValue = value + 1;
+    }
 
-		updateValue(coord.row, coord.col, newValue);
-	};
+    updateValue(coord.row, coord.col, newValue);
+  };
 </script>
 
 <div
-	class={`container ${containerClassStr}`}
-	style={`--zeroColor: ${zeroColor ?? 'var(--blue)'}; --oneColor: ${oneColor ?? 'var(--red)'}`}
+  class={`container ${containerClassStr}`}
+  style={`--zeroColor: ${zeroColor ?? 'var(--blue)'}; --oneColor: ${oneColor ?? 'var(--red)'}`}
 >
-	<button aria-label="board cell" class="button" onclick={change} disabled={locked}>
-		{@render children?.()}
-	</button>
-	{#if locked}
-		<img class="lock" src={lock} alt="lock icon" />
-	{/if}
+  <button aria-label="board cell" class="button" onclick={change} disabled={locked}>
+    {@render children?.()}
+  </button>
+  {#if locked}
+    <img class="lock" src={lock} alt="lock icon" />
+  {/if}
 </div>
 
-<style>
-	.container {
-		--animate-ms: 75ms;
-		--border-radius-px: 5px;
-		--zeroColor: --blue;
-		--oneColor: --red;
+<style lang="scss">
+  .container {
+    --animate-ms: 75ms;
+    --border-radius-px: 5px;
+    --zeroColor: --blue;
+    --oneColor: --red;
 
-		box-sizing: border-box;
-		position: relative;
+    box-sizing: border-box;
+    position: relative;
 
-		border: 1px solid var(--dark);
-		background-color: var(--gray);
+    border: 1px solid var(--dark);
+    background-color: var(--gray);
 
-		height: 100%;
-		width: 100%;
+    height: 100%;
+    width: 100%;
 
-		aspect-ratio: 1 / 1;
+    aspect-ratio: 1 / 1;
 
-		transition: background-color var(--animate-ms) linear;
-	}
-	.container.top-left {
-		border-top-left-radius: var(--border-radius-px);
-	}
-	.container.top-right {
-		border-top-right-radius: var(--border-radius-px);
-	}
-	.container.bottom-left {
-		border-bottom-left-radius: var(--border-radius-px);
-	}
-	.container.bottom-right {
-		border-bottom-right-radius: var(--border-radius-px);
-	}
-	.container:disabled:hover {
-		border-color: black;
-	}
+    transition: background-color var(--animate-ms) linear;
 
-	.zero {
-		background-color: var(--zeroColor);
-	}
+    &.top-left {
+      border-top-left-radius: var(--border-radius-px);
+    }
+    &.top-right {
+      border-top-right-radius: var(--border-radius-px);
+    }
+    &.bottom-left {
+      border-bottom-left-radius: var(--border-radius-px);
+    }
+    &.bottom-right {
+      border-bottom-right-radius: var(--border-radius-px);
+    }
+    &:disabled:hover {
+      border-color: black;
+    }
+  }
 
-	.one {
-		background-color: var(--oneColor);
-	}
+  .zero {
+    background-color: var(--zeroColor);
+  }
 
-	.hint {
-		border: 3px solid var(--warning);
-	}
+  .one {
+    background-color: var(--oneColor);
+  }
 
-	.button {
-		position: relative;
-		z-index: 1;
+  .hint {
+    border: 3px solid var(--app-theme-warning);
+  }
 
-		height: 100%;
-		width: 100%;
+  .button {
+    position: relative;
+    z-index: 1;
 
-		border: none;
-		background-color: transparent;
+    height: 100%;
+    width: 100%;
 
-		font-size: 1.2rem;
-	}
-	.button:disabled {
-		color: black;
-	}
+    border: none;
+    background-color: transparent;
 
-	.lock {
-		--gap: 0.3rem;
-		--size: 0.8rem;
+    font-size: 1.2rem;
 
-		position: absolute;
-		top: var(--gap);
-		right: var(--gap);
+    &:hover {
+      cursor: pointer;
+    }
+    &:disabled {
+      color: black;
+    }
+  }
 
-		height: var(--size);
-		width: var(--size);
-	}
+  .lock {
+    --gap: 0.3rem;
+    --size: 0.8rem;
 
-	@keyframes pulse {
-		to {
-			border-width: 4px;
-		}
-	}
+    position: absolute;
+    top: var(--gap);
+    right: var(--gap);
+
+    height: var(--size);
+    width: var(--size);
+  }
+
+  @keyframes pulse {
+    to {
+      border-width: 4px;
+    }
+  }
 </style>

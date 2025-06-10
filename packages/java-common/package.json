@@ -1,0 +1,7 @@
+{
+  "name": "java-common",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "mvn clean install"
+  }
+}

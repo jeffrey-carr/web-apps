@@ -1,10 +1,5 @@
 <script lang="ts">
-  import {
-    ExpandButton,
-    Button,
-    type ButtonOptions,
-    Modal,
-  } from '@jeffrey-carr/frontend-common/components';
+  import { ExpandButton, Button, type ButtonOptions, Modal } from '@jeffrey-carr/frontend-common';
   import { deleteLocalStorage, getLocalStorage, putLocalStorage } from '$lib/utils';
   import { onMount } from 'svelte';
 

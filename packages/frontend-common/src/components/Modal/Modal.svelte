@@ -94,7 +94,7 @@
   }
 
   .close-button {
-    --gap: 0.5rem;
+    --gap: 1rem;
     --size: 2rem;
 
     position: absolute;

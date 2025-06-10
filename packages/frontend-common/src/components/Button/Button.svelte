@@ -12,8 +12,7 @@
     children,
   }: ButtonOptions & { children?: () => any } = $props();
   let containerClass = $derived(`container ${size} ${type}${className ? ` ${className}` : ''}`);
-  $inspect(containerClass);
-  let buttonClass = $derived(`button ${type} ${shape}`);
+  let buttonClass = $derived(`button ${type} ${shape} ${loading ? 'loading' : ''}`);
 </script>
 
 <div class={containerClass}>
@@ -102,6 +101,9 @@
         cursor: default;
         border: 2px solid transparent;
       }
+      &:active {
+        transform: none;
+      }
     }
 
     &.round {
@@ -121,6 +123,7 @@
         color: var(--theme-text-secondary);
         transform: none;
         box-shadow: none;
+        cursor: pointer;
       }
     }
 

@@ -8,10 +8,14 @@
   --green: #a6d189;
   --yellow: #e5c890;
   --blue: #8caaee;
+  --mauve: #ca9ee6;
   --rosewater: #f2d5cf;
   --sky: #99d1db;
   --periwinkle: #c6d0f5;
-  --ebony-clay: #292c3c;
+  --ebony-clay: #8493ea;
+  --gray: #bcc0cc;
+  --gray-light: #ccd0da;
+  --gray-dark: #acb0be;
   
   --default-transition-ms: 100ms;
   
@@ -20,7 +24,12 @@
   --app-theme-secondary: var(--blue);
   --app-theme-tertiary: var(--yellow);
   --app-theme-text-primary: var(--periwinkle);
-  --app-theme-text-secondary: var(--ebony-clay);
+  --app-theme-text-secondary: var(--bg-color);
+  
+  /* Basic colors */
+  --app-theme-gray: var(--gray);
+  --app-theme-gray-light: var(--gray-light);
+  --app-theme-gray-dark: var(--gray-dark);
   
   /* Special colors */
   --app-theme-success: var(--green);
@@ -30,12 +39,14 @@
   --app-theme-danger: var(--red);
   --app-theme-danger-light: #ea999c;
   --app-theme-subtle: #838ba7;
+  --app-theme-subtle-dark: var(--bg-color);
   --app-theme-link: #8caaee;
   --app-theme-overlay: var(--bg-color-overlay);
   --app-theme-overlay-light: var(--bg-color-overlay);
   
   /* This is the font used for special headers like custom banners, h1, etc. */
-  --app-theme-header-font: 'Tagesschrift';
+  --app-theme-header-font: 'Underdog';
+
   /* This is the main font for the app. Used for paragraphs, labels, etc. */
   --app-theme-font: 'Comic Relief';
   /* The readable font is meant to be easy to read for utility. Used for button text, etc. */
@@ -46,8 +57,6 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  
-  color: var(--app-theme-text-primary);
 }
 
 html, body {
@@ -62,10 +71,11 @@ html, body {
 }
 
 h1, h2, h3, h4, h5, h6 {
+  color: var(--app-theme-text-primary);
   font-family: var(--app-theme-header-font);
 }
 h1 {
-  font-size: 3rem;  
+  font-size: 4rem;  
 }
 h2 {
   font-size: 2rem;
@@ -78,6 +88,7 @@ h4 {
 }
 
 body, div, p, a, label, li {
+  color: var(--app-theme-text-primary);
   font-family: var(--app-theme-font);
 }
 
@@ -86,7 +97,8 @@ a {
 }
 
 ol, ul {
- padding: 0.5rem 0.5rem;
+  padding: 0.5rem 0.5rem;
+  color: var(--app-theme-text-primary);
 }
 
 button {

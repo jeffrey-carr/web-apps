@@ -1,9 +1,7 @@
-export type ServerResponse = {
-  status: number;
-  message: string;
-};
+export { Stack } from './stack';
+export * from './network';
 
-export type MultiPageModalContent = {
-  title?: string;
-  content: (() => string) | string;
+export type ServerResponse<T> = {
+  status: number;
+  data: T;
 };
