@@ -28,42 +28,32 @@ jobs:
         run: mvn clean install
         
       - name: Create backend folder
-        run: mkdir -p build/backend
+        run: mkdir backend
 
       - name: Remove original JAR (this is dumb)
         working-directory: apps/web_games/backend
         run: rm target/*.original
 
       - name: Copy JAR
-        run: cp apps/web_games/backend/target/*.jar build/backend/
-      
-      - name: Archive project build
-        run: tar -cvf project-build.tar ./build
+        run: cp apps/web_games/backend/target/*.jar backend/
         
+      - name: Zip backend artifact
+        run: tar -cvf backend.tar backend
+      
       - name: Upload backend artifact
         uses: actions/upload-artifact@v4
         with:
-          name: project-build
-          path: project-build.tar
+          name: backend.tar
+          path: backend.tar
           
   build-frontend:
-    needs: build-backend
     runs-on: ubuntu-latest
     steps:
-      - name: Download backend artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: project-build
-          path: .
-          
-      - name: Extract backend artifact
-        run: tar -xvf project-build.tar
-        
-      - name: Create frontend folder
-        run: mkdir build/frontend
-        
       - name: Checkout repo
         uses: actions/checkout@v4
+        
+      - name: Create build folder
+        run: mkdir frontend
       
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -79,27 +69,44 @@ jobs:
       - name: Move frontend build to artifacts
         working-directory: ${{ github.workspace }}
         run: |
-          mv apps/web_games/frontend/build build/frontend
-          mv build/frontend/build build/frontend/web-games-frontend
+          mv apps/web_games/frontend/build frontend
+          mv build/frontend/build frontend/web-games-frontend
           
       - name: Zip project build
-        run: tar -cvf build.tar ./build
+        run: tar -cvf frontend.tar frontend
         
       - name: Upload project artifact
         uses: actions/upload-artifact@v4
         with:
-          name: build.tar
-          path: build.tar
+          name: frontend.tar
+          path: frontend.tar
           
   deploy:
-    needs: build-frontend
+    needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
     steps:
-      - name: Download build artifacts
+      - name: Download backend artifact
         uses: actions/download-artifact@v4
         with:
-          name: build.tar
+          name: backend.tar
+
+      - name: Download frontend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend.tar
           
+      - name: Unzip backend artifact
+        run: tar -xvf backend.tar
+
+      - name: Unzip frontend artifact
+        run: tar -xvf frontend.tar
+          
+      - name: Aggregate build artifacts
+        run: mkdir build && mv backend build && mv frontend build
+        
+      - name: Zip build
+        run: tar -cvf build.tar build
+
       - name: Copy build to server
         uses: appleboy/scp-action@master
         with:
