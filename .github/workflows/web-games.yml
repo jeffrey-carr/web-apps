@@ -40,8 +40,8 @@ jobs:
       - name: Upload backend artifact
         uses: actions/upload-artifact@v4
         with:
-          name: backend-output
-          path: build/backend
+          name: project-build
+          path: build/
           
   build-frontend:
     needs: build-backend
@@ -50,7 +50,7 @@ jobs:
       - name: Download backend artifact
         uses: actions/download-artifact@v4
         with:
-          name: build/
+          name: project-build
           path: build/
         
       - name: Checkout repo
