@@ -59,6 +59,12 @@ jobs:
       - name: Extract backend artifact
         run: tar -xvf project-build.tar
         
+      - name: List available files
+        run: ls
+      
+      - name: Create frontend folder
+        run: mkdir build/frontend
+        
       - name: Checkout repo
         uses: actions/checkout@v4
       
@@ -75,7 +81,6 @@ jobs:
         
       - name: Move frontend build to artifacts
         run: |
-          mkdir build/frontend
           mv apps/web_games/frontend/build build/frontend
           mv build/frontend/build build/frontend/web-games-frontend
           
