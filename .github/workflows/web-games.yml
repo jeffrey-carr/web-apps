@@ -72,7 +72,7 @@ jobs:
           mv apps/web_games/frontend/build web-games-frontend
           
       - name: Zip project build
-        run: tar -cvf frontend.tar frontend
+        run: tar -cvf frontend.tar web-games-frontend
         
       - name: Upload project artifact
         uses: actions/upload-artifact@v4
