@@ -3,6 +3,6 @@
   "version": "1.2.7",
   "scripts": {
     "dev": "mvn spring-boot:run",
-    "build": "mvn install"
+    "build": "mvn clean install"
   }
 }
