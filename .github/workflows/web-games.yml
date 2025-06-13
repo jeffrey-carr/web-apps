@@ -54,7 +54,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: project-build
-          path: project-build.tar
+          path: .
           
       - name: Extract backend artifact
         run: tar -xvf project-build.tar
