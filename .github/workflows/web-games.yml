@@ -60,7 +60,7 @@ jobs:
         run: tar -xvf project-build.tar
         
       - name: List available files
-        run: ls
+        run: pwd && ls
       
       - name: Create frontend folder
         run: mkdir build/frontend
@@ -85,8 +85,8 @@ jobs:
       - name: List a bunch of info
         run: |
           pwd
-          ls -R
-          ls -R build
+          ls 
+          ls build
         
       - name: Move frontend build to artifacts
         run: |
