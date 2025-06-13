@@ -79,6 +79,15 @@ jobs:
         working-directory: apps/web_games/frontend
         run: npm run build
         
+      - name: List build files
+        run: ls -R apps/web_games/frontend/build
+        
+      - name: List a bunch of info
+        run: |
+          pwd
+          ls -R
+          ls -R build
+        
       - name: Move frontend build to artifacts
         run: |
           mv apps/web_games/frontend/build build/frontend
