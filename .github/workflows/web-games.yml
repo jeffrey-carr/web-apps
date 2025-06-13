@@ -59,9 +59,6 @@ jobs:
       - name: Extract backend artifact
         run: tar -xvf project-build.tar
         
-      - name: List available files
-        run: pwd && ls
-      
       - name: Create frontend folder
         run: mkdir build/frontend
         
@@ -79,16 +76,8 @@ jobs:
         working-directory: apps/web_games/frontend
         run: npm run build
         
-      - name: List build files
-        run: ls -R apps/web_games/frontend/build
-        
-      - name: List a bunch of info
-        run: |
-          pwd
-          ls 
-          ls build
-        
       - name: Move frontend build to artifacts
+        working-directory: ${{ github.workspace }}
         run: |
           mv apps/web_games/frontend/build build/frontend
           mv build/frontend/build build/frontend/web-games-frontend
