@@ -35,7 +35,7 @@ jobs:
         run: rm target/*.original
 
       - name: Copy JAR
-        run: cp apps/web_games/backend/target/*.jar backend/
+        run: cp apps/web_games/backend/target/*.jar backend/web-games-backend.jar
         
       - name: Zip backend artifact
         run: tar -cvf backend.tar backend
@@ -69,7 +69,7 @@ jobs:
       - name: Move frontend build to artifacts
         working-directory: ${{ github.workspace }}
         run: |
-          mv apps/web_games/frontend/build frontend
+          mv apps/web_games/frontend/build web-games-frontend
           
       - name: Zip project build
         run: tar -cvf frontend.tar frontend
