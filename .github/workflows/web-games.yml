@@ -38,7 +38,7 @@ jobs:
         run: cp apps/web_games/backend/target/*.jar build/backend/
       
       - name: Archive project build
-        run: tar -cvf build.tar ./build
+        run: tar -cvf project-build.tar ./build
         
       - name: Upload backend artifact
         uses: actions/upload-artifact@v4
