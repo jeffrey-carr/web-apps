@@ -69,10 +69,10 @@ jobs:
       - name: Move frontend build to artifacts
         working-directory: ${{ github.workspace }}
         run: |
-          mv apps/web_games/frontend/build web-games-frontend
+          mv apps/web_games/frontend/build frontend
           
       - name: Zip project build
-        run: tar -cvf frontend.tar web-games-frontend
+        run: tar -cvf frontend.tar frontend
         
       - name: Upload project artifact
         uses: actions/upload-artifact@v4
@@ -127,6 +127,6 @@ jobs:
             tar -xvf ~/build.tar -C .
             cp build/backend/web-games-backend.jar web-games-backend/
             sudo systemctl restart web-games-backend
-            sudo cp build/frontend/web-games-frontend /var/www/
+            sudo cp build/frontend /var/www/web-games-frontend
             rm build.tar
             rm -rf build
