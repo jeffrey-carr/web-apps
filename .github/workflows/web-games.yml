@@ -36,12 +36,15 @@ jobs:
 
       - name: Copy JAR
         run: cp apps/web_games/backend/target/*.jar build/backend/
+      
+      - name: Archive project build
+        run: tar -cvf build.tar ./build
         
       - name: Upload backend artifact
         uses: actions/upload-artifact@v4
         with:
           name: project-build
-          path: ./build/
+          path: project-build.tar
           
   build-frontend:
     needs: build-backend
@@ -51,7 +54,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: project-build
-          path: build/
+          path: project-build.tar
+          
+      - name: Extract backend artifact
+        run: tar -xvf project-build.tar
         
       - name: Checkout repo
         uses: actions/checkout@v4
