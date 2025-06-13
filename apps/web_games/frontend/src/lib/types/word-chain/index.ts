@@ -1,14 +1,13 @@
-import { PUBLIC_BACKEND_URL } from "$env/static/public";
 import { METHODS, type RouteInformation } from "@jeffrey-carr/frontend-common";
 
 /* Network */
 export const ROUTES: Record<string, RouteInformation> = {
   NEW_GAME: { 
-    path: `${PUBLIC_BACKEND_URL}/api/word-chain/new-game`,
+    path: '/api/word-chain/new-game',
     method: METHODS.GET,
   },
   VALIDATE_ANSWER: {
-    path: `${PUBLIC_BACKEND_URL}/api/word-chain/validate-answer`,
+    path: `/api/word-chain/validate-answer`,
     method: METHODS.POST,
   },
 } as const;

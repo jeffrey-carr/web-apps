@@ -2,7 +2,6 @@
   import { GameButton } from '$lib/components';
   import { Icon as BinokuIcon } from '$lib/components/binoku';
   import { Icon as WordChainIcon } from '$lib/components/word-chain';
-  // import bg from '$lib/assets/bg.png';
 </script>
 
 <main class="main">

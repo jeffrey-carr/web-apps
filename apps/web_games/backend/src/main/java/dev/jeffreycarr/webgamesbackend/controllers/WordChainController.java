@@ -43,7 +43,6 @@ public class WordChainController {
         } catch (JsonProcessingException | IndexOutOfBoundsException e) {
             return ResponseEntity.badRequest().body(ServerResponse.newMessage("Invalid data"));
         } catch (Exception e) {
-            System.out.printf("Error: %s\n", e.getMessage());
             return ResponseEntity.internalServerError()
                     .body(ServerResponse.newMessage("Error validating game"));
         }
