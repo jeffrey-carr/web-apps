@@ -6,6 +6,7 @@
 
 <main class="main">
   <h1 class="title">Jeff's Web Games</h1>
+  <p>Hello!</p>
   <div class="games-container">
     <GameButton icon={BinokuIcon} name="Binoku" slug="/binoku" />
     <GameButton icon={WordChainIcon} name="Word Chain" slug="/word-chain" />
