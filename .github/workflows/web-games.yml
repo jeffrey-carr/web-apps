@@ -28,7 +28,7 @@ jobs:
         run: mvn clean install
         
       - name: Create backend folder
-        run: mkdir backend
+        run: mkdir -p backend
 
       - name: Remove original JAR (this is dumb)
         working-directory: apps/web_games/backend
@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend.tar
-          path: backend.tar
+          path: .
           
   build-frontend:
     runs-on: ubuntu-latest
@@ -78,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend.tar
-          path: frontend.tar
+          path: .
           
   deploy:
     needs: [build-backend, build-frontend]
@@ -127,6 +127,6 @@ jobs:
             tar -xvf ~/build.tar -C .
             cp build/backend/web-games-backend.jar web-games-backend/
             sudo systemctl restart web-games-backend
-            sudo cp build/frontend /var/www/web-games-frontend
+            sudo cp -r build/frontend/* /var/www/web-games-frontend/
             rm build.tar
             rm -rf build
