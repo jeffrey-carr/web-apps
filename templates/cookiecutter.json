@@ -1,0 +1,9 @@
+{
+  "app_name": "federation",
+  "project_name": "Central Fed",
+  "project_slug": "federation",
+  "project_title": "federation",
+  "project_description": "A centralized federation server for all my web apps",
+  "package_name": "dev.jeffreycarr.federation",
+  "frontend_origin": "login.jeffreycarr.dev"
+}

@@ -1,0 +1,25 @@
+<script lang="ts">
+  import './reset.css';
+  import './globals.css';
+
+  let { children }: { children?: () => any } = $props();
+</script>
+
+<svelte:head>
+  <title>{{ cookiecutter.project_name }}</title>
+</svelte:head>
+
+<main class="container">
+  {@render children?.()}
+</main>
+
+<style lang="scss">
+  .container {
+    height: 100vh;
+    width: 100vw;
+
+    margin: 0;
+
+    background-color: var(--app-theme-background);
+  }
+</style>

@@ -1,0 +1,38 @@
+<script lang="ts">
+  import { Button, makeRequest, METHODS } from '@jeffrey-carr/frontend-common';
+  import type { RouteInformation } from '@jeffrey-carr/frontend-common';
+
+  let code = $state<number>();
+
+  const testRequest: RouteInformation = {
+    path: '/api/test/',
+    method: METHODS.GET,
+  };
+  const getCode = async () => {
+    const response = await makeRequest(testRequest);
+    if (response.status !== 200) {
+      console.error('Error fetching test response', response);
+      return;
+    }
+
+    const data = await response.json();
+    code = data['code'];
+  };
+</script>
+
+<main class="main">
+  <h1>Hello world!</h1>
+  <p>Congrats on the new project!</p>
+  {% raw %}
+  {#if code != null}
+    <p>Code from server: {code}</p>
+  {/if}
+  {% endraw %}
+  <Button onclick={getCode} size="medium">Ping server</Button>
+</main>
+
+<style lang="scss">
+  .main {
+    height: 100vh;
+  }
+</style>

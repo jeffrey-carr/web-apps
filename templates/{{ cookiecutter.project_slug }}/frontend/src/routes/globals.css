@@ -1,0 +1,106 @@
+:root {
+  /* App colors */
+  --bg-color: #303446;
+  --bg-color-light: #232634;
+  --bg-color-surface: #737994;
+  --bg-color-overlay: #838ba7;
+  --red: #e78284;
+  --green: #a6d189;
+  --yellow: #e5c890;
+  --blue: #8caaee;
+  --mauve: #ca9ee6;
+  --rosewater: #f2d5cf;
+  --sky: #99d1db;
+  --periwinkle: #c6d0f5;
+  --ebony-clay: #8493ea;
+  --gray: #bcc0cc;
+  --gray-light: #ccd0da;
+  --gray-dark: #acb0be;
+  
+  --default-transition-ms: 100ms;
+  
+  /* Main theme colors */
+  --app-theme-primary: var(--rosewater);
+  --app-theme-secondary: var(--blue);
+  --app-theme-tertiary: var(--yellow);
+  --app-theme-text-primary: var(--periwinkle);
+  --app-theme-text-secondary: var(--bg-color);
+  
+  /* Basic colors */
+  --app-theme-gray: var(--gray);
+  --app-theme-gray-light: var(--gray-light);
+  --app-theme-gray-dark: var(--gray-dark);
+  
+  /* Special colors */
+  --app-theme-success: var(--green);
+  --app-theme-success-light: #c0f29d;
+  --app-theme-warning: var(--yellow);
+  --app-theme-warning-light: #f7d89c;
+  --app-theme-danger: var(--red);
+  --app-theme-danger-light: #ea999c;
+  --app-theme-subtle: #838ba7;
+  --app-theme-subtle-dark: var(--bg-color);
+  --app-theme-link: #8caaee;
+  --app-theme-overlay: var(--bg-color-overlay);
+  --app-theme-overlay-light: var(--bg-color-overlay);
+  
+  /* This is the font used for special headers like custom banners, h1, etc. */
+  --app-theme-header-font: 'Arial';
+
+  /* This is the main font for the app. Used for paragraphs, labels, etc. */
+  --app-theme-font: 'serif';
+  /* The readable font is meant to be easy to read for utility. Used for button text, etc. */
+  --app-theme-readable-font: 'sans-serif';
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+  
+  background-color: var(--bg-color);
+  
+  line-height: 1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--app-theme-text-primary);
+  font-family: var(--app-theme-header-font);
+}
+h1 {
+  font-size: 4rem;  
+}
+h2 {
+  font-size: 2rem;
+}
+h3 {
+  font-size: 1.5rem;
+}
+h4 {
+  font-size: 1.2rem;
+}
+
+body, div, p, a, label, li {
+  color: var(--app-theme-text-primary);
+  font-family: var(--app-theme-font);
+}
+
+a {
+  color: var(--app-theme-link);
+}
+
+ol, ul {
+  padding: 0.5rem 0.5rem;
+  color: var(--app-theme-text-primary);
+}
+
+button {
+  font-family: var(--app-theme-readable-font);
+}
