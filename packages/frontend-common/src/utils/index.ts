@@ -5,6 +5,10 @@ export const ping = (): string => {
   return "pong!";
 };
 
+export const sleep = (ms: number): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
+
 // place files you want to import through the `$lib` alias in this folder.
 export const generateRandomNumber = (min: number, max?: number): number => {
   if (max == null) {
@@ -29,3 +33,25 @@ export const getRandomElement = <T>(arr: T[]): T => {
 export const getRandomHexColor = (): string => {
   return `#${Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, '0')}`;
 };
+
+export const generateGreeting = (): string => {
+  return getRandomElement([
+    "Hello",
+    "Hi",
+    "Hey",
+    "Yo",
+    "Sup",
+    "Howdy",
+    "Ahoy",
+    "Greetings",
+    "Welcome",
+    "Hola",
+    "Aloha",
+    "Salutations",
+    "Hiya",
+    "G'day",
+    "Heya",
+    "Heyo",
+    "Yello",
+  ]);
+}

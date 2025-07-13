@@ -12,13 +12,16 @@
     children,
   }: ButtonOptions & { children?: () => any } = $props();
   let containerClass = $derived(`container ${size} ${type}${className ? ` ${className}` : ''}`);
+  let spinnerTheme = $derived<'primary' | 'secondary'>(
+    `${type === 'primary' ? 'secondary' : 'primary'}`
+  );
   let buttonClass = $derived(`button ${type} ${shape} ${loading ? 'loading' : ''}`);
 </script>
 
 <div class={containerClass}>
   <button class={buttonClass} {onclick} disabled={disabled || loading}>
     {#if loading}
-      <Spinner color="dark" />
+      <Spinner theme={spinnerTheme} />
     {:else}
       {@render children?.()}
     {/if}

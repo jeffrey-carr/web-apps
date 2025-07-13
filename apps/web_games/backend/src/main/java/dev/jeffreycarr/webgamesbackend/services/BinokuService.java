@@ -6,23 +6,50 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import dev.jeffreycarr.javacommon.models.CommonUser;
 import dev.jeffreycarr.javacommon.utils.ArrayUtils;
-import dev.jeffreycarr.webgamesbackend.BinokuUtils;
+import dev.jeffreycarr.webgamesbackend.models.UserStats;
+import dev.jeffreycarr.webgamesbackend.models.binoku.BinokuStats;
 import dev.jeffreycarr.webgamesbackend.models.binoku.Coordinate;
 import dev.jeffreycarr.webgamesbackend.models.binoku.InvalidBoardHint;
 import dev.jeffreycarr.webgamesbackend.models.binoku.RuleThreeValidation;
 import dev.jeffreycarr.webgamesbackend.models.binoku.ValidateGuessRequest;
 import dev.jeffreycarr.webgamesbackend.models.binoku.ValidateGuessResponse;
+import dev.jeffreycarr.webgamesbackend.utils.BinokuUtils;
 
 @Component
 public class BinokuService {
   private static final int Empty = -1;
   private static final int Zero = 0;
   private static final int One = 1;
+  
+  private UserStatsService stats;
 
-  public BinokuService() {}
+  @Autowired
+  public BinokuService(UserStatsService stats) {
+    this.stats = stats;
+  }
+  
+  public Integer[][] createGame(int size, CommonUser user) throws Exception {
+    UserStats userStats = this.stats.getOrCreateUserStats(user.uuid);
+    BinokuStats binokuStats = userStats.getBinoku();
+
+    Integer[][] board = this.generateBoard(size);
+    
+    binokuStats.incrementGamesPlayed();
+    userStats.setBinoku(binokuStats);
+    this.stats.putUserStats(user.uuid, userStats);
+    
+    return board;
+  }
+  
+  public Integer[][] createGame(int size) throws Exception {
+    return this.generateBoard(size);
+  }
+  
   
   public Integer[][] generateBoard(int size) throws Exception {
     List<List<Integer>> board = new ArrayList<List<Integer>>();
@@ -45,6 +72,19 @@ public class BinokuService {
     return BinokuUtils.cloneBoard(puzzle);
   }
   
+  public ValidateGuessResponse validateGuess(ValidateGuessRequest guess, CommonUser user) throws Exception {
+    ValidateGuessResponse response = this.validateGuess(guess);
+    if (response.valid) {
+      System.out.println("Incrementing games completed");
+      UserStats userStats = this.stats.getOrCreateUserStats(user.uuid);
+      BinokuStats binokuStats = userStats.getBinoku();
+      binokuStats.incrementGamesCompleted();
+      userStats.setBinoku(binokuStats);
+      this.stats.putUserStats(user.uuid, userStats);
+    }
+
+    return response;
+  }
   public ValidateGuessResponse validateGuess(ValidateGuessRequest guess) {
     int size = guess.board.length;
     
@@ -58,7 +98,7 @@ public class BinokuService {
         }
       }
     }
-
+    
     return boardIsValid(guess.toList());
   }
   

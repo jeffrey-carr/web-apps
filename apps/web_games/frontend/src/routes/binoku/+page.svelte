@@ -7,7 +7,6 @@
     type ValidateGameResponse,
     ROUTES,
   } from '$lib/types/binoku';
-  import { MainButton } from '$lib/components';
   import { onDestroy } from 'svelte';
 
   // Hints
@@ -53,7 +52,7 @@
       generatingLevel = Math.min(GENERATING_MESSAGES.length, generatingLevel + 1);
     }, LOADING_INTERVAL);
 
-    const boardRequest = await makeRequest(ROUTES.NEW_GAME, { query: { size } });
+    const boardRequest = await makeRequest(ROUTES.NEW_GAME, { credentials: true, query: { size } });
     if (boardRequest.status !== 200) {
       console.error('error getting game', boardRequest);
       return;
@@ -82,7 +81,10 @@
   const checkSolution = async () => {
     validating = true;
     const payload = JSON.parse(JSON.stringify(board));
-    const validateRequest = await makeRequest(ROUTES.VALIDATE_GUESS, { body: { board: payload } });
+    const validateRequest = await makeRequest(ROUTES.VALIDATE_GUESS, {
+      body: { board: payload },
+      credentials: true,
+    });
     if (validateRequest.status !== 200) {
       console.error(`[${validateRequest.status}] error validating guess`);
       return;
@@ -138,8 +140,6 @@
     <Confetti />
   {/if}
 
-  <MainButton />
-
   <!-- Header -->
   <div class="header">
     <h1 class="title">Binoku</h1>
@@ -192,7 +192,8 @@
 
     box-sizing: border-box;
 
-    height: 100vh;
+    // height: 100vh;
+    height: 100%;
     width: 100vw;
 
     margin: 0;

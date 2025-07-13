@@ -3,13 +3,18 @@ package dev.jeffreycarr.webgamesbackend.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+
+import dev.jeffreycarr.javacommon.models.CommonUser;
 import dev.jeffreycarr.javacommon.services.EncryptionError;
 import dev.jeffreycarr.javacommon.services.EncryptionService;
 import dev.jeffreycarr.javacommon.utils.ArrayUtils;
+import dev.jeffreycarr.webgamesbackend.models.UserStats;
 import dev.jeffreycarr.webgamesbackend.models.wordchain.Dictionary;
 import dev.jeffreycarr.webgamesbackend.models.wordchain.Game;
 import dev.jeffreycarr.webgamesbackend.models.wordchain.GameData;
 import dev.jeffreycarr.webgamesbackend.models.wordchain.ValidateResponse;
+import dev.jeffreycarr.webgamesbackend.models.wordchain.WordChainStats;
+
 import java.util.Map;
 import java.util.Stack;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +26,25 @@ public class WordChainService {
 
     private Map<String, String[]> dictionary;
     private EncryptionService encrypter;
+    private UserStatsService stats;
 
     @Autowired
-    public WordChainService(Dictionary dictionary, EncryptionService encryption) {
+    public WordChainService(Dictionary dictionary, EncryptionService encryption, UserStatsService stats) {
         this.dictionary = dictionary.getValues();
         this.encrypter = encryption;
+        this.stats = stats;
     }
 
+    public Game createGame(CommonUser user) throws Exception {
+        UserStats userStats = this.stats.getOrCreateUserStats(user.uuid);
+        WordChainStats wordChainStats = userStats.getWordChain();
+        wordChainStats.incrementGamesPlayed();
+
+        Game game = this.createGame();
+        
+        this.stats.putUserStats(user.uuid, userStats);
+        return game;
+    }
     public Game createGame() throws Exception {
         Stack<String> chain = this.generateChain(new Stack<String>());
         GameData data = new GameData(chain);

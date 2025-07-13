@@ -45,12 +45,12 @@
   --app-theme-overlay-light: var(--bg-color-overlay);
   
   /* This is the font used for special headers like custom banners, h1, etc. */
-  --app-theme-header-font: 'Underdog';
+  --app-theme-header-font: 'Luckiest Guy';
 
   /* This is the main font for the app. Used for paragraphs, labels, etc. */
-  --app-theme-font: 'Comic Relief';
+  --app-theme-font: 'Fredoka';
   /* The readable font is meant to be easy to read for utility. Used for button text, etc. */
-  --app-theme-readable-font: 'Raleway';
+  --app-theme-readable-font: 'Quicksand';
 }
 
 * {

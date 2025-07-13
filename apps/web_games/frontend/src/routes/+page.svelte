@@ -5,7 +5,6 @@
 </script>
 
 <main class="main">
-  <h1 class="title">Jeff's Web Games</h1>
   <div class="games-container">
     <GameButton icon={BinokuIcon} name="Binoku" slug="/binoku" />
     <GameButton icon={WordChainIcon} name="Word Chain" slug="/word-chain" />
@@ -14,25 +13,20 @@
 
 <style lang="scss">
   .main {
-    height: 100vh;
+    height: 100%;
 
     background-image: url('../lib/assets/bg.png');
 
     overflow-x: hidden;
   }
 
-  .title {
-    margin: 2rem 1rem 1rem 1rem;
-    margin-bottom: 1.5rem;
-
-    color: var(--rosewater);
-    text-align: center;
-  }
-
   .games-container {
     display: flex;
     justify-content: center;
+    align-items: center;
     flex-wrap: wrap;
     gap: 2rem;
+
+    height: 100%;
   }
 </style>

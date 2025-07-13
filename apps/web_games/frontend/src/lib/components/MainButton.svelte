@@ -8,7 +8,7 @@
 </script>
 
 <div class="container">
-  <ExpandButton onclick={back}>Back to main</ExpandButton>
+  <ExpandButton theme="secondary" onclick={back}>Back to main</ExpandButton>
 </div>
 
 <style lang="scss">

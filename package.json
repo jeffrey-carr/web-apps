@@ -10,9 +10,10 @@
   "packageManager": "npm@11.1.0",
   "scripts": {
     "prettier": "prettier --write .",
-    "test-page": "turbo run dev --filter=@jeffrey-carr/frontend-common --filter=test-page",
+    "test-page": "turbo run dev --filter=test_app-frontend",
     "new-project": "cookiecutter -o apps/ templates/",
-    "dev:web-games": "turbo run dev --filter=web-games-frontend --filter=web-games-backend --filter=test-page --no-cache --parallel"
+    "dev:web-games": "turbo run dev --filter=web-games-frontend --filter=web-games-backend --filter=test_app-frontend --filter=federation-frontend --filter=federation-backend --no-cache --parallel",
+    "dev:federation": "turbo run dev --filter=federation-frontend --filter=federation-backend --filter=test_app-frontend --no-cache --parallel"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

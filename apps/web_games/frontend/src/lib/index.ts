@@ -32,4 +32,5 @@ export const GAME_INFO: Record<AvailableGame, GameInfo> = {
     description: "Can you climb the chain?",
     icon: BinokuIcon,
   },
-}
+};
+

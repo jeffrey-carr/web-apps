@@ -1,0 +1,8 @@
+{
+  "name": "federation-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "mvn spring-boot:run",
+    "build": "mvn clean install"
+  }
+}

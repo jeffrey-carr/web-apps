@@ -52,7 +52,7 @@
   });
 
   const newGame = async () => {
-    const response = await makeRequest(ROUTES.NEW_GAME);
+    const response = await makeRequest(ROUTES.NEW_GAME, { credentials: true });
     if (response.status !== 200) {
       console.error('error getting new game', response);
       return;
@@ -102,6 +102,7 @@
 
     const response = await makeRequest(ROUTES.VALIDATE_ANSWER, {
       body: { guess, gameState: game },
+      credentials: true,
     });
     if (response.status !== 200) {
       console.error('error in request', response);
@@ -149,8 +150,6 @@
       </div>
     </div>
   </Modal>
-
-  <MainButton />
 
   <div class="info-center">
     <div class="title">
