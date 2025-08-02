@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseCookie.ResponseCookieBuilder;
 
 import dev.jeffreycarr.federation.constants.AuthConstants;
+import dev.jeffreycarr.federation.models.CookieOptions;
 import dev.jeffreycarr.javacommon.constants.EnvironmentConstants;
 import dev.jeffreycarr.javacommon.models.VariableNotDefinedException;
 
@@ -16,7 +17,7 @@ public class NetworkUtils {
     return ResponseEntity.badRequest().body("Email or password is incorrect");
   }
   
-  public static ResponseCookie createCookie(String key, String[] values) throws Exception, VariableNotDefinedException {
+  public static ResponseCookie createCookie(String key, String[] values, CookieOptions opts) throws Exception, VariableNotDefinedException {
     if (values.length == 0) {
       throw new Exception("No values provided!");
     }
@@ -24,10 +25,10 @@ public class NetworkUtils {
     String valueStr = String.join(":", values);
     ResponseCookieBuilder builder = ResponseCookie.from(key, valueStr);
     builder.domain(".jeffreycarr.dev");
-    builder.path("/");
+    builder.path(opts.getPath());
     builder.secure(true);
-    builder.httpOnly(true);
-    builder.maxAge(7 * 24 * 60 * 60);
+    builder.httpOnly(opts.getHttpOnly());
+    builder.maxAge(opts.getMaxAge());
     builder.sameSite("None");
     
     String environment = GeneralUtils.getEnvironment();

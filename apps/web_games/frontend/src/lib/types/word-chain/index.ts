@@ -18,31 +18,20 @@ export type NewGameResponse = {
 
 /* Game Types */
 export type Chain = string[];
-export type WordChainState = {
+export type WordChainGameData = {
   uuid: string;
-  generatedChain: Chain;
+  chain: string[];
   userProgress: number;
-};
-export type WordChainGame = {
-  data: WordChainState;
   encryptedState: string;
 };
 
 export type ValidateAnswerRequest = {
   guess: string;
-  gameState: {
-    encryptedState: string;
-    data: {
-      uuid: string;
-      generatedChain: string[];
-      userProgress: number;
-    };
-  };
-  encryptedState: string;
+  payload: WordChainGameData;
 };
 export type ValidateAnswerResponse = {
   correct: boolean;
   victory: boolean;
-  updatedGame: WordChainGame;
+  game: WordChainGameData;
 };
 

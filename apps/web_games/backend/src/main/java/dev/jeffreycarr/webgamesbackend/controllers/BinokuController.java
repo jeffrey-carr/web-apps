@@ -1,4 +1,3 @@
-/* (C)2025 */
 package dev.jeffreycarr.webgamesbackend.controllers;
 
 import dev.jeffreycarr.javacommon.constants.AuthConstants;

@@ -49,7 +49,7 @@
     width: 100%;
     height: 100%;
 
-    transition: right 200ms linear;
+    transition: right 500ms cubic-bezier(0.68, -0.55, 0.27, 1.55);
 
     &.open {
       right: 0;
@@ -66,7 +66,7 @@
 
     background-color: black;
 
-    transition: opacity 200ms linear;
+    transition: opacity 200ms cubic-bezier(0.68, -0.55, 0.27, 1.55);
 
     pointer-events: none;
 

@@ -75,7 +75,6 @@ public class BinokuService {
   public ValidateGuessResponse validateGuess(ValidateGuessRequest guess, CommonUser user) throws Exception {
     ValidateGuessResponse response = this.validateGuess(guess);
     if (response.valid) {
-      System.out.println("Incrementing games completed");
       UserStats userStats = this.stats.getOrCreateUserStats(user.uuid);
       BinokuStats binokuStats = userStats.getBinoku();
       binokuStats.incrementGamesCompleted();

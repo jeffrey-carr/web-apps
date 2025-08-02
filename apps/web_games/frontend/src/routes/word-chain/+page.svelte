@@ -1,22 +1,21 @@
 <script lang="ts">
-  import { MainButton } from '$lib/components';
   import {
     ROUTES,
     type ValidateAnswerRequest,
     type ValidateAnswerResponse,
-    type WordChainGame,
+    type WordChainGameData,
   } from '$lib/types/word-chain';
   import { Word } from '$lib/components/word-chain';
-  import { Button, Confetti, makeRequest, Modal } from '@jeffrey-carr/frontend-common';
+  import { Button, Confetti, makeRequest, Modal, Spinner } from '@jeffrey-carr/frontend-common';
 
   const TIMEOUT_PENALTY = 5000;
 
-  let game = $state<WordChainGame>();
+  let game = $state<WordChainGameData>();
   let gameUUID = $state('');
-  let revealedWords = $state<string[]>([]);
+  let loading = $state(false);
+
   let guesses = $state<string[]>([]);
   let timeouts = $state<number[]>([]);
-  let revealedLetters = $state<number[]>([]);
   let showWin = $state(false);
 
   $effect(() => {
@@ -25,40 +24,27 @@
       return;
     }
 
-    revealedWords = [...game.data.generatedChain.slice(0, game.data.userProgress)];
-    const newGuesses = Array(game.data.generatedChain.length)
-      .fill('')
-      .map((_, i) => {
-        if (i === 0 || game!.data.userProgress > i) {
-          return game!.data.generatedChain[i];
-        }
+    if (gameUUID !== game.uuid) {
+      gameUUID = game.uuid;
 
-        return game!.data.generatedChain[i].slice(0, revealedLetters[i]);
-      });
-
-    guesses = newGuesses;
-
-    if (gameUUID !== game.data.uuid) {
-      gameUUID = game.data.uuid;
-
-      const initialTimeouts = Array(game.data.generatedChain.length).fill(0);
+      const initialTimeouts = Array(game.chain.length).fill(0);
       timeouts = initialTimeouts;
-
-      const initialRevealedLetters = Array(game.data.generatedChain.length).fill(1);
-      // First word is completely revealed
-      initialRevealedLetters[0] = game.data.generatedChain[0].length;
-      revealedLetters = initialRevealedLetters;
     }
   });
 
   const newGame = async () => {
+    game = undefined;
+    loading = true;
+
     const response = await makeRequest(ROUTES.NEW_GAME, { credentials: true });
     if (response.status !== 200) {
+      loading = false;
       console.error('error getting new game', response);
       return;
     }
 
     game = await response.json();
+    loading = false;
   };
 
   const updateGuess = (guess: string, index: number) => {
@@ -71,17 +57,6 @@
       return;
     }
 
-    if (guess.length === 0) {
-      guess = game.data.generatedChain[index].substring(0, revealedLetters[index]);
-      guesses[index] = guess;
-      return;
-    }
-
-    const revealed = game.data.generatedChain[index].substring(0, revealedLetters[index]);
-    if (!guess.startsWith(revealed)) {
-      guess = revealed + guess.substring(revealedLetters[index]);
-    }
-
     guess = guess.toUpperCase();
     if (guess === guesses[index]) {
       return;
@@ -89,7 +64,7 @@
 
     guesses[index] = guess;
 
-    if (guesses[index].length === game.data.generatedChain[index].length) {
+    if (guesses[index].length === game.chain[index].length) {
       submitGuess(guess, index);
     }
   };
@@ -100,31 +75,28 @@
       return;
     }
 
-    const response = await makeRequest(ROUTES.VALIDATE_ANSWER, {
-      body: { guess, gameState: game },
+    const request: ValidateAnswerRequest = {
+      guess,
+      payload: game,
+    };
+    const rawResponse = await makeRequest(ROUTES.VALIDATE_ANSWER, {
+      body: request,
       credentials: true,
     });
-    if (response.status !== 200) {
-      console.error('error in request', response);
+    if (rawResponse.status !== 200) {
+      console.error('error in request', rawResponse);
       return;
     }
 
-    const responseJSON: ValidateAnswerResponse = await response.json();
-    if (responseJSON.correct) {
-      game = responseJSON.updatedGame;
-      if (responseJSON.victory) {
+    const response: ValidateAnswerResponse = await rawResponse.json();
+    game = response.game;
+    if (response.correct) {
+      console.log('correct!');
+      if (response.victory) {
         showWin = true;
       }
-      // document.getElementById(`word-${game.userProgress}`)?.scrollIntoView();
     } else {
       timeouts[index] = new Date().getTime() + TIMEOUT_PENALTY;
-
-      const targetWordLength = game.data.generatedChain[index].length;
-      if (revealedLetters[index] < targetWordLength - 1) {
-        revealedLetters[index]++;
-      }
-
-      guesses[index] = game.data.generatedChain[index].substring(0, revealedLetters[index]);
     }
   };
 </script>
@@ -162,17 +134,20 @@
   </div>
 
   <div class="words-column">
-    {#if game}
-      {#each game.data.generatedChain as word, i}
-        <div class="word" id={`word-${i}`}>
+    {#if loading}
+      <div class="loading-container">
+        <Spinner theme="red" />
+        Loading...
+      </div>
+    {:else if game}
+      {#each game.chain as word, i}
+        <div class="word" id={word}>
           <Word
-            word={guesses[i]}
-            targetWord={word}
+            {word}
             onUpdate={(newGuess: string) => updateGuess(newGuess, i)}
-            correct={i !== 0 && i < game.data.userProgress}
-            locked={i !== game.data.userProgress}
+            correct={i !== 0 && i < game.userProgress}
+            locked={i !== game.userProgress}
             timedOutUntil={timeouts[i]}
-            revealedLetters={revealedLetters[i]}
           />
         </div>
       {/each}
@@ -204,6 +179,14 @@
       font-size: 0.7rem;
       color: var(--app-theme-danger);
     }
+  }
+
+  .loading-container {
+    --size: 2rem;
+    height: var(--size);
+    width: var(--size);
+
+    text-align: center;
   }
 
   .words-column {

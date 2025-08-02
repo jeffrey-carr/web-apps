@@ -104,6 +104,18 @@ public class AuthService extends Exception {
     return Optional.of(user);
   }
   
+  // logout logs the user out of all applications by invalidating their auth token
+  public void logoutEverywhere(String uuid) throws NotConnectedException, NotFoundException {
+    User user = this.mongo.getByUUID(uuid);
+    if (!user.isTokenValid()) {
+      return;
+    }
+    
+    user.invalidateToken();
+    this.mongo.updateItem(uuid, user);
+    return;
+  }
+  
   private byte[] generateSalt() {
     byte[] salt = new byte[16];
     random.nextBytes(salt);

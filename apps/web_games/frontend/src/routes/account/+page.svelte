@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ArcadeMachine } from '$lib/components';
   import type { GetUserResponse, UserStats } from '$lib/types';
+  import { ROUTES } from '$lib/types';
   import {
     makeRequest,
     METHODS,
@@ -15,11 +16,7 @@
   $inspect(loading);
 
   const loadUser = async () => {
-    const getUserInfo: RouteInformation = {
-      path: '/api/user/me',
-      method: METHODS.GET,
-    };
-    const rawResponse = await makeRequest(getUserInfo, { credentials: true });
+    const rawResponse = await makeRequest(ROUTES.ME, { credentials: true });
 
     if (rawResponse.status !== 200) {
       console.error('error retrieving user', rawResponse);
@@ -78,6 +75,10 @@
         <tr>
           <td>Games Played</td>
           <td>{stats?.wordChain.gamesPlayed ?? '?'}</td>
+        </tr>
+        <tr>
+          <td>Games Completed</td>
+          <td>{stats?.wordChain.gamesCompleted ?? '?'}</td>
         </tr>
       </tbody>
     </table>

@@ -1,6 +1,5 @@
-import type { RouteQuery } from '$lib/types/index.js';
-import { APP_QUERY_PARAM, isValidApp, PATH_QUERY_PARAM } from '@jeffrey-carr/frontend-common';
-import { App } from '@jeffrey-carr/frontend-common';
+import type { RouteQuery } from '@jeffrey-carr/frontend-common';
+import { App, APP_QUERY_PARAM, isValidApp, PATH_QUERY_PARAM } from '@jeffrey-carr/frontend-common';
 
 export const load = ({ url }): RouteQuery => {
   let app = url.searchParams.get(APP_QUERY_PARAM);

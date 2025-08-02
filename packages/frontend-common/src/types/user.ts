@@ -31,3 +31,5 @@ export const CharacterToName: Record<Character, string> = {
   "glitchard_simmons": "Glitchard Simmons",
   "alien_degeneres": "Alien Degeneres"
 };
+
+export const AUTH_COOKIE_NAME = 'auth-data';

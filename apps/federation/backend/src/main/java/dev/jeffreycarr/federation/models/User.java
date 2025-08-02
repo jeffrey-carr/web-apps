@@ -126,4 +126,7 @@ public class User {
   public Instant getTokenValidTo() {
     return this.tokenValidTo;    
   }
+  public void invalidateToken() {
+    this.tokenValidTo = Instant.now().minusSeconds(60);
+  }
 }

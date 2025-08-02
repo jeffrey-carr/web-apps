@@ -15,8 +15,6 @@
   .main {
     height: 100%;
 
-    background-image: url('../lib/assets/bg.png');
-
     overflow-x: hidden;
   }
 

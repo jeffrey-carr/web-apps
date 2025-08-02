@@ -1,7 +1,7 @@
 <script lang="ts">
-  let { until }: { until: number } = $props();
+  let { until }: { until?: number } = $props();
   let progress = $state(100);
-  let intervalId: NodeJS.Timeout;
+  let intervalId: number;
 
   $effect(() => {
     if (!until) return;
@@ -31,7 +31,9 @@
 </script>
 
 <div class="container">
-  <div class="timer" style={`--progress: ${progress}%`}></div>
+  {#if until}
+    <div class="timer" style={`--progress: ${progress}%`}></div>
+  {/if}
 </div>
 
 <style>

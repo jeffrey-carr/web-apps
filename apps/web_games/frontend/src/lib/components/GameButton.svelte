@@ -17,8 +17,8 @@
       containerClass = 'container bounce';
       removeBounceTimer = setTimeout(() => {
         containerClass = 'container';
-      }, 2000);
-    }, 4000);
+      }, 1000);
+    }, 2000);
   };
 
   const onHoverEnd = () => {

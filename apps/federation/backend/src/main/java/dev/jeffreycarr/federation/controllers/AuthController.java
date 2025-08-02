@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.jeffreycarr.federation.models.AuthRequest;
+import dev.jeffreycarr.federation.models.CookieOptions;
 import dev.jeffreycarr.federation.models.CreateUserRequest;
+import dev.jeffreycarr.federation.models.LogoutRequest;
 import dev.jeffreycarr.federation.models.User;
 import dev.jeffreycarr.federation.services.AuthService;
 import dev.jeffreycarr.federation.utils.NetworkUtils;
@@ -57,7 +59,7 @@ public class AuthController {
     User user = possibleUser.get();
     BodyBuilder response = ResponseEntity.ok();
     try {
-      response = this.addAuthCookieToResponse(response, user);
+      response = this.addAuthCookieToResponse(response, user.getUUID(), user.getToken(), new CookieOptions());
     } catch (Exception e) {
       return ResponseEntity.internalServerError().body(ServerResponse.newMessage("Error creating cookie"));
     }
@@ -82,7 +84,7 @@ public class AuthController {
     
     BodyBuilder response = ResponseEntity.ok();
     try {
-      response = this.addAuthCookieToResponse(response, createdUser);
+      response = this.addAuthCookieToResponse(response, createdUser.getUUID(), createdUser.getToken(), new CookieOptions());
     } catch (Exception e) {
       return ResponseEntity.internalServerError().body(ServerResponse.newMessage("Error creating cookie"));
     }
@@ -119,14 +121,40 @@ public class AuthController {
   }
   
   @PostMapping("/logout")
-  public ResponseEntity<?> logout(@CookieValue(name = AuthConstants.AuthorizationCookieName) String cookieValue) {
-    // Do not invalidate login token so they stay logged in per site
-    return ResponseEntity.ok().build();
+  public ResponseEntity<?> logout(
+    @CookieValue(name = AuthConstants.AuthorizationCookieName) String cookieValue,
+    @RequestBody LogoutRequest request
+  ) {
+    String[] cookieValues = NetworkUtils.getCookieValues(cookieValue);
+    String uuid = cookieValues[0];
+    String token = cookieValues[1];
+
+    if (request.logoutEverywhere) {
+      try {
+        this.service.logoutEverywhere(uuid);
+      } catch (NotConnectedException e) {
+        return ResponseEntity.internalServerError().body(ServerResponse.newMessage("Error logging user out"));
+      } catch (NotFoundException e) {
+        return ResponseEntity.badRequest().body(ServerResponse.newMessage("Unknown user"));
+      }
+    }
+
+    CookieOptions cookieOpts = new CookieOptions();
+    cookieOpts.setMaxAge(0);
+    
+    BodyBuilder response = ResponseEntity.ok();
+    try {
+      response = this.addAuthCookieToResponse(response, uuid, token, cookieOpts);
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().body(ServerResponse.newMessage("Error creating cookie"));
+    }
+    
+    return response.build();
   }
   
-  private BodyBuilder addAuthCookieToResponse(BodyBuilder response, User user) throws Exception {
-    String[] cookieValues = new String[]{user.getUUID(), user.getToken()};
-    ResponseCookie authCookie = NetworkUtils.createCookie(AuthConstants.AuthorizationCookieName, cookieValues);
+  private BodyBuilder addAuthCookieToResponse(BodyBuilder response, String userUUID, String token, CookieOptions opts) throws Exception {
+    String[] cookieValues = new String[]{userUUID, token};
+    ResponseCookie authCookie = NetworkUtils.createCookie(AuthConstants.AuthorizationCookieName, cookieValues, opts);
     return response.header("Set-Cookie", authCookie.toString());
   }
 }

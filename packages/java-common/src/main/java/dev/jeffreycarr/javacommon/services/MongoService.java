@@ -79,9 +79,7 @@ public class MongoService<T> {
     FindIterable<T> result = collection.find(Filters.eq(key, value));
     List<T> aggregatedResults = new ArrayList<>();
     MongoCursor<T> it = result.iterator();
-    int i = 0;
     while (it.hasNext()) {
-      i++;
       aggregatedResults.add(it.next());
     }
     

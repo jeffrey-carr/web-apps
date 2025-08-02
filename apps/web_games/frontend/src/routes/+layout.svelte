@@ -9,9 +9,8 @@
     type NotificationLevel,
   } from '@jeffrey-carr/frontend-common';
 
+  export let data;
   let { children }: { children?: () => any } = $props();
-
-  let navbarHeight = $state<string>();
 
   let notification = $state<{ title?: string; message: string }>();
   let notificationLevel = $state<NotificationLevel>('error');
@@ -61,8 +60,8 @@
 </svelte:head>
 
 <main class="container">
-  <NavBar bind:height={navbarHeight} />
-  <div class="content" style={`height: calc(100% - ${navbarHeight})`}>
+  <NavBar />
+  <div class="content">
     {@render children?.()}
   </div>
   {#if notification}
@@ -77,11 +76,19 @@
 
 <style lang="scss">
   .container {
+    display: flex;
+    flex-direction: column;
+
     height: 100vh;
     width: 100vw;
 
     margin: 0;
 
     background-color: var(--app-theme-background);
+  }
+
+  .content {
+    flex: 1;
+    overflow-y: 100%;
   }
 </style>

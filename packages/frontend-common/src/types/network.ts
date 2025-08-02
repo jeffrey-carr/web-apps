@@ -21,3 +21,10 @@ export type RouteQuery = {
   app: App;
   path?: string;
 };
+
+export const ROUTES: Record<string, RouteInformation> = {
+  LOGOUT: {
+    path: '/api/auth/logout',
+    method: METHODS.POST,
+  },
+};

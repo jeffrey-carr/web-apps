@@ -9,7 +9,7 @@ import dev.jeffreycarr.javacommon.models.CommonUser;
 import dev.jeffreycarr.javacommon.models.VariableNotDefinedException;
 import dev.jeffreycarr.javacommon.services.EnvironmentService;
 import dev.jeffreycarr.javacommon.utils.ServerResponse;
-import dev.jeffreycarr.webgamesbackend.models.wordchain.Game;
+import dev.jeffreycarr.webgamesbackend.models.wordchain.GameData;
 import dev.jeffreycarr.webgamesbackend.models.wordchain.ValidateResponse;
 import dev.jeffreycarr.webgamesbackend.models.wordchain.ValidationRequest;
 import dev.jeffreycarr.webgamesbackend.services.WordChainService;
@@ -49,7 +49,7 @@ public class WordChainController {
         }
         boolean isAuthed = user != null;
 
-        Game game;
+        GameData game;
         try {
             if (isAuthed) {
                 game = this.service.createGame(user);
@@ -60,21 +60,45 @@ public class WordChainController {
             return ResponseEntity.internalServerError()
                     .body(ServerResponse.newMessage("Error creating game"));
         }
-
-        return ResponseEntity.ok(game);
+        
+        String[] chain = game.getChain();
+        String gameString = chain[0];
+        for (int i = 1; i < chain.length; i++) {
+            gameString = String.format("%s --> %s", gameString, chain[i]);
+        }
+        System.out.println("Created game:");
+        System.out.println(gameString);
+        
+        return ResponseEntity.ok(game.toPayload());
     }
 
     @PostMapping("/validate-answer")
-    public ResponseEntity<?> validateGuess(@RequestBody ValidationRequest request) {
+    public ResponseEntity<?> validateGuess(
+        @CookieValue(name = AuthConstants.AuthorizationCookieName, required = false) String authCookie,
+        @RequestBody ValidationRequest request
+    ) {
+        CommonUser user = null;
+        if (authCookie != null) {
+            user = HandlerUtils.getUserFromCookie(this.env, authCookie);
+        }
+        boolean isAuthed = user != null;
+        
+        ValidateResponse response;
         try {
-            ValidateResponse response =
-                    this.service.validateGuess(request.getGameState(), request.getGuess());
-            return ResponseEntity.ok(response);
+            if (isAuthed) {
+                response = this.service.validateGuess(request.payload, request.guess, user);
+            } else {
+                response = this.service.validateGuess(request.payload, request.guess);
+            }
         } catch (JsonProcessingException | IndexOutOfBoundsException e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(ServerResponse.newMessage("Invalid data"));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.internalServerError()
                     .body(ServerResponse.newMessage("Error validating game"));
         }
+        
+        return ResponseEntity.ok(response);
     }
 }

@@ -2,17 +2,23 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
-  import { App, ExpandButton, getAppURL, getUser } from '@jeffrey-carr/frontend-common';
+  import {
+    App,
+    ExpandButton,
+    getAppURL,
+    getUser,
+    ReactiveIcon,
+  } from '@jeffrey-carr/frontend-common';
   import { Sidebar } from './index';
   import type { User } from '@jeffrey-carr/frontend-common';
   import { onMount } from 'svelte';
 
-  let { height = $bindable() }: { height?: string } = $props();
+  let height = $state('5rem');
   let bar = $state<HTMLDivElement>();
   let path = $state(page.url.pathname);
   let user = $state<User | null>(null);
   let loadingUser = $state(true);
-  let isSidebarOpen = $state(true);
+  let isSidebarOpen = $state(false);
 
   onMount(async () => {
     const loadedUser = await getUser(PUBLIC_ENVIRONMENT, App.WebGames);
@@ -31,7 +37,6 @@
 
   $effect(() => {
     if (bar == null) {
-      height = '5rem';
       return;
     }
 
@@ -81,17 +86,10 @@
   </div>
   <h1 class="title">Jeff's Web Games</h1>
   {#if path != '/account'}
-    <div class="button account-button icon">
-      <button onclick={toggleSidebar}>Sidebar</button>
-      <!-- <ExpandButton onclick={handleAccount} icon="account">
-        {#if loadingUser}
-          Loading...
-        {:else if user == null}
-          Login
-        {:else}
-          View Account
-        {/if}
-      </ExpandButton> -->
+    <div class="button account-button">
+      <button onclick={toggleSidebar}>
+        <ReactiveIcon icon="hamburger" />
+      </button>
     </div>
   {/if}
 </div>
@@ -138,5 +136,14 @@
 
   .account-button {
     right: var(--button-offset);
+
+    button {
+      background-color: transparent;
+      border: none;
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
   }
 </style>

@@ -1,8 +1,19 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { PUBLIC_ENVIRONMENT } from '$env/static/public';
   import type { SidebarAction, SidebarItem } from '$lib/types/sidebar';
-  import { Button, CharacterIcon, generateGreeting, Sidebar } from '@jeffrey-carr/frontend-common';
-  import type { User } from '@jeffrey-carr/frontend-common';
+  import {
+    App,
+    APP_QUERY_PARAM,
+    Button,
+    CharacterIcon,
+    generateGreeting,
+    getAppURL,
+    makeRequest,
+    ROUTES,
+    Sidebar,
+  } from '@jeffrey-carr/frontend-common';
+  import type { RouteInformation, User } from '@jeffrey-carr/frontend-common';
 
   let {
     title,
@@ -25,13 +36,36 @@
     }
   };
 
+  const login = () => {
+    const route = getAppURL(PUBLIC_ENVIRONMENT, App.Federation);
+    window.location.assign(`${route}?${APP_QUERY_PARAM}=${App.WebGames}`);
+  };
+
   const gotoAccount = () => {
     goto('/account');
     open = false;
   };
 
-  const logout = () => {
-    // TODO
+  const logout = async () => {
+    const appURL = getAppURL(PUBLIC_ENVIRONMENT, App.Federation);
+    const info = ROUTES.LOGOUT;
+    const route = `${appURL}${info.path}`;
+    const fullInfo: RouteInformation = {
+      path: route,
+      method: info.method,
+    };
+    const response = await makeRequest(fullInfo, {
+      body: { logoutEverywhere: true },
+      credentials: true,
+    });
+
+    if (response.status !== 200) {
+      console.error('Error logging out');
+      console.error(response);
+      return;
+    }
+
+    location.reload();
   };
 </script>
 
@@ -58,7 +92,7 @@
       {:else}
         <h3>Login</h3>
         <div class="buttons">
-          <Button size="medium">Login</Button>
+          <Button size="medium" onclick={login}>Login</Button>
         </div>
       {/if}
     </div>

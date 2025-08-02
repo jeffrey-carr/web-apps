@@ -3,6 +3,7 @@ package dev.jeffreycarr.webgamesbackend.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.jeffreycarr.javacommon.models.CommonUser;
 import dev.jeffreycarr.javacommon.services.EncryptionError;
@@ -10,8 +11,8 @@ import dev.jeffreycarr.javacommon.services.EncryptionService;
 import dev.jeffreycarr.javacommon.utils.ArrayUtils;
 import dev.jeffreycarr.webgamesbackend.models.UserStats;
 import dev.jeffreycarr.webgamesbackend.models.wordchain.Dictionary;
-import dev.jeffreycarr.webgamesbackend.models.wordchain.Game;
 import dev.jeffreycarr.webgamesbackend.models.wordchain.GameData;
+import dev.jeffreycarr.webgamesbackend.models.wordchain.GamePayload;
 import dev.jeffreycarr.webgamesbackend.models.wordchain.ValidateResponse;
 import dev.jeffreycarr.webgamesbackend.models.wordchain.WordChainStats;
 
@@ -35,22 +36,25 @@ public class WordChainService {
         this.stats = stats;
     }
 
-    public Game createGame(CommonUser user) throws Exception {
+    public GameData createGame(CommonUser user) throws Exception {
         UserStats userStats = this.stats.getOrCreateUserStats(user.uuid);
         WordChainStats wordChainStats = userStats.getWordChain();
         wordChainStats.incrementGamesPlayed();
 
-        Game game = this.createGame();
+        GameData game = this.createGame();
         
         this.stats.putUserStats(user.uuid, userStats);
         return game;
     }
-    public Game createGame() throws Exception {
-        Stack<String> chain = this.generateChain(new Stack<String>());
-        GameData data = new GameData(chain);
-        String encryptedState = this.encrypter.encrypt(data.toString());
+    public GameData createGame() throws Exception {
+        Stack<String> chainStack = this.generateChain(new Stack<String>());
+        String[] chain = chainStack.toArray(new String[0]);
 
-        return new Game(data, encryptedState);
+        GameData game = new GameData(chain);
+        String encryptedState = this.encrypter.encrypt(game.toString());
+        game.setEncryptedState(encryptedState);
+
+        return game;
     }
 
     private Stack<String> generateChain(Stack<String> currentChain) {
@@ -76,33 +80,61 @@ public class WordChainService {
         currentChain.push(nextWord);
         return this.generateChain(currentChain);
     }
+    
+    public ValidateResponse validateGuess(GamePayload payload, String guess, CommonUser user) throws Exception {
+        UserStats userStats = this.stats.getOrCreateUserStats(user.uuid);
+        WordChainStats wordChainStats = userStats.getWordChain();
+        
+        ValidateResponse response = validateGuess(payload, guess);
+        
+        if (response.victory) {
+            wordChainStats.incrementGamesCompleted();
+            userStats.setWordChain(wordChainStats);
+            this.stats.putUserStats(user.uuid, userStats);
+        }
 
-    public ValidateResponse validateGuess(Game currentGame, String guess)
+        return response;
+    }
+
+    public ValidateResponse validateGuess(GamePayload payload, String guess)
             throws JsonMappingException,
                     JsonProcessingException,
                     IndexOutOfBoundsException,
                     Exception {
-        String decryptedGameData = this.encrypter.decrypt(currentGame.getEncryptedState());
+        String decryptedGameData = this.encrypter.decrypt(payload.encryptedState);
         if (decryptedGameData.length() == 0) {
             throw new EncryptionError("Error decrypting game state");
         }
 
-        GameData data = GameData.fromJson(decryptedGameData);
-        if (data.getUserProgress() >= data.getGeneratedChain().length) {
+        GameData data = new ObjectMapper().readValue(decryptedGameData, GameData.class);
+        if (data.getUserProgress() < 0 || data.getUserProgress() >= data.getChain().length) {
             throw new IndexOutOfBoundsException("User progress out of bounds");
         }
 
-        String[] chain = data.getGeneratedChain();
+        String[] chain = data.getChain();
         int progress = data.getUserProgress();
-        if (guess.equalsIgnoreCase(chain[progress])) {
-            data.increaseUserProgress();
-            String encryptedUpdatedGame = this.encrypter.encrypt(data.toString());
-            return new ValidateResponse(
-                    true,
-                    data.getUserProgress() == chain.length,
-                    new Game(data, encryptedUpdatedGame));
-        } else {
-            return new ValidateResponse(false, false, currentGame);
+        if (!guess.equalsIgnoreCase(chain[progress])) {
+            return this.invalidGuess(data);
         }
+        
+        return this.validGuess(data);
+    }
+    
+    private ValidateResponse invalidGuess(GameData game) throws Exception {
+        game.revealLetter();
+        String encryptedUpdate = this.encrypter.encrypt(game.toString());
+        game.setEncryptedState(encryptedUpdate);
+        
+        return new ValidateResponse(false, false, game.toPayload());
+    }
+    
+    private ValidateResponse validGuess(GameData game) throws Exception {
+        game.increaseUserProgress();
+        boolean isVictory = game.getChain().length == game.getUserProgress();
+
+        String encryptedUpdatedGame = this.encrypter.encrypt(game.toString());
+        game.setEncryptedState(encryptedUpdatedGame);
+
+        return new ValidateResponse(true, isVictory, game.toPayload());
     }
 }

@@ -1,4 +1,4 @@
-import type { User } from "@jeffrey-carr/frontend-common";
+import { METHODS, type RouteInformation, type User } from "@jeffrey-carr/frontend-common";
 
 export type CommonStats = {
   gameName: string;
@@ -13,8 +13,14 @@ export type UserStats = {
   wordChain: WordChainStats;
 };
 
-
 export type GetUserResponse = {
   user: User;
   stats: UserStats;
+};
+
+export const ROUTES: Record<string, RouteInformation> = {
+  ME: {
+    path: '/api/user/me',
+    method: METHODS.GET,
+  },
 };
