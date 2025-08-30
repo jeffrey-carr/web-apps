@@ -80,12 +80,9 @@ jobs:
           path: .
           
   deploy:
+    environment: federation
     needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
-    env:
-      SSH_USERNAME: ${{ vars.SSH_USERNAME }}
-      SERVE_IP: ${{ vars.SERVER_IP }}
-      SSH_KEY: ${{ secrets.SSH_KEY }}
     steps:
       - name: Download backend artifact
         uses: actions/download-artifact@v4
