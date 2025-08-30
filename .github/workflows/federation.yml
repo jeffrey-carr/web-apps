@@ -48,6 +48,9 @@ jobs:
   build-frontend:
     runs-on: ubuntu-latest
     steps:
+      - name: Check env vars
+        run: env | grep PUBLIC_
+
       - name: Checkout repo
         uses: actions/checkout@v4
         
