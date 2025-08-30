@@ -1,8 +1,8 @@
-name: Deploy Web Games
+name: Deploy Federation
 on:
   push:
     tags:
-      - 'web_games-v*'
+      - 'federation-v*'
 jobs:
   build-backend:
     runs-on: ubuntu-latest
@@ -23,18 +23,18 @@ jobs:
         run: mvn clean install
       
       - name: Build JAR
-        working-directory: apps/web_games/backend
+        working-directory: apps/federation/backend
         run: mvn clean install
         
       - name: Create backend folder
         run: mkdir -p backend
 
       - name: Remove original JAR (this is dumb)
-        working-directory: apps/web_games/backend
+        working-directory: apps/federation/backend
         run: rm target/*.original
 
       - name: Copy JAR
-        run: cp apps/web_games/backend/target/*.jar backend/web-games-backend.jar
+        run: cp apps/federation/backend/target/*.jar backend/federation-backend.jar
         
       - name: Zip backend artifact
         run: tar -cvf backend.tar backend
@@ -55,11 +55,11 @@ jobs:
         uses: actions/setup-node@v4
         
       - name: Install dependencies
-        working-directory: apps/web_games/frontend
+        working-directory: apps/federation/frontend
         run: npm install
 
       - name: Build project
-        working-directory: apps/web_games/frontend
+        working-directory: apps/federation/frontend
         run: npm run build
         
       - name: Move frontend build to artifacts
@@ -121,8 +121,8 @@ jobs:
           port: 22
           script: |
             tar -xvf ~/build.tar -C .
-            cp build/backend/web-games-backend.jar web-games-backend/
-            sudo systemctl restart web-games-backend
-            sudo cp -r build/frontend/* /var/www/web-games-frontend/
+            cp build/backend/federation-backend.jar federation-backend/
+            sudo systemctl restart federation-backend
+            sudo cp -r build/frontend/* /var/www/federation-frontend/
             rm build.tar
             rm -rf build
