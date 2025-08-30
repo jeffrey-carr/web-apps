@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { CharacterToIcon } from '../../lib/assets/characters';
-  import { CharacterToName, type Character } from '../../types';
+  import { CharacterToName, CharacterToSrc, type Character } from '../../types';
 
   let { character }: { character: Character } = $props();
 
-  let src = $derived(CharacterToIcon[character]);
+  let src = $derived(CharacterToSrc[character].href);
   let alt = $derived(`${CharacterToName[character]} icon`);
 </script>
 

@@ -49,7 +49,7 @@
     width: 100%;
     height: 100%;
 
-    transition: right 500ms cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    transition: right 250ms cubic-bezier(0.68, -0.55, 0.27, 1.35);
 
     &.open {
       right: 0;

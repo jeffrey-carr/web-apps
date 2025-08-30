@@ -22,7 +22,6 @@
   let timeoutID: NodeJS.Timeout | undefined;
 
   let revealedLetters = $derived(word.split('').filter(letter => letter !== HIDDEN_LETTER));
-  $inspect(revealedLetters);
   let guess = $state('');
   let fullGuess = $derived(revealedLetters.join('') + guess);
   let displayGuess = $state(word.split(''));

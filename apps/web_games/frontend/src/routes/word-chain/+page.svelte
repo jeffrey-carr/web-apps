@@ -1,12 +1,30 @@
 <script lang="ts">
   import {
-    ROUTES,
     type ValidateAnswerRequest,
     type ValidateAnswerResponse,
     type WordChainGameData,
   } from '$lib/types/word-chain';
   import { Word } from '$lib/components/word-chain';
-  import { Button, Confetti, makeRequest, Modal, Spinner } from '@jeffrey-carr/frontend-common';
+  import {
+    Button,
+    Confetti,
+    makeRequest,
+    METHODS,
+    Modal,
+    Spinner,
+    type RouteInformation,
+  } from '@jeffrey-carr/frontend-common';
+
+  const Routes: Record<string, RouteInformation> = {
+    NEW_GAME: {
+      path: '/api/word-chain/new-game',
+      method: METHODS.GET,
+    },
+    VALIDATE_ANSWER: {
+      path: '/api/word-chain/validate-answer',
+      method: METHODS.POST,
+    },
+  };
 
   const TIMEOUT_PENALTY = 5000;
 
@@ -36,7 +54,7 @@
     game = undefined;
     loading = true;
 
-    const response = await makeRequest(ROUTES.NEW_GAME, { credentials: true });
+    const response = await makeRequest(Routes.NEW_GAME, { credentials: true });
     if (response.status !== 200) {
       loading = false;
       console.error('error getting new game', response);
@@ -79,7 +97,7 @@
       guess,
       payload: game,
     };
-    const rawResponse = await makeRequest(ROUTES.VALIDATE_ANSWER, {
+    const rawResponse = await makeRequest(Routes.VALIDATE_ANSWER, {
       body: request,
       credentials: true,
     });
@@ -136,7 +154,9 @@
   <div class="words-column">
     {#if loading}
       <div class="loading-container">
-        <Spinner theme="red" />
+        <div class="spinner-container">
+          <Spinner theme="red" />
+        </div>
         Loading...
       </div>
     {:else if game}
@@ -163,6 +183,8 @@
     gap: 1rem;
 
     width: 100%;
+
+    padding-top: 1rem;
   }
 
   .info-center {
@@ -182,11 +204,16 @@
   }
 
   .loading-container {
-    --size: 2rem;
-    height: var(--size);
-    width: var(--size);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
 
-    text-align: center;
+    .spinner-container {
+      --size: 2rem;
+      height: var(--size);
+      width: var(--size);
+    }
   }
 
   .words-column {

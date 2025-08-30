@@ -1,13 +1,27 @@
 <script lang="ts">
   import { Board, BoardSizeButton, TutorialModal } from '$lib/components/binoku';
-  import { Button, Confetti, makeRequest, Modal, Spinner } from '@jeffrey-carr/frontend-common';
   import {
-    type InvalidHint,
-    type Coordinate,
-    type ValidateGameResponse,
-    ROUTES,
-  } from '$lib/types/binoku';
+    Button,
+    Confetti,
+    makeRequest,
+    type RouteInformation,
+    METHODS,
+    Modal,
+    Spinner,
+  } from '@jeffrey-carr/frontend-common';
+  import { type InvalidHint, type Coordinate, type ValidateGameResponse } from '$lib/types/binoku';
   import { onDestroy } from 'svelte';
+
+  const Routes: Record<string, RouteInformation> = {
+    NEW_GAME: {
+      path: '/api/binoku/new-game',
+      method: METHODS.GET,
+    },
+    VALIDATE_ANSWER: {
+      path: '/api/binoku/validate-board',
+      method: METHODS.POST,
+    },
+  };
 
   // Hints
   const HINT_DURATION_MS = 3500;
@@ -52,7 +66,7 @@
       generatingLevel = Math.min(GENERATING_MESSAGES.length, generatingLevel + 1);
     }, LOADING_INTERVAL);
 
-    const boardRequest = await makeRequest(ROUTES.NEW_GAME, { credentials: true, query: { size } });
+    const boardRequest = await makeRequest(Routes.NEW_GAME, { credentials: true, query: { size } });
     if (boardRequest.status !== 200) {
       console.error('error getting game', boardRequest);
       return;
@@ -81,7 +95,7 @@
   const checkSolution = async () => {
     validating = true;
     const payload = JSON.parse(JSON.stringify(board));
-    const validateRequest = await makeRequest(ROUTES.VALIDATE_GUESS, {
+    const validateRequest = await makeRequest(Routes.VALIDATE_ANSWER, {
       body: { board: payload },
       credentials: true,
     });

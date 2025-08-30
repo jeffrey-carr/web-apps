@@ -1,17 +1,6 @@
-import { METHODS, type RouteInformation } from "@jeffrey-carr/frontend-common";
+import { METHODS, type RouteInformation } from '@jeffrey-carr/frontend-common';
 
 /* Network */
-export const ROUTES: Record<string, RouteInformation> = {
-  NEW_GAME: {
-    path: '/api/binoku/new-game',
-    method: METHODS.GET,
-  },
-  VALIDATE_GUESS: {
-    path: '/api/binoku/validate-board',
-    method: METHODS.POST,
-  },
-} as const;
-
 export type NewGameResponse = {
   board: number[][];
 };

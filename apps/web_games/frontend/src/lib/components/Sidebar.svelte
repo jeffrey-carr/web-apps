@@ -10,7 +10,7 @@
     generateGreeting,
     getAppURL,
     makeRequest,
-    ROUTES,
+    GlobalRoutes,
     Sidebar,
   } from '@jeffrey-carr/frontend-common';
   import type { RouteInformation, User } from '@jeffrey-carr/frontend-common';
@@ -48,7 +48,7 @@
 
   const logout = async () => {
     const appURL = getAppURL(PUBLIC_ENVIRONMENT, App.Federation);
-    const info = ROUTES.LOGOUT;
+    const info = GlobalRoutes.LOGOUT;
     const route = `${appURL}${info.path}`;
     const fullInfo: RouteInformation = {
       path: route,

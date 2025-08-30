@@ -29,7 +29,10 @@
 
 <style lang="scss">
   .input {
+    width: 100%;
+
     padding: 0.5rem;
+    line-height: 1rem;
 
     border-radius: 5px;
 

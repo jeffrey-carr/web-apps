@@ -1,20 +1,4 @@
-import { METHODS, type RouteInformation } from "@jeffrey-carr/frontend-common";
-
-/* Network */
-export const ROUTES: Record<string, RouteInformation> = {
-  NEW_GAME: { 
-    path: '/api/word-chain/new-game',
-    method: METHODS.GET,
-  },
-  VALIDATE_ANSWER: {
-    path: `/api/word-chain/validate-answer`,
-    method: METHODS.POST,
-  },
-} as const;
-
-export type NewGameResponse = {
-  
-};
+import { METHODS, type RouteInformation } from '@jeffrey-carr/frontend-common';
 
 /* Game Types */
 export type Chain = string[];
@@ -34,4 +18,3 @@ export type ValidateAnswerResponse = {
   victory: boolean;
   game: WordChainGameData;
 };
-

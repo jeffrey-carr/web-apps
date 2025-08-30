@@ -14,15 +14,14 @@
     message: string;
     close: () => void;
   } = $props();
-  let containerClass = $derived(`container ${level}`);
+  let closing = $state(false);
+  let containerClass = $derived(`container ${level} ${closing ? 'transition-out' : ''}`);
   let timerPercentage = $state(100);
-  let closeTimeoutID = $state<NodeJS.Timeout>();
+  let closeTimeoutID = $state<number>();
 
-  const onTimerFinish = () => {
-    containerClass += ' transition-out';
-    closeTimeoutID = setTimeout(() => {
-      close();
-    }, 105);
+  const onClose = () => {
+    closing = true;
+    closeTimeoutID = setTimeout(close, 1000);
   };
 
   const onTimerUpdate = (remainingMs: number) => {
@@ -30,16 +29,19 @@
   };
 
   const NOTIFICATION_DURATION_MS = 15000;
-  let timer = new Timer(NOTIFICATION_DURATION_MS, onTimerFinish, onTimerUpdate);
+  let timer = new Timer(NOTIFICATION_DURATION_MS, onClose, onTimerUpdate);
 
   timer.start();
 
   onDestroy(() => {
     timer.stop();
+    clearTimeout(closeTimeoutID);
   });
 </script>
 
 <div class={containerClass}>
+  <button class="close-button" onclick={onClose}>&#10006;</button>
+
   {#if title}
     <p class="title">{title}</p>
   {/if}
@@ -73,6 +75,31 @@
 
     &.transition-out {
       animation: popOut var(--pop-ms) linear forwards;
+    }
+  }
+
+  .close-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+
+    padding: 0.35rem;
+
+    border: 1px solid black;
+    border-radius: 5px;
+
+    background-color: transparent;
+
+    --transition-ms: 200ms;
+    transition: 
+      background-color var(--transition-ms) linear,
+      color var(--transition-ms) linear;
+
+    &:hover {
+      cursor: pointer;
+
+      background-color: black;
+      color: white;
     }
   }
 

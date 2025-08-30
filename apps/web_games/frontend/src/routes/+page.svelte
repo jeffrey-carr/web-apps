@@ -1,13 +1,19 @@
 <script lang="ts">
+  import { AVAILABLE_GAMES, GamesInfo } from '$lib';
   import { GameButton } from '$lib/components';
-  import { Icon as BinokuIcon } from '$lib/components/binoku';
-  import { Icon as WordChainIcon } from '$lib/components/word-chain';
+
+  let open = $state(false);
 </script>
 
 <main class="main">
   <div class="games-container">
-    <GameButton icon={BinokuIcon} name="Binoku" slug="/binoku" />
-    <GameButton icon={WordChainIcon} name="Word Chain" slug="/word-chain" />
+    {#each AVAILABLE_GAMES as game}
+      <GameButton
+        icon={GamesInfo[game].icon}
+        name={GamesInfo[game].name}
+        slug={GamesInfo[game].path}
+      />
+    {/each}
   </div>
 </main>
 

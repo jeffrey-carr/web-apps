@@ -1,9 +1,9 @@
-import { App } from "./apps";
+import { App } from './apps';
 
 export enum METHODS {
   GET = 'GET',
   POST = 'POST',
-};
+}
 
 export type RouteInformation = {
   path: string;
@@ -18,11 +18,15 @@ export type makeRequestParams = {
 };
 
 export type RouteQuery = {
-  app: App;
+  app?: App;
   path?: string;
 };
 
-export const ROUTES: Record<string, RouteInformation> = {
+export const GlobalRoutes: Record<string, RouteInformation> = {
+  AUTH: {
+    path: '/api/auth/authed-user',
+    method: METHODS.GET,
+  },
   LOGOUT: {
     path: '/api/auth/logout',
     method: METHODS.POST,

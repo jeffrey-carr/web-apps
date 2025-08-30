@@ -7,7 +7,7 @@ export class Timer {
   private alert: () => void;
   private update?: (remainingMs: number) => void;
 
-  private timeoutID?: NodeJS.Timeout;
+  private timeoutID?: number;
 
   constructor(durationMs: number, alert: () => void, update?: (remainingMs: number) => void) {
     this.durationMs = durationMs;

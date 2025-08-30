@@ -1,22 +1,32 @@
 <script lang="ts">
-  import { ArcadeMachine } from '$lib/components';
-  import type { GetUserResponse, UserStats } from '$lib/types';
-  import { ROUTES } from '$lib/types';
+  import { CharacterIcon, TabbedContent } from '@jeffrey-carr/frontend-common';
+  import { type Game, GamesInfo } from '$lib';
+  import type { GetUserResponse } from '$lib/types';
+  import type { CommonStats, UserStats } from '$lib/types/stats';
+  import { binokuStatsToStrings, wordChainStatsToStrings } from '$lib/utils/stats';
+
   import {
     makeRequest,
     METHODS,
+    Spinner,
     type RouteInformation,
     type User,
   } from '@jeffrey-carr/frontend-common';
   import { onMount } from 'svelte';
 
+  const Routes: Record<string, RouteInformation> = {
+    ME: {
+      path: '/api/user/me',
+      method: METHODS.GET,
+    },
+  };
+
   let user = $state<User | null>(null);
   let stats = $state<UserStats | null>(null);
   let loading = $state(true);
-  $inspect(loading);
 
   const loadUser = async () => {
-    const rawResponse = await makeRequest(ROUTES.ME, { credentials: true });
+    const rawResponse = await makeRequest(Routes.ME, { credentials: true });
 
     if (rawResponse.status !== 200) {
       console.error('error retrieving user', rawResponse);
@@ -24,7 +34,6 @@
     }
 
     const response: GetUserResponse = await rawResponse.json();
-    console.log('Got response', response);
     user = response.user;
     stats = response.stats;
     loading = false;
@@ -33,57 +42,64 @@
   onMount(loadUser);
 </script>
 
+{#snippet statBlock(game: Game, stats: string[])}
+  {#if stats}
+    <div class={`stat ${game}`}>
+      <h2 class="game-title">{GamesInfo[game].name}</h2>
+      <ul class="stats-list">
+        {#each stats as stat}
+          <li>{stat}</li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
+{/snippet}
+
 <main class="container">
   {#if loading}
-    Loading user info...
+    <div class="loading-container">
+      <div class="spinner">
+        <Spinner />
+      </div>
+      Loading your info...
+    </div>
+  {:else if !stats || !user}
+    <h1>Oops!</h1>
+    <p>Error getting stats. Maybe try refreshing?</p>
   {:else}
-    <table class="user-info">
-      <tbody>
-        <tr>
-          <th class="section-title">User Info</th>
-        </tr>
-        <tr>
-          <td>UUID</td>
-          <td>{user?.uuid}</td>
-        </tr>
-        <tr>
-          <td>Email</td>
-          <td>{user?.email}</td>
-        </tr>
-        <tr>
-          <td>First Name</td>
-          <td>{user?.fName}</td>
-        </tr>
-        <tr>
-          <td>Last name</td>
-          <td>{user?.lName}</td>
-        </tr>
-        <tr>
-          <th class="section-title">Binoku Stats</th>
-        </tr>
-        <tr>
-          <td>Games Played</td>
-          <td>{stats?.binoku?.gamesPlayed ?? '?'}</td>
-        </tr>
-        <tr>
-          <td>Games Completed</td>
-          <td>{stats?.binoku.gamesCompleted}</td>
-        </tr>
-        <tr>
-          <th class="section-title">Word Chain Stats</th>
-        </tr>
-        <tr>
-          <td>Games Played</td>
-          <td>{stats?.wordChain.gamesPlayed ?? '?'}</td>
-        </tr>
-        <tr>
-          <td>Games Completed</td>
-          <td>{stats?.wordChain.gamesCompleted ?? '?'}</td>
-        </tr>
-      </tbody>
-    </table>
+    <h1>Your Stats</h1>
 
-    <ArcadeMachine gameName="Binoku" score={42} />
+    <div class="character-container">
+      <CharacterIcon character={user.character} />
+    </div>
+    <h2 class="greeting">Hey, {user.fName}</h2>
+
+    {#snippet commonStats(stats: CommonStats)}
+      <li><b>Games played:</b> {stats.gamesPlayed}</li>
+      <li><b>Games completed:</b> {stats.gamesCompleted}</li>
+    {/snippet}
+    {#snippet binoku()}
+      <div class="stats-body">
+        <ul class="stats-list">
+          {@render commonStats(stats!.binoku)}
+        </ul>
+      </div>
+    {/snippet}
+    {#snippet wordChain()}
+      <div class="stats-body">
+        <ul class="stats-list">
+          {@render commonStats(stats!.wordChain)}
+        </ul>
+      </div>
+    {/snippet}
+    <div class="stats-container">
+      <TabbedContent
+        items={[
+          { title: 'Binoku', content: binoku },
+          { title: 'Word Chain', content: wordChain },
+        ]}
+      />
+    </div>
   {/if}
 </main>
 
@@ -91,17 +107,58 @@
   .container {
     box-sizing: border-box;
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    padding-top: 1rem;
 
-    height: 100vh;
-    width: 100vw;
+    height: 100%;
+    width: 100%;
+
+    text-align: center;
   }
 
-  .user-info {
-    td {
-      padding: 0.5rem;
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+
+    height: 100%;
+    width: 100%;
+
+    .spinner {
+      --size: 2rem;
+      height: var(--size);
+      width: var(--size);
     }
+  }
+
+  .character-container {
+    margin: auto;
+
+    height: 12rem;
+    width: 12rem;
+
+    border-radius: 100%;
+    border: 10px solid black;
+
+    padding: 15px;
+  }
+
+  .greeting {
+    font-family: var(--app-theme-readable-font);
+    text-transform: capitalize;
+
+    margin-top: 1rem;
+  }
+
+  .stats-container {
+    margin-top: 2rem;
+  }
+
+  .stats-body {
+  }
+
+  .stats-list {
+    font-size: 2rem;
   }
 </style>

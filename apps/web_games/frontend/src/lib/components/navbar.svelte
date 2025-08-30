@@ -2,34 +2,16 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
-  import {
-    App,
-    ExpandButton,
-    getAppURL,
-    getUser,
-    ReactiveIcon,
-  } from '@jeffrey-carr/frontend-common';
+  import { App, ExpandButton, getAppURL, ReactiveIcon } from '@jeffrey-carr/frontend-common';
   import { Sidebar } from './index';
   import type { User } from '@jeffrey-carr/frontend-common';
-  import { onMount } from 'svelte';
 
+  let { user }: { user?: User } = $props();
   let height = $state('5rem');
   let bar = $state<HTMLDivElement>();
   let path = $state(page.url.pathname);
-  let user = $state<User | null>(null);
   let loadingUser = $state(true);
   let isSidebarOpen = $state(false);
-
-  onMount(async () => {
-    const loadedUser = await getUser(PUBLIC_ENVIRONMENT, App.WebGames);
-    loadingUser = false;
-
-    if (loadedUser == null) {
-      return;
-    }
-
-    user = loadedUser;
-  });
 
   $effect(() => {
     path = page.url.pathname;
@@ -43,38 +25,25 @@
     height = `${bar.getBoundingClientRect().height}px`;
   });
 
+  const nav = (path: string) => {
+    goto(path);
+    isSidebarOpen = false;
+  };
+
   const back = () => {
-    goto('/');
+    nav('/');
+  };
+
+  const binoku = () => {
+    nav('/binoku');
+  };
+
+  const wordChain = () => {
+    nav('/word-chain');
   };
 
   const toggleSidebar = () => {
     isSidebarOpen = !isSidebarOpen;
-  };
-
-  const handleAccount = () => {
-    if (loadingUser) {
-      return;
-    }
-
-    if (user != null && user.uuid !== '') {
-      goto('/account');
-      return;
-    }
-
-    // Build query info to route back here
-    const params = new URLSearchParams({
-      app: App.WebGames,
-    });
-
-    const p = path;
-    if (p !== '/') {
-      params.set('path', p.slice(1));
-    }
-    window.location.assign(`${getAppURL(PUBLIC_ENVIRONMENT, App.Federation)}?${params.toString()}`);
-  };
-
-  const boop = () => {
-    alert('boop');
   };
 </script>
 
@@ -85,17 +54,18 @@
     {/if}
   </div>
   <h1 class="title">Jeff's Web Games</h1>
-  {#if path != '/account'}
-    <div class="button account-button">
-      <button onclick={toggleSidebar}>
-        <ReactiveIcon icon="hamburger" />
-      </button>
-    </div>
-  {/if}
+  <div class="button account-button">
+    <button onclick={toggleSidebar}>
+      <ReactiveIcon icon="hamburger" />
+    </button>
+  </div>
 </div>
 <Sidebar
   title="Sidebar"
-  items={[{ title: 'Item 1', action: boop }]}
+  items={[
+    { title: 'Binoku', action: binoku },
+    { title: 'Word Chain', action: wordChain },
+  ]}
   bind:open={isSidebarOpen}
   {user}
 />
@@ -122,6 +92,7 @@
 
   .title {
     color: var(--app-theme-text-secondary);
+    font-family: var(--app-theme-readable-font);
   }
 
   .button {

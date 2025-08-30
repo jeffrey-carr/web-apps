@@ -13,5 +13,5 @@ export { default as NotificationController } from './Notification/NotificationCo
 export { default as RadialTimer } from './RadialTimer.svelte';
 export { default as ReactiveIcon } from './ReactiveIcon.svelte';
 export { default as Sidebar } from './Sidebar/Sidebar.svelte';
-export type { SidebarItem } from './Sidebar/Sidebar.svelte';
 export { default as Spinner } from './Spinner.svelte';
+export { default as TabbedContent } from './TabbedContent.svelte';

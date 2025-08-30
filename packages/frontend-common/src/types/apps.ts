@@ -4,16 +4,19 @@ export enum App {
 }
 
 export type AppInfo = {
+  friendlyName: string;
   subdomain: string;
   devPort: string;
 };
 
 export const Apps: Record<App, AppInfo> = {
   Federation: {
+    friendlyName: 'Federation',
     subdomain: 'login',
     devPort: '5175',
   },
   WebGames: {
+    friendlyName: 'Web Games',
     subdomain: 'games',
     devPort: '5173',
   },

@@ -7,10 +7,11 @@
     Notification,
     NOTIFICATION_LEVELS,
     type NotificationLevel,
+    type User,
   } from '@jeffrey-carr/frontend-common';
 
-  export let data;
-  let { children }: { children?: () => any } = $props();
+  let { data, children }: { data?: { user: User }; children?: () => any } = $props();
+  let user = $derived(data?.user);
 
   let notification = $state<{ title?: string; message: string }>();
   let notificationLevel = $state<NotificationLevel>('error');
@@ -51,16 +52,18 @@
 </script>
 
 <svelte:head>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Luckiest+Guy&family=Quicksand:wght@300..700&display=swap"
-    rel="stylesheet"
-  />
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Monoton" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P" rel="stylesheet" />
 
   <title>Jeff's Web Games</title>
 </svelte:head>
 
 <main class="container">
-  <NavBar />
+  <NavBar {user} />
   <div class="content">
     {@render children?.()}
   </div>

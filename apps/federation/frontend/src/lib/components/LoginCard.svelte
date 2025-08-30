@@ -50,10 +50,6 @@
 <style lang="scss">
   @import 'shared.scss';
 
-  .container {
-    aspect-ratio: 2 / 3;
-  }
-
   .title {
     justify-self: flex-start;
   }

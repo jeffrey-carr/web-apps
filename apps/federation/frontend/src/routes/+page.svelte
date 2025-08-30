@@ -1,12 +1,12 @@
 <script lang="ts">
+    import { goto } from '$app/navigation';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
-  import { AccountCard } from '$lib/components';
+  import { CreateAccountCard, LoginCard } from '$lib/components';
   import { buildAppURL, isValidEmail, isValidName, isValidPassword } from '$lib/utils';
   import { Apps, makeRequest, METHODS, Notification } from '@jeffrey-carr/frontend-common';
   import type {
     AuthRequest,
     RouteQuery,
-    User,
     makeRequestParams,
     RouteInformation,
     Character,
@@ -15,6 +15,24 @@
   let { data }: { data: RouteQuery } = $props();
 
   let errorNotif = $state<{ title?: string; message: string }>();
+  let showCreate = $state(false);
+  let pop = $state(false);
+  let containerClass = $derived(`container ${pop ? 'pop' : ''}`);
+
+  $effect(() => {
+    if (data.app == null) {
+      goto('/choose-app');
+      return;
+    }
+  });
+
+  const toggleCreate = () => {
+    showCreate = !showCreate;
+    pop = true;
+    setTimeout(() => {
+      pop = false;
+    }, 201); // hacky
+  };
 
   const closeNotif = () => {
     errorNotif = undefined;
@@ -56,8 +74,7 @@
       return false;
     }
 
-    const user = await response.json();
-
+    await response.json();
     window.location.assign(buildRerouteURL());
     return true;
   };
@@ -111,13 +128,14 @@
       return false;
     }
 
-    const user: User = await response.json();
-
+    await response.json();
     window.location.assign(buildRerouteURL());
     return true;
   };
 
   const buildRerouteURL = (): string => {
+    if (!data.app) return "";
+
     let route = buildAppURL(PUBLIC_ENVIRONMENT, Apps[data.app]);
     let path = `/${data.path ?? ''}`;
     if (path.length > 1) {
@@ -129,7 +147,13 @@
 </script>
 
 <main class="main">
-  <AccountCard {login} createAccount={create} />
+  <div class={containerClass}>
+    {#if showCreate}
+      <CreateAccountCard createAccount={create} backToLogin={toggleCreate} />
+    {:else}
+      <LoginCard {login} switchToCreate={toggleCreate} />
+    {/if}
+  </div>
 
   {#if errorNotif}
     <Notification
@@ -147,6 +171,37 @@
     justify-content: center;
     align-items: center;
 
-    height: 100vh;
+    height: 100%;
+  }
+
+  .container {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+
+    border: 1px solid var(--app-theme-primary);
+    border-radius: 5px;
+
+    padding: 2rem;
+  }
+
+  .pop {
+    animation: pop 200ms linear;
+  }
+
+  @keyframes pop {
+    0% {
+      transform: scale(1);
+    }
+    33% {
+      transform: scale(0.9);
+    }
+    66% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
 </style>
