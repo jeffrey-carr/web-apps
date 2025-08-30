@@ -47,10 +47,10 @@ jobs:
           
   build-frontend:
     runs-on: ubuntu-latest
+    env:
+      PUBLIC_ENVIRONMENT: ${{ vars.PUBLIC_ENVIRONMENT }}
+      PUBLIC_BACKEND_URL: ${{ vars.PUBLIC_BACKEND_URL }}
     steps:
-      - name: Check env vars
-        run: env | grep PUBLIC_
-
       - name: Checkout repo
         uses: actions/checkout@v4
         
