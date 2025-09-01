@@ -75,6 +75,7 @@ jobs:
             mkdir -p ${{ inputs.app }}-backend
             ls -a build/backend
             cp -r build/backend/* ${{ inputs.app }}-backend/
+            touch ${{ inputs.app }}-backend/hello.txt
             sudo mkdir -p /var/www/${{ inputs.app }}-frontend
             sudo cp -r build/frontend/* /var/www/${{ inputs.app }}-frontend/
             rm build.tar
