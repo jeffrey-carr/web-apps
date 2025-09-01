@@ -46,6 +46,7 @@ jobs:
           path: .
           
   build-frontend:
+    environment: federation
     runs-on: ubuntu-latest
     env:
       PUBLIC_ENVIRONMENT: ${{ vars.ENVIRONMENT }}
