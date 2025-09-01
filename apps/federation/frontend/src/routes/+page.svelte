@@ -75,7 +75,8 @@
     }
 
     await response.json();
-    window.location.assign(await buildRerouteURL());
+    const url = await buildRerouteURL();
+    window.location.assign(url);
     return true;
   };
 
@@ -129,7 +130,8 @@
     }
 
     await response.json();
-    window.location.assign(await buildRerouteURL());
+    const url = await buildRerouteURL(); 
+    window.location.assign(url);
     return true;
   };
 
