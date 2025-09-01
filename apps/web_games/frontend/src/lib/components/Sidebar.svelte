@@ -12,6 +12,7 @@
     makeRequest,
     GlobalRoutes,
     Sidebar,
+    Spinner,
   } from '@jeffrey-carr/frontend-common';
   import type { RouteInformation, User } from '@jeffrey-carr/frontend-common';
 
@@ -84,7 +85,7 @@
         <div class="profile">
           <CharacterIcon character={user.character} />
         </div>
-        <h3>{generateGreeting()}, {user.fName}</h3>
+        <h3 class="user-greeting">{generateGreeting()}, {user.fName}</h3>
         <div class="buttons">
           <Button size="medium" onclick={gotoAccount}>View Account</Button>
           <Button size="medium" type="secondary" onclick={logout}>Logout</Button>
@@ -111,7 +112,7 @@
 
     border-radius: 10px;
 
-    background-color: white;
+    background-color: var(--dark-white);
   }
 
   .title {
@@ -145,9 +146,14 @@
 
     max-height: 33%;
 
+    margin: 0.6rem;
     margin-top: auto;
 
+    border-radius: 15px;
+
     padding: 1rem 0;
+
+    background-color: white;
 
     .buttons {
       display: flex;
@@ -162,5 +168,11 @@
 
     border: 1px solid black;
     border-radius: 100%;
+  }
+
+  .user-greeting {
+    font: var(--app-theme-font);
+    font-size: 1.3rem;
+    text-transform: capitalize;
   }
 </style>

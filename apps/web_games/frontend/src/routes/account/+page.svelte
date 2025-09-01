@@ -1,9 +1,7 @@
 <script lang="ts">
   import { CharacterIcon, TabbedContent } from '@jeffrey-carr/frontend-common';
-  import { type Game, GamesInfo } from '$lib';
   import type { GetUserResponse } from '$lib/types';
   import type { CommonStats, UserStats } from '$lib/types/stats';
-  import { binokuStatsToStrings, wordChainStatsToStrings } from '$lib/utils/stats';
 
   import {
     makeRequest,
@@ -42,19 +40,6 @@
   onMount(loadUser);
 </script>
 
-{#snippet statBlock(game: Game, stats: string[])}
-  {#if stats}
-    <div class={`stat ${game}`}>
-      <h2 class="game-title">{GamesInfo[game].name}</h2>
-      <ul class="stats-list">
-        {#each stats as stat}
-          <li>{stat}</li>
-        {/each}
-      </ul>
-    </div>
-  {/if}
-{/snippet}
-
 <main class="container">
   {#if loading}
     <div class="loading-container">
@@ -67,7 +52,7 @@
     <h1>Oops!</h1>
     <p>Error getting stats. Maybe try refreshing?</p>
   {:else}
-    <h1>Your Stats</h1>
+    <h1 class="title">Your Stats</h1>
 
     <div class="character-container">
       <CharacterIcon character={user.character} />
@@ -104,6 +89,10 @@
 </main>
 
 <style lang="scss">
+  .title {
+    margin: 1.2rem;
+  }
+
   .container {
     box-sizing: border-box;
 

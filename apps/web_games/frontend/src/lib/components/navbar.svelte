@@ -1,8 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { PUBLIC_ENVIRONMENT } from '$env/static/public';
-  import { App, ExpandButton, getAppURL, ReactiveIcon } from '@jeffrey-carr/frontend-common';
+  import { ExpandButton, ReactiveIcon } from '@jeffrey-carr/frontend-common';
   import { Sidebar } from './index';
   import type { User } from '@jeffrey-carr/frontend-common';
 
@@ -61,7 +60,7 @@
   </div>
 </div>
 <Sidebar
-  title="Sidebar"
+  title="Web Games"
   items={[
     { title: 'Binoku', action: binoku },
     { title: 'Word Chain', action: wordChain },

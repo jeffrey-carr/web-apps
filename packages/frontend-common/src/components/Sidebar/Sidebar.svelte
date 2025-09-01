@@ -35,8 +35,6 @@
     height: 100vh;
 
     pointer-events: none;
-
-    overflow: hidden;
   }
 
   .sidebar {
@@ -49,9 +47,11 @@
     width: 100%;
     height: 100%;
 
-    transition: right 250ms cubic-bezier(0.68, -0.55, 0.27, 1.35);
+    transition: right 250ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.7, 0.2);
 
     &.open {
+      transition-timing-function: cubic-bezier(0.2, 0.9, 0.1, 1.2);
       right: 0;
     }
   }
