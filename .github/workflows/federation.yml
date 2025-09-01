@@ -64,6 +64,11 @@ jobs:
       - name: Build project
         working-directory: apps/federation/frontend
         run: npm run build
+
+      - name: Verify values got inlined
+        run: |
+          grep -R --line-number "$PUBLIC_BACKEND_URL" apps/federation/frontend/build || true
+          grep -R --line-number "$PUBLIC_ENVIRONMENT" apps/federation/frontend/build || true
         
       - name: Move frontend build to artifacts
         working-directory: ${{ github.workspace }}
