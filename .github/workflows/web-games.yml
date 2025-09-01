@@ -3,6 +3,15 @@ on:
   push:
     tags:
       - 'web_games-v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to run (e.g. federation-v1.2.3)"
+        required: true
+        type: string
+
+run-name: Deploy ${{ (github.event_name == 'workflow_dispatch' && inputs.tag) || github.ref_name }}
+
 jobs:
   build-backend:
     runs-on: ubuntu-latest
