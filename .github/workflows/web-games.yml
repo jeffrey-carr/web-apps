@@ -25,13 +25,23 @@ jobs:
       - name: Build JAR
         working-directory: apps/web_games/backend
         run: mvn clean install
-        
+
+       
       - name: Create backend folder
         run: mkdir -p backend
 
       - name: Remove original JAR (this is dumb)
         working-directory: apps/web_games/backend
         run: rm target/*.original
+
+      - name: Write .env file
+        env:
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+          MONGO_CONNECTION_URL: ${{ secrets.MONGO_CONNECTION_URL }}
+        run: |
+          touch backend/.env
+          echo ENVIRONMENT="$ENVIRONMENT" >> backend/.env
+          echo MONGO_CONNECTION_URL="$MONGO_CONNECTION_URL" >> backend/.env
 
       - name: Copy JAR
         run: cp apps/web_games/backend/target/*.jar backend/web-games-backend.jar
