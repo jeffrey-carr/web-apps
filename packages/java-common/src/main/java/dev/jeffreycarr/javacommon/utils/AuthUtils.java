@@ -14,8 +14,8 @@ import dev.jeffreycarr.javacommon.constants.EnvironmentConstants;
 import dev.jeffreycarr.javacommon.models.CommonUser;
 
 public class AuthUtils {
-  private static String DevAuthEndpoint = "http://auth.jeffreycarr.local:8081/api/auth";
-  private static String ProdAuthEndpoint = "https://auth.jeffreycarr.dev/api/auth";
+  private static String DevAuthEndpoint = "http://login.jeffreycarr.local:8081/api/auth";
+  private static String ProdAuthEndpoint = "https://login.jeffreycarr.dev:8081/api/auth";
 
   private AuthUtils() {}
   

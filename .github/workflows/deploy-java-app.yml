@@ -105,8 +105,6 @@ jobs:
     env:
       TAG: ${{ needs.prep.outputs.tag }}
       APP: ${{ needs.prep.outputs.app }}
-      PUBLIC_ENVIRONMENT: ${{ vars.ENVIRONMENT }}
-      PUBLIC_BACKEND_URL: ${{ vars.BACKEND_URL }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -122,12 +120,10 @@ jobs:
 
       - name: Build project
         working-directory: apps/${{ env.APP }}/frontend
-        run: npm run build
-
-      - name: Verify values got inlined
-        run: |
-          grep -R --line-number "$PUBLIC_BACKEND_URL" "apps/${{ env.APP }}/frontend/build" || true
-          grep -R --line-number "$PUBLIC_ENVIRONMENT" "apps/${{ env.APP }}/frontend/build" || true
+        run: npm run build --workspace "apps/${{ env.APP }}/frontend"
+        env:
+          PUBLIC_ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+          PUBLIC_BACKEND_URL: ${{ vars.BACKEND_URL }}
 
       - name: Move frontend build to artifacts
         run: mv "apps/${{ env.APP }}/frontend/build" frontend
