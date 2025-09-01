@@ -83,7 +83,7 @@ jobs:
 
       - name: Create .env file
         env:
-          MONGO_CONNECTION_URL=${{ secrets.MONGO_CONNECTION_URL}}
+          MONGO_CONNECTION_URL: ${{ secrets.MONGO_CONNECTION_URL}}
         run: |
           touch backend/.env
           echo ENVIRONMENT=prod >> backend/.env
