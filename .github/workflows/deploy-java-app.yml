@@ -1,0 +1,131 @@
+name: Deploy Java App
+on:
+  push:
+ tags:
+      - 'web_games-v*'
+      - 'federation-v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to run (e.g. federation-v1.2.3)"
+        required: true
+        type: string
+
+run-name: Deploy ${{ (github.event_name == 'workflow_dispatch' && inputs.tag) || github.ref_name }}
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.extract.outputs.tag }}
+      app: ${{ steps.extract.outputs.app }}
+    steps:
+      - name: Extract app from tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+          if [[ "$TAG" =~ ^([a-zA-Z0-9_-]+)-v([0-9]\.[0-9]\.[0-9])$ ]]; then
+            echo ""
+          else
+            echo "Unrecognized app tag: "$TAG"
+            exit 1
+          fi
+
+  build-backend:
+    runs-on: ubuntu-latest
+    needs: [prep]
+    env:
+      TAG: ${{ needs.prep.outputs.tag }}
+      APP: ${{ needs.prep.outputs.app }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Java Version 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: '21'
+          cache: 'maven'
+          
+      # TODO - check if this is necessary
+      - name: Build dependency
+        working-directory: packages/java-common
+        run: mvn clean install
+      
+      - name: Build JAR
+        working-directory: apps/${{ env.APP }}/backend
+        run: mvn clean install
+        
+      - name: Create backend folder
+        run: mkdir -p backend
+
+      - name: Remove original JAR (this is dumb)
+        working-directory: apps/${{ env.APP }}/backend
+        run: rm target/*.original
+
+      - name: Copy JAR
+        run: cp apps/${{ env.APP }}/backend/target/*.jar backend/${{ env.APP }}-backend.jar
+        
+      - name: Zip backend artifact
+        run: tar -cvf backend.tar backend
+      
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend.tar
+          path: .
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: [prep]
+    environment: ${{ needs.prep.outputs.app }}
+    env:
+      TAG: ${{ needs.prep.outputs.tag }}
+      APP: ${{ needs.prep.outputs.app }}
+      PUBLIC_ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+      PUBLIC_BACKEND_URL: ${{ vars.BACKEND_URL }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        
+      - name: Install dependencies
+        working-directory: apps/${{ env.APP }}/frontend
+        run: npm install
+
+      - name: Build project
+        working-directory: apps/${{ env.APP }}/frontend
+        run: npm run build
+
+      - name: Verify values got inlined
+        run: |
+          grep -R --line-number "$PUBLIC_BACKEND_URL" apps/${{ env.APP }}/frontend/build || true
+          grep -R --line-number "$PUBLIC_ENVIRONMENT" apps/${{ env.APP}}/frontend/build || true
+        
+      - name: Move frontend build to artifacts
+        working-directory: ${{ github.workspace }}
+        run: |
+          mv apps/${{ env.APP }}/frontend/build frontend
+          
+      - name: Zip project build
+        run: tar -cvf frontend.tar frontend
+        
+      - name: Upload project artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend.tar
+          path: .
+  
+  deploy:
+    needs: [prep, build-frontend, build-backend]
+    env:
+      TAG: ${{ needs.prep.outputs.tag }}
+      APP: ${{ needs.prep.outputs.app }}
+    uses: ./.github/workflows/deploy.yml
+    with:
+      app: ${{ needs.prep.outputs.app }}
+      tag: ${{ needs.prep.outputs.tag }}
