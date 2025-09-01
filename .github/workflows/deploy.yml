@@ -53,6 +53,11 @@ jobs:
           source: build.tar
           target: "~/."
           
+      - name: Stop backend service
+        continue-on-error: true
+        run: |
+          sudo systemctl stop ${{ inputs.app }}-backend
+        
       - name: Unzip tar
         uses: appleboy/ssh-action@master
         with:
@@ -62,10 +67,14 @@ jobs:
           port: 22
           script: |
             tar -xvf ~/build.tar -C .
+            rm -rf ${{ inputs.app }}-backend
             mkdir -p ${{ inputs.app }}-backend
             cp build/backend/${{ inputs.app }}-backend.jar ${{ inputs.app }}-backend/
-            sudo systemctl restart ${{ inputs.app }}-backend
             sudo mkdir -p /var/www/${{ inputs.app }}-frontend
             sudo cp -r build/frontend/* /var/www/${{ inputs.app }}-frontend/
             rm build.tar
             rm -rf build
+
+        - name: Start backend service
+          run: |
+            sudo systemctl start ${{ inputs.app }}-backend
