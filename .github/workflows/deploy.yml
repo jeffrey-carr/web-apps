@@ -62,8 +62,8 @@ jobs:
           port: 22
           script: |
             tar -xvf ~/build.tar -C .
-            cp build/backend/${{ env.APP }}-backend.jar ${{ env.APP }}-backend/
-            sudo systemctl restart ${{ env.APP }}-backend
-            sudo cp -r build/frontend/* /var/www/${{ env.APP }}-frontend/
+            cp build/backend/${{ inputs.app }}-backend.jar ${{ inputs.app }}-backend/
+            sudo systemctl restart ${{ inputs.app }}-backend
+            sudo cp -r build/frontend/* /var/www/${{ inputs.app }}-frontend/
             rm build.tar
             rm -rf build
