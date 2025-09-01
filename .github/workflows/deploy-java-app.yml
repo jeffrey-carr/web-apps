@@ -1,7 +1,7 @@
 name: Deploy Java App
 on:
   push:
- tags:
+    tags:
       - 'web_games-v*'
       - 'federation-v*'
   workflow_dispatch:
