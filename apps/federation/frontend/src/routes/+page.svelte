@@ -136,6 +136,7 @@
   const buildRerouteURL = (): string => {
     if (!data.app) return "";
 
+    console.log(PUBLIC_ENVIRONMENT);
     let route = buildAppURL(PUBLIC_ENVIRONMENT, Apps[data.app]);
     let path = `/${data.path ?? ''}`;
     if (path.length > 1) {
