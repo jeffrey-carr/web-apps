@@ -33,6 +33,7 @@ public class NetworkUtils {
     
     String environment = GeneralUtils.getEnvironment();
     if (!environment.equals(EnvironmentConstants.ProdEnvironment)) {
+      System.out.printf("environment is %s\n", environment);
       builder.domain(".jeffreycarr.local");
       builder.secure(false);
       builder.sameSite("Lax");
