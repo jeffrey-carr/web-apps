@@ -82,7 +82,6 @@ jobs:
         run: cp apps/${{ env.APP }}/backend/target/*.jar backend/${{ env.APP }}-backend.jar
 
       - name: Create .env file
-
         run: |
           touch backend/.env
           echo ENVIRONMENT=prod >> backend/.env
@@ -114,7 +113,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: pwd && npm ci 
+        run: npm ci 
 
       - name: Build project
         working-directory: apps/${{ env.APP }}/frontend

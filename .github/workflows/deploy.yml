@@ -19,8 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.app }}
     steps:
-      - name: Log inputs
-        run: echo ${{ inputs.app }} ${{ inputs.tag }}
       - name: Download backend artifact
         uses: actions/download-artifact@v4
         with:
@@ -75,6 +73,7 @@ jobs:
             tar -xvf ~/build.tar -C .
             rm -rf ${{ inputs.app }}-backend
             mkdir -p ${{ inputs.app }}-backend
+            ls -a build/backend
             cp -r build/backend/* ${{ inputs.app }}-backend/
             sudo mkdir -p /var/www/${{ inputs.app }}-frontend
             sudo cp -r build/frontend/* /var/www/${{ inputs.app }}-frontend/
