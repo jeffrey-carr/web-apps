@@ -47,8 +47,8 @@ jobs:
 
   build-backend:
     runs-on: ubuntu-latest
-    environment: ${{ needs.prep.outputs.app }}
     needs: [prep]
+    environment: ${{ needs.prep.outputs.app }}
     env:
       TAG: ${{ needs.prep.outputs.tag }}
       APP: ${{ needs.prep.outputs.app }}
@@ -82,10 +82,12 @@ jobs:
         run: cp apps/${{ env.APP }}/backend/target/*.jar backend/${{ env.APP }}-backend.jar
 
       - name: Create .env file
+        env:
+          MONGO_CONNECTION_URL=${{ secrets.MONGO_CONNECTION_URL}}
         run: |
           touch backend/.env
           echo ENVIRONMENT=prod >> backend/.env
-          echo MONGO_CONNECTION_URL=${{ secrets.MONGO_CONNECTION_URL }} >> backend/.env
+          echo MONGO_CONNECTION_URL="$MONGO_CONNECTION_URL" >> backend/.env
 
       - name: Zip backend artifact
         run: tar -cvf backend.tar backend
