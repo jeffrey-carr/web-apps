@@ -75,7 +75,7 @@
     }
 
     await response.json();
-    window.location.assign(buildRerouteURL());
+    window.location.assign(await buildRerouteURL());
     return true;
   };
 
