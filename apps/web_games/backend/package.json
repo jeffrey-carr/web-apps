@@ -1,6 +1,6 @@
 {
-  "name": "web-games-backend",
-  "version": "1.2.7",
+  "name": "web_games-backend",
+  "version": "1.0.0",
   "scripts": {
     "dev": "mvn spring-boot:run",
     "build": "mvn clean install"

@@ -12,7 +12,7 @@
     "prettier": "prettier --write .",
     "test-page": "turbo run dev --filter=test_app-frontend",
     "new-project": "cookiecutter -o apps/ templates/",
-    "dev:web-games": "turbo run dev --filter=web-games-frontend --filter=web-games-backend --filter=test_app-frontend --filter=federation-frontend --filter=federation-backend --no-cache --parallel",
+    "dev:web-games": "turbo run dev --filter=web_games-frontend --filter=web_games-backend --filter=test_app-frontend --filter=federation-frontend --filter=federation-backend --no-cache --parallel",
     "dev:federation": "turbo run dev --filter=federation-frontend --filter=federation-backend --no-cache --parallel"
   },
   "devDependencies": {

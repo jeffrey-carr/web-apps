@@ -75,7 +75,7 @@ jobs:
             tar -xvf ~/build.tar -C .
             rm -rf ${{ inputs.app }}-backend
             mkdir -p ${{ inputs.app }}-backend
-            cp build/backend/${{ inputs.app }}-backend.jar ${{ inputs.app }}-backend/
+            cp -r build/backend/* ${{ inputs.app }}-backend/
             sudo mkdir -p /var/www/${{ inputs.app }}-frontend
             sudo cp -r build/frontend/* /var/www/${{ inputs.app }}-frontend/
             rm build.tar
