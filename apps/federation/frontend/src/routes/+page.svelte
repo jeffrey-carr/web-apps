@@ -75,8 +75,7 @@
     }
 
     await response.json();
-    const url = await buildRerouteURL();
-    window.location.assign(url);
+    window.location.assign(buildRerouteURL());
     return true;
   };
 
@@ -130,20 +129,15 @@
     }
 
     await response.json();
-    const url = await buildRerouteURL(); 
-    window.location.assign(url);
+    window.location.assign(buildRerouteURL());
     return true;
   };
 
-  const buildRerouteURL = async (): Promise<string> => {
+  const buildRerouteURL = (): string => {
     if (!data.app) return "";
 
     let route = buildAppURL(PUBLIC_ENVIRONMENT, Apps[data.app]);
     
-    console.log(PUBLIC_ENVIRONMENT);
-    console.log(route);
-    await new Promise((resolve, _) => setTimeout(resolve, 5000));
-
     let path = `/${data.path ?? ''}`;
     if (path.length > 1) {
       route = `${route}${path}`;
