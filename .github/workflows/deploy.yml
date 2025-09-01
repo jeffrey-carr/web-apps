@@ -75,6 +75,6 @@ jobs:
             rm build.tar
             rm -rf build
 
-        - name: Start backend service
-          run: |
-            sudo systemctl start ${{ inputs.app }}-backend
+      - name: Start backend service
+        run: |
+          sudo systemctl start ${{ inputs.app }}-backend
