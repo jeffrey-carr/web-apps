@@ -55,8 +55,14 @@ jobs:
           
       - name: Stop backend service
         continue-on-error: true
-        run: |
-          sudo systemctl stop ${{ inputs.app }}-backend
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_IP }}
+          username: ${{ vars.SSH_USERNAME}}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            sudo -n systemctl stop ${{ inputs.app }}-backend
         
       - name: Unzip tar
         uses: appleboy/ssh-action@master
@@ -76,5 +82,13 @@ jobs:
             rm -rf build
 
       - name: Start backend service
-        run: |
-          sudo systemctl start ${{ inputs.app }}-backend
+        continue-on-error: true
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_IP }}
+          username: ${{ vars.SSH_USERNAME}}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            sudo -n systemctl start ${{ inputs.app }}-backend
+
