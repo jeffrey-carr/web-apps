@@ -65,7 +65,7 @@ public class UserController {
     String msg = "";
     if (authValue != null) {
       String userID = authValue.split(":")[0];
-      msg = String.format("hi %s", msg, userID);
+      msg = String.format("hi %s", userID);
       Optional<CommonUser> maybeUser = AuthUtils.getUser(this.env, authValue);
       if (maybeUser.isPresent()) {
         msg = String.format("%s (or should I say %s)!", msg, maybeUser.get().fName);

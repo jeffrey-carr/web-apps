@@ -47,14 +47,14 @@ public class AuthController {
 
     if (authValue != null) {
       String[] cookieValues = NetworkUtils.getCookieValues(authValue);
-      msg = String.format("%s; hi %s", cookieValues[0]);
+      msg = String.format("%s; hi %s", msg, cookieValues[0]);
 
       ResponseEntity<?> maybeUser = this.validateCookie(authValue);
       if (maybeUser.getStatusCode() == HttpStatus.OK) {
         CommonUser user = (CommonUser) maybeUser.getBody();
         msg = String.format("%s (or should I say %s)", msg, user.fName);
       } else {
-        msg = String.format("%s (auth failed)");
+        msg = String.format("%s (auth failed)", msg);
       }
     }
 
@@ -66,14 +66,14 @@ public class AuthController {
     String msg = "";
     if (authValue != null) {
       String[] cookieValues = NetworkUtils.getCookieValues(authValue);
-      msg = String.format("%s; hi %s", cookieValues[0]);
+      msg = String.format("hi %s", cookieValues[0]);
 
       ResponseEntity<?> maybeUser = this.validateCookie(authValue);
       if (maybeUser.getStatusCode() == HttpStatus.OK) {
         CommonUser user = (CommonUser) maybeUser.getBody();
         msg = String.format("%s (or should I say %s)!", msg, user.fName);
       } else {
-        msg = String.format("%s (auth failed)!");
+        msg = String.format("%s (auth failed)!", msg);
       }
     }
 
