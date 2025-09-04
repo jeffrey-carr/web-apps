@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,6 +21,7 @@ import dev.jeffreycarr.javacommon.services.EnvironmentService;
 import dev.jeffreycarr.javacommon.utils.AuthUtils;
 import dev.jeffreycarr.javacommon.utils.ServerResponse;
 import dev.jeffreycarr.webgamesbackend.models.GetUserResponse;
+import dev.jeffreycarr.webgamesbackend.models.MarcoRequest;
 import dev.jeffreycarr.webgamesbackend.models.UserStats;
 import dev.jeffreycarr.webgamesbackend.services.UserStatsService;
 
@@ -38,6 +41,48 @@ public class UserController {
       this.env = EnvironmentConstants.DevEnvironment;
     }
   }
+
+  @GetMapping("/ping")
+  public ResponseEntity<?> ping(@CookieValue(name = AuthConstants.AuthorizationCookieName, required = false) String authValue) {
+    String msg = String.format("[%s] pong", this.env);
+
+    if (authValue != null) {
+      String userID = authValue.split(":")[0];
+      msg = String.format("%s; hi %s", msg, userID);
+      Optional<CommonUser> maybeUser = AuthUtils.getUser(this.env, authValue);
+      if (maybeUser.isPresent()) {
+        msg = String.format("%s (or should I say %s)", msg, maybeUser.get().fName);
+      } else {
+        msg = String.format("%s (auth failed)", msg);
+      }
+    }
+
+    return ResponseEntity.ok(ServerResponse.newMessage(msg));
+  }
+
+  @PostMapping("/marco")
+  public ResponseEntity<?> marco(@CookieValue(name = AuthConstants.AuthorizationCookieName, required = false) String authValue, @RequestBody MarcoRequest request) {
+    String msg = "";
+    if (authValue != null) {
+      String userID = authValue.split(":")[0];
+      msg = String.format("hi %s", msg, userID);
+      Optional<CommonUser> maybeUser = AuthUtils.getUser(this.env, authValue);
+      if (maybeUser.isPresent()) {
+        msg = String.format("%s (or should I say %s)!", msg, maybeUser.get().fName);
+      } else {
+        msg = String.format("%s (auth failed)!", msg);
+      }
+    }
+
+    if (!request.person.equalsIgnoreCase("marco")) {
+      msg = String.format("%s Polo!", msg);
+    } else {
+      msg = String.format("%s Who were you looking for?", msg);
+    }
+
+    return ResponseEntity.ok(msg);
+  }
+
   
   @GetMapping("/me")
   public ResponseEntity<?> getUser(@CookieValue(name = AuthConstants.AuthorizationCookieName) String authValue) {

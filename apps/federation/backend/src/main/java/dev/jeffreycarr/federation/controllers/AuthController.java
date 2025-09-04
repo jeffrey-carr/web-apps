@@ -3,6 +3,8 @@ package dev.jeffreycarr.federation.controllers;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseEntity.BodyBuilder;
@@ -17,13 +19,16 @@ import dev.jeffreycarr.federation.models.AuthRequest;
 import dev.jeffreycarr.federation.models.CookieOptions;
 import dev.jeffreycarr.federation.models.CreateUserRequest;
 import dev.jeffreycarr.federation.models.LogoutRequest;
+import dev.jeffreycarr.federation.models.MarcoRequest;
 import dev.jeffreycarr.federation.models.User;
 import dev.jeffreycarr.federation.services.AuthService;
 import dev.jeffreycarr.federation.utils.NetworkUtils;
 import dev.jeffreycarr.federation.validators.AuthValidators;
 import dev.jeffreycarr.javacommon.constants.AuthConstants;
+import dev.jeffreycarr.javacommon.models.CommonUser;
 import dev.jeffreycarr.javacommon.models.NotConnectedException;
 import dev.jeffreycarr.javacommon.models.NotFoundException;
+import dev.jeffreycarr.javacommon.utils.AuthUtils;
 import dev.jeffreycarr.javacommon.utils.ServerResponse;
 
 @RestController
@@ -34,6 +39,51 @@ public class AuthController {
   @Autowired
   public AuthController(AuthService service) {
     this.service = service;
+  }
+
+  @GetMapping("/ping")
+  public ResponseEntity<?> ping(@CookieValue(name = AuthConstants.AuthorizationCookieName, required = false) String authValue) {
+    String msg = "pong";
+
+    if (authValue != null) {
+      String[] cookieValues = NetworkUtils.getCookieValues(authValue);
+      msg = String.format("%s; hi %s", cookieValues[0]);
+
+      ResponseEntity<?> maybeUser = this.validateCookie(authValue);
+      if (maybeUser.getStatusCode() == HttpStatus.OK) {
+        CommonUser user = (CommonUser) maybeUser.getBody();
+        msg = String.format("%s (or should I say %s)", msg, user.fName);
+      } else {
+        msg = String.format("%s (auth failed)");
+      }
+    }
+
+    return ResponseEntity.ok(ServerResponse.newMessage(msg));
+  }
+
+  @PostMapping("/marco")
+  public ResponseEntity<?> marco(@CookieValue(name = AuthConstants.AuthorizationCookieName, required = false) String authValue, @RequestBody MarcoRequest request) {
+    String msg = "";
+    if (authValue != null) {
+      String[] cookieValues = NetworkUtils.getCookieValues(authValue);
+      msg = String.format("%s; hi %s", cookieValues[0]);
+
+      ResponseEntity<?> maybeUser = this.validateCookie(authValue);
+      if (maybeUser.getStatusCode() == HttpStatus.OK) {
+        CommonUser user = (CommonUser) maybeUser.getBody();
+        msg = String.format("%s (or should I say %s)!", msg, user.fName);
+      } else {
+        msg = String.format("%s (auth failed)!");
+      }
+    }
+
+    if (!request.person.equalsIgnoreCase("marco")) {
+      msg = String.format("%s Polo!", msg);
+    } else {
+      msg = String.format("%s Who were you looking for?", msg);
+    }
+
+    return ResponseEntity.ok(msg);
   }
   
   @PostMapping("/login")
