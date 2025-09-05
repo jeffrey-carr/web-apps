@@ -21,6 +21,7 @@
     open = $bindable(),
     items,
     user,
+    loadingUser = false,
   }: {
     title?: string;
     open: boolean;
@@ -38,7 +39,8 @@
   };
 
   const login = () => {
-    const route = getAppURL(PUBLIC_ENVIRONMENT, App.Federation);
+    let route = getAppURL(PUBLIC_ENVIRONMENT, App.Federation);
+    route += `?${APP_QUERY_PARAM}=${App.WebGames}`;
     window.location.assign(`${route}?${APP_QUERY_PARAM}=${App.WebGames}`);
   };
 

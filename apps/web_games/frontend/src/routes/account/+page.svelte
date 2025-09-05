@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CharacterIcon, TabbedContent } from '@jeffrey-carr/frontend-common';
+  import { App, APP_QUERY_PARAM, CharacterIcon, getAppURL, PATH_QUERY_PARAM, TabbedContent } from '@jeffrey-carr/frontend-common';
   import type { GetUserResponse } from '$lib/types';
   import type { CommonStats, UserStats } from '$lib/types/stats';
 
@@ -11,6 +11,8 @@
     type User,
   } from '@jeffrey-carr/frontend-common';
   import { onMount } from 'svelte';
+    import { PUBLIC_ENVIRONMENT } from '$env/static/public';
+    import { goto } from '$app/navigation';
 
   const Routes: Record<string, RouteInformation> = {
     ME: {
@@ -26,8 +28,19 @@
   const loadUser = async () => {
     const rawResponse = await makeRequest(Routes.ME, { credentials: true });
 
+    if (rawResponse.status === 400) {
+      if (!window) {
+        console.error("Please log in again");
+        return;
+      }
+      const route = getAppURL(PUBLIC_ENVIRONMENT, App.Federation);
+      window.location.assign(`${route}?${APP_QUERY_PARAM}=${App.WebGames}&${PATH_QUERY_PARAM}=account`);
+      return;
+    }
+
     if (rawResponse.status !== 200) {
-      console.error('error retrieving user', rawResponse);
+      console.error("error retrieving user info");
+      goto('/');
       return;
     }
 
