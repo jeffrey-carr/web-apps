@@ -32,7 +32,6 @@
 
   $effect(() => {
     if (!locked && !timeoutClass) {
-      console.log(`word ${word} not locked or timed out! stealing focus`);
       inputElement?.focus();
     }
   });

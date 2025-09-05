@@ -109,7 +109,6 @@
     const response: ValidateAnswerResponse = await rawResponse.json();
     game = response.game;
     if (response.correct) {
-      console.log('correct!');
       if (response.victory) {
         showWin = true;
       }

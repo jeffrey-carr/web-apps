@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
   import type { SidebarAction, SidebarItem } from '$lib/types/sidebar';
@@ -12,7 +13,7 @@
     makeRequest,
     GlobalRoutes,
     Sidebar,
-    Spinner,
+    PATH_QUERY_PARAM,
   } from '@jeffrey-carr/frontend-common';
   import type { RouteInformation, User } from '@jeffrey-carr/frontend-common';
 
@@ -21,7 +22,6 @@
     open = $bindable(),
     items,
     user,
-    loadingUser = false,
   }: {
     title?: string;
     open: boolean;
@@ -30,7 +30,6 @@
   } = $props();
 
   const handleClick = (action: SidebarAction) => {
-    console.log('button clicked!');
     if (typeof action === 'string') {
       window.location.assign(action);
     } else {
@@ -41,7 +40,10 @@
   const login = () => {
     let route = getAppURL(PUBLIC_ENVIRONMENT, App.Federation);
     route += `?${APP_QUERY_PARAM}=${App.WebGames}`;
-    window.location.assign(`${route}?${APP_QUERY_PARAM}=${App.WebGames}`);
+    if (page.url.pathname !== "/") {
+      route += `&${PATH_QUERY_PARAM}=${page.url.pathname.slice(1)}`
+    }
+    window.location.assign(route);
   };
 
   const gotoAccount = () => {
@@ -65,6 +67,11 @@
     if (response.status !== 200) {
       console.error('Error logging out');
       console.error(response);
+      return;
+    }
+
+    if (page.url.pathname.includes("account")) {
+      goto('/');
       return;
     }
 
