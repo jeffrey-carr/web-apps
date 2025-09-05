@@ -7,7 +7,7 @@ export default defineConfig({
 	server: {
 		allowedHosts: ['games.jeffreycarr.local'],
 		proxy: {
-			'/api': 'http://localhost:8080'
+			'/api': 'http://localhost:8081'
 		},
 		fs: {
 			allow: [

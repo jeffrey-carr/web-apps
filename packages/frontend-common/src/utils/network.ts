@@ -56,10 +56,10 @@ export const getAppURL = (environment: Environment, app: App): string => {
 
 const getAuthURL = (environment: Environment): string => {
   if (environment !== prodEnvironment) {
-    return 'http://auth.jeffreycarr.local:8081';
+    return 'http://login.jeffreycarr.local:9999';
   }
   
-  return 'https://auth.jeffreycarr.dev';
+  return 'https://login.jeffreycarr.dev';
 };
 
 export const getUser = async (environment: Environment, app: App): Promise<User | null> => {

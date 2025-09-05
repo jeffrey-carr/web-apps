@@ -28,7 +28,6 @@ import dev.jeffreycarr.javacommon.constants.AuthConstants;
 import dev.jeffreycarr.javacommon.models.CommonUser;
 import dev.jeffreycarr.javacommon.models.NotConnectedException;
 import dev.jeffreycarr.javacommon.models.NotFoundException;
-import dev.jeffreycarr.javacommon.utils.AuthUtils;
 import dev.jeffreycarr.javacommon.utils.ServerResponse;
 
 @RestController

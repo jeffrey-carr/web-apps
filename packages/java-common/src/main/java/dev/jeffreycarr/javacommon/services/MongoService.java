@@ -23,7 +23,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
 
-import dev.jeffreycarr.constants.EnvironmentVariables;
+import dev.jeffreycarr.javacommon.constants.EnvironmentConstants;
 import dev.jeffreycarr.javacommon.models.NotConnectedException;
 import dev.jeffreycarr.javacommon.models.NotFoundException;
 import dev.jeffreycarr.javacommon.models.VariableNotDefinedException;
@@ -37,9 +37,9 @@ public class MongoService<T> {
 
   public MongoService() throws VariableNotDefinedException {
     Dotenv dotenv = Dotenv.load();
-    String connectionString = dotenv.get(EnvironmentVariables.MONGO_URL);
+    String connectionString = dotenv.get(EnvironmentConstants.MongoURL);
     if (connectionString == null) {
-      throw new VariableNotDefinedException(EnvironmentVariables.MONGO_URL);
+      throw new VariableNotDefinedException(EnvironmentConstants.MongoURL);
     }
     
     // We need to define a codec registry to allow the Mongo driver to automatically
