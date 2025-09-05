@@ -71,10 +71,12 @@
     }
 
     if (page.url.pathname.includes("account")) {
-      goto('/');
+      // Use location.assign so the sidebar reloads
+      window.location.assign('/');
       return;
     }
 
+    // Or if we don't route, just reload the page
     location.reload();
   };
 </script>
