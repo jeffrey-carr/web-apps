@@ -1,0 +1,80 @@
+.container {
+  height: 100%;
+  width: 100%;
+
+  background-color: var(--app-theme-overlay-light);
+
+  &:hover {
+    .hoverContainer {
+      opacity: 1;
+      pointer-events: all;
+    }
+  }
+}
+
+.cell {
+  position: relative;
+
+  height: 100%;
+  width: 100%;
+}
+
+.dayContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  height: 100%;
+  width: 100%;
+
+  .dayContentList {
+    list-style: none;
+
+    li {
+      margin-bottom: 0.3rem;
+    }
+  }
+}
+
+.hoverContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 100ms linear;
+
+  height: 100%;
+  width: 100%;
+
+  .background {
+    position: absolute;
+    z-index: -1;
+
+    height: 100%;
+    width: 100%;
+
+    opacity: 0.3;
+
+    background-color: black;
+  }
+  
+  .hoverContainerButton {
+    height: 2.5rem;
+    width: 95%;
+  }
+}
+
+.dayNumber {
+  --pos: 0.2rem;
+  position: absolute;
+  top: var(--pos);
+  left: var(--pos);
+}

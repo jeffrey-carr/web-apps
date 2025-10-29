@@ -1,0 +1,89 @@
+.modal {
+  padding: 2rem;
+  min-height: 75vh;
+  min-width: 80vw;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 1rem;
+  background: var(--app-theme-surface, transparent);
+  border-radius: var(--app-border-radius, 8px);
+
+  h1 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    color: var(--app-theme-text-secondary);
+  }
+}
+
+.empty {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.eventList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  width: 100%;
+}
+
+.eventItem {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+
+  padding: 0.4rem 0.5rem; 
+  background: var(--app-theme-background, transparent);
+}
+
+.orderBox {
+  width: 2.5rem;
+  height: 2rem;
+  padding: 0.25rem;
+
+  text-align: center;
+
+  border: 1px solid var(--app-theme-tertiary);
+  border-radius: 6px;
+
+  background: var(--app-theme-surface, transparent);
+  color: var(--app-theme-text, currentColor);
+
+  &:focus {
+    outline: none;
+    border: 1px solid var(--app-theme-primary);
+    box-shadow: 0 0 6px var(--app-theme-primary);
+  }
+}
+
+.addEventSection {
+  margin: 0.5rem;
+
+  width: 100%;
+  max-width: 500px;
+}
+
+.footerButtons {
+  position: absolute;
+  bottom: 1rem;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+
+  margin: 0.5rem;
+
+  width: 100%;
+}

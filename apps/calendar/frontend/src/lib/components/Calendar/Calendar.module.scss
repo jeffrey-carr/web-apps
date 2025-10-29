@@ -1,0 +1,89 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+
+  min-height: 800px;
+}
+
+.titleContainer {
+  padding: 2rem 0;
+
+  background-color: var(--app-theme-primary);
+
+  border: 1px solid var(--app-theme-tertiary);
+  border-top-left-radius: var(--app-border-radius);
+  border-top-right-radius: var(--app-border-radius);
+
+  height: fit-content;
+
+  text-align: center;
+  text-transform: capitalize;
+
+  .month-title {
+    color: var(--app-theme-text-secondary);
+  }
+}
+
+.daysContainer {
+  --nRows: 5;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: 0.35fr repeat(5, 1fr);
+  gap: 3px;
+
+  height: 100%;
+  min-height: calc(var(--nRows) * 5rem);
+
+  border-radius: var(--app-border-radius);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.cell {
+  border: 1px solid black;
+
+  overflow: hidden;
+
+  &.bottomLeft {
+    border-bottom-left-radius: var(--app-border-radius);
+  }
+  &.bottomRight {
+    border-bottom-right-radius: var(--app-border-radius);
+  }
+}
+
+.dowContainer {
+  grid-column: 1 / -1;
+
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+
+  background-color: var(--app-theme-tertiary);
+  
+  height: 100%;
+
+  gap: 3px;
+  padding: 0.2rem;
+
+  .dow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 100%;
+    width: 100%;
+
+    padding: 0.5rem;
+
+    background-color: var(--app-theme-primary);
+
+    border: 1px solid black;
+    border-radius: var(--app-border-radius);
+
+    text-transform: capitalize;
+  }
+}
+

@@ -1,0 +1,8 @@
+{
+  "name": "calendar-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "go run .",
+    "build": "go build -o build"
+  }
+}
