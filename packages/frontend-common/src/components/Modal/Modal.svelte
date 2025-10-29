@@ -40,12 +40,11 @@
 
 <style lang="scss">
   .container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: var(--base-z-index);
+    position: fixed;
+    inset: 0;
+    z-index: 100;
 
-    height: 100vh;
+    height: 100dvh;
     width: 100vw;
 
     margin: 0;

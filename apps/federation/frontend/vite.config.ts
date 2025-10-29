@@ -8,7 +8,7 @@ export default defineConfig({
 		port: 5175,
 		allowedHosts: ['login.jeffreycarr.local'],
 		proxy: {
-			'/api': 'http://localhost:8081'
+			'/api': 'http://localhost:9999'
 		},
 		fs: {
 			allow: [

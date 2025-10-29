@@ -41,5 +41,3 @@ export const CharacterToSrc: Record<Character, URL> = {
   "glitchard_simmons": new URL('https://objectstorage.us-ashburn-1.oraclecloud.com/n/idfb9sbi5d4p/b/shared/o/glitchard_simmons.png'),
   "alien_degeneres": new URL('https://objectstorage.us-ashburn-1.oraclecloud.com/n/idfb9sbi5d4p/b/shared/o/alien_degeneres.png')
 }
-
-export const AUTH_COOKIE_NAME = 'auth-data';

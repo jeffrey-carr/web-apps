@@ -8,11 +8,13 @@
     title,
     message,
     close,
+    duration = 15000,
   }: {
     level: NotificationLevel;
     title?: string;
     message: string;
     close: () => void;
+    duration?: number;
   } = $props();
   let closing = $state(false);
   let containerClass = $derived(`container ${level} ${closing ? 'transition-out' : ''}`);
@@ -25,11 +27,10 @@
   };
 
   const onTimerUpdate = (remainingMs: number) => {
-    timerPercentage = (remainingMs / NOTIFICATION_DURATION_MS) * 100;
+    timerPercentage = (remainingMs / duration) * 100;
   };
 
-  const NOTIFICATION_DURATION_MS = 15000;
-  let timer = new Timer(NOTIFICATION_DURATION_MS, onClose, onTimerUpdate);
+  let timer = new Timer(duration, onClose, onTimerUpdate);
 
   timer.start();
 
@@ -48,7 +49,7 @@
   <p class="message">{message}</p>
 
   <div
-    class={`timer ${timerPercentage > 0 ? 'visible' : ''}`}
+    class={`timer ${timerPercentage > 0 ? 'visible' : ''} ${level}`}
     style={`width: ${timerPercentage}%; transition-duration: ${Timer.tickRate}ms`}
   ></div>
 </div>
@@ -60,21 +61,37 @@
     position: absolute;
     bottom: 1rem;
     right: 2rem;
+    z-index: 9999;
 
     width: 20rem;
     max-width: 90vw;
 
     padding: 1rem;
 
-    background-color: var(--theme-danger-light);
-
-    border: 1px solid var(--theme-danger);
+    border: 1px solid white;
     border-radius: 5px;
 
     animation: popIn var(--pop-ms) linear;
 
     &.transition-out {
       animation: popOut var(--pop-ms) linear forwards;
+    }
+
+    &.info {
+      background-color: var(--theme-primary);
+      border-color: var(--theme-secondary);
+    }
+    &.warning {
+      background-color: var(--theme-warning-light);
+      border-color: var(--theme-warning);
+    }
+    &.error {
+      background-color: var(--theme-danger-light);
+      border-color: var(--theme-danger);
+    }
+    &.success {
+      background-color: var(--theme-success-light);
+      border-color: var(--theme-success);
     }
   }
 
@@ -125,6 +142,19 @@
 
     &.visible {
       border: 1px solid var(--theme-danger);
+
+      &.info {
+        border-color: var(--theme-secondary);
+      }
+      &.warning {
+        border-color: var(--theme-warning);
+      }
+      &.error {
+        border-color: var(--theme-danger);
+      }
+      &.success {
+        border-color: var(--theme-success);
+      }
     }
   }
 

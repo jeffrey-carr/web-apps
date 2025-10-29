@@ -1,16 +1,19 @@
 <script lang="ts">
-  import { Button, Input, Spinner } from '@jeffrey-carr/frontend-common';
+  import { Apps, Button, Input, type RouteQuery } from '@jeffrey-carr/frontend-common';
 
   let {
+    query,
     login,
     switchToCreate,
   }: {
+    query?: RouteQuery;
     login: (email: string, password: string) => Promise<boolean>;
     switchToCreate: () => void;
   } = $props();
   let email = $state('');
   let password = $state('');
   let loggingIn = $state(false);
+  let appName = $derived(query?.app ? Apps[query.app].friendlyName : null);
 
   const callLoginShortcut = (e: KeyboardEvent) => {
     if (e.key !== 'Enter') {
@@ -29,6 +32,9 @@
 
 <div class="container">
   <h1 class="title">Enter the Jeffiverse</h1>
+  {#if appName}
+    <p>Once you log in, you'll be brought back to <span class="app-highlight">{appName}</span></p>
+  {/if}
   <div class="inputs">
     <div class="input">
       <label class="label" for="email">Email</label>

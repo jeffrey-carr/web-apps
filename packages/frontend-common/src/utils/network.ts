@@ -1,10 +1,9 @@
 import type { makeRequestParams, RouteInformation } from "../types/network";
 import { METHODS } from '../types/network';
-import type { Environment, User } from "../types";
+import type { Environment } from "../types";
 import { App, Apps, prodEnvironment } from "../types";
 
-export const makeRequest = async (info: RouteInformation, params?: makeRequestParams): Promise<Response> => {
-  let headers: Record<string, string> = {};
+export const makeRequest = async (info: RouteInformation, params?: makeRequestParams, f?: any): Promise<Response> => { let headers: Record<string, string> = {};
   if (info.method === METHODS.POST) {
     headers['Content-Type'] = 'application/json';
   }
@@ -28,9 +27,18 @@ export const makeRequest = async (info: RouteInformation, params?: makeRequestPa
   if (params?.body) {
     body = JSON.stringify(params.body);
   }
-  let credentials: RequestCredentials = 'omit';
-  if (params?.credentials) {
-    credentials = 'include';
+  let credentials: RequestCredentials = 'include';
+  if (info.credentials === 'none') {
+    credentials = 'omit';
+  }
+
+  if (f) {
+    return f(pathWithQuery, {
+    method: info.method,
+    credentials, 
+    headers,
+    body,
+    });
   }
 
   return fetch(pathWithQuery, {
@@ -52,33 +60,5 @@ export const getAppURL = (environment: Environment, app: App): string => {
   }
   
   return `http://${info.subdomain}.jeffreycarr.local:${info.devPort}`;
-}
-
-const getAuthURL = (environment: Environment): string => {
-  if (environment !== prodEnvironment) {
-    return 'http://login.jeffreycarr.local:9999';
-  }
-  
-  return 'https://login.jeffreycarr.dev';
 };
 
-export const getUser = async (environment: Environment, app: App): Promise<User | null> => {
-  const backendURL = getAuthURL(environment);
-  const response = await makeRequest(
-    {
-      path: `${backendURL}/api/auth/authed-user`,
-      method: METHODS.GET,
-    },
-    {
-      query: { app },
-      credentials: true,
-    }
-  );
-
-  if (response.status !== 200) {
-    return null;
-  }
-  
-  const user = await response.json();
-  return user;
-}

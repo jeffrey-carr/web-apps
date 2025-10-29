@@ -9,13 +9,26 @@
     message?: string;
     value: string;
   } & svelte.JSX.HTMLAttributes<HTMLInputElement> = $props();
-  let errMessage = $derived(validator?.(value) ?? '');
+  // let errMessage = $derived(validator?.(value) ?? '');
+  let errMessage = $state("");
   let hasError = $derived(errMessage.length > 0 || message?.length > 0);
   let inputClass = $derived(`input ${hasError ? 'error' : ''}`);
+
+  const handleInputChanged = (e: Event) => {
+    const target = e.currentTarget as HTMLInputElement;
+    if (!target) return;
+
+    errMessage = validator?.(target.value) ?? "";
+  };
 </script>
 
 <div class="container">
-  <input class={inputClass} bind:value {...rest} />
+  <input 
+    class={inputClass} 
+    bind:value 
+    {...rest}
+    oninput={handleInputChanged}
+  />
   {#if hasError}
     <p class="error-message">
       {#if message?.length > 0}

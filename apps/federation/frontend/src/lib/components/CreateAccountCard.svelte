@@ -1,12 +1,13 @@
 <script lang="ts">
   import { isValidName, isValidEmail, isValidPassword } from '$lib/utils';
-  import { Button, CHARACTERS, Input } from '@jeffrey-carr/frontend-common';
-  import type { Character } from '@jeffrey-carr/frontend-common';
+  import { Apps, Button, CHARACTERS, Input } from '@jeffrey-carr/frontend-common';
+  import type { Character, RouteQuery } from '@jeffrey-carr/frontend-common';
   import CharacterButton from './CharacterButton.svelte';
 
   let {
     createAccount,
     backToLogin,
+    query,
   }: {
     createAccount: (
       email: string,
@@ -16,6 +17,7 @@
       character: Character
     ) => Promise<boolean>;
     backToLogin: () => void;
+    query?: RouteQuery;
   } = $props();
   let email = $state('');
   let emailErr = $state('');
@@ -27,6 +29,7 @@
   let lNameErr = $state('');
   let chosenCharacter = $state<Character>('???');
   let creatingAccount = $state(false);
+  let appName = $derived(query?.app ? Apps[query.app].friendlyName : null);
 
   const callCreateAccountShortcut = (e: KeyboardEvent) => {
     if (e.key !== 'Enter') {
@@ -139,6 +142,10 @@
       </div>
     </div>
   </div>
+
+  {#if appName}
+    <p>Once you create your account, you'll be brought back to <span class="app-highlight">{appName}</span></p>
+  {/if}
 
   <div class="buttons">
     <Button size="medium" onclick={callCreateAccount} loading={creatingAccount}>

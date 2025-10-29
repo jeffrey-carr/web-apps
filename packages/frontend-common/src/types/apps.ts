@@ -1,6 +1,7 @@
 export enum App {
   Federation = 'Federation',
   WebGames = 'WebGames',
+  Calendar = 'Calendar',
 }
 
 export type AppInfo = {
@@ -11,13 +12,18 @@ export type AppInfo = {
 
 export const Apps: Record<App, AppInfo> = {
   Federation: {
-    friendlyName: 'Federation',
+    friendlyName: 'The Jeffiverse Portal',
     subdomain: 'login',
     devPort: '5175',
   },
   WebGames: {
-    friendlyName: 'Web Games',
+    friendlyName: 'Jeff\'s Web Games',
     subdomain: 'games',
+    devPort: '5173',
+  },
+  Calendar: {
+    friendlyName: 'Jeff\'s Calendar Creator',
+    subdomain: 'calendar',
     devPort: '5173',
   },
 };

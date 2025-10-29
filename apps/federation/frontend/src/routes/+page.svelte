@@ -150,9 +150,9 @@
 <main class="main">
   <div class={containerClass}>
     {#if showCreate}
-      <CreateAccountCard createAccount={create} backToLogin={toggleCreate} />
+      <CreateAccountCard query={data} createAccount={create} backToLogin={toggleCreate} />
     {:else}
-      <LoginCard {login} switchToCreate={toggleCreate} />
+      <LoginCard query={data} {login} switchToCreate={toggleCreate} />
     {/if}
   </div>
 

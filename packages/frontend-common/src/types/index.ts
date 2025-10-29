@@ -10,6 +10,12 @@ export type ServerResponse<T> = {
   data: T;
 };
 
+export type GoServerResponse = {
+  status: number;
+  message: string;
+  data: any;
+};
+
 export type Environment = string;
 export const devEnvironment: Environment = 'dev';
 export const prodEnvironment: Environment = 'prod';
