@@ -13,12 +13,18 @@
     "test-page": "turbo run dev --filter=test_app-frontend",
     "new-project": "cookiecutter -o apps/ templates/",
     "dev:web-games": "turbo run dev --filter=web_games-frontend --filter=web_games-backend --filter=federation-frontend --filter=federation-backend --parallel",
-    "dev:federation": "turbo run dev --filter=federation-frontend --filter=federation-backend --parallel"
+    "dev:federation": "turbo run dev --filter=federation-frontend --filter=federation-backend --parallel",
+    "dev:recipe-book": "turbo run dev --filter=recipe_book-frontend --filter=recipe_book-backend --filter=federation-frontend --filter=federation-backend --parallel"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
     "prettier-plugin-svelte": "^3.3.3",
     "sass": "^1.90.0",
     "sass-embedded": "^1.89.2"
+  },
+  "dependencies": {
+    "@tiptap/core": "^3.10.4",
+    "@tiptap/pm": "^3.10.4",
+    "@tiptap/starter-kit": "^3.10.4"
   }
 }

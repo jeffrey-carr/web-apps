@@ -1,0 +1,174 @@
+.textarea {
+  min-height: 5rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  background-color: white;
+  border: 1px solid var(--app-theme-border-color);
+  border-radius: 5px;
+
+  padding: 0.5rem 0.6rem;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+
+  resize: vertical;
+
+  &:focus,
+  &:focus-visible {
+      outline: none;
+      border: 1px solid var(--app-theme-primary);
+      box-shadow: 0 0 10px var(--app-theme-primary);
+  }
+}
+
+.richWrapper {
+  width: 100%;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  padding: 0.5rem;
+  background-color: var(--theme-overlay);
+
+  .button {
+    min-width: 2rem;
+
+    background-color: transparent;
+    border: none;
+    border-radius: 5px;
+
+    padding: 0.25rem;
+
+    &:hover {
+      cursor: pointer;
+      background-color: color-mix(in oklab, white, transparent 35%);;
+    }
+
+    &.active {
+      background-color: var(--app-theme-primary);
+      outline: 1px solid var(--app-theme-secondary);
+    }
+  }
+}
+
+.divider {
+  width: 2px;
+  align-self: stretch;
+  background: var(--app-theme-border-color);
+  margin: 0 0.15rem;
+}
+
+/* Rich editor content area (Tiptap root) */
+.rich {
+  display: block;
+  min-height: 5rem;
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 0.5rem 0.6rem;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.5;
+
+  background-color: white;
+  border: 1px solid var(--app-theme-border-color);
+  border-radius: 5px;
+
+  resize: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+
+  /* Paragraph spacing */
+  p {
+    margin: 0 0 0.35rem 0;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  /* Headings */
+  h1,
+  h2,
+  h3 {
+    margin: 0.4rem 0 0.2rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  h1 {
+    font-size: 1.35rem;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+  }
+
+  h3 {
+    font-size: 1.05rem;
+  }
+
+  /* Lists */
+  ul,
+  ol {
+    margin: 0.25rem 0 0.35rem 1.4rem;
+    padding: 0;
+  }
+
+  li {
+    margin: 0.1rem 0;
+  }
+
+  /* Blockquote */
+  blockquote {
+    margin: 0.35rem 0;
+    padding: 0.25rem 0.5rem;
+    border-left: 3px solid var(--app-theme-secondary);
+    background: #f8f8f8;
+    color: #555;
+  }
+
+  /* Inline code */
+  code {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+      "Courier New", monospace;
+    font-size: 0.9em;
+    padding: 0.05rem 0.25rem;
+    border-radius: 3px;
+    background-color: #f3f3f3;
+  }
+
+  /* Code block */
+  pre {
+    margin: 0.35rem 0;
+    padding: 0.4rem 0.5rem;
+    border-radius: 4px;
+    background-color: #111827; /* tweak if too dark for your theme */
+    color: #e5e7eb;
+    overflow-x: auto;
+    font-size: 0.9rem;
+
+    code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+  }
+
+  /* Horizontal rule */
+  hr {
+    border: none;
+    border-top: 1px solid #e2e2e2;
+    margin: 0.5rem 0;
+  }
+
+  /* Links */
+  a {
+    color: var(--app-theme-secondary);
+    text-decoration: underline;
+  }
+}

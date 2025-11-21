@@ -2,7 +2,7 @@
   let {
     theme = 'primary',
   }: {
-    theme?: 'primary' | 'secondary' | 'red';
+    theme?: 'primary' | 'secondary';
   } = $props();
 </script>
 
@@ -10,24 +10,22 @@
 
 <style lang="scss">
   .spinner {
-    --large-spinner-color: var(--light);
+    // This is confusing because the primary spinner _class_ is meant to be used with primary
+    // colored components. So to contrast with the components the spinner sits on, it should use
+    // the opposite color
+    --spinner-color: var(--jeffs-spinner-color, var(--theme-secondary));
+    --spinner-spin-color: var(--jeffs-spinner-spin-color, var(--spinner-color));
     height: 100%;
     aspect-ratio: 1 / 1;
-    border: 3px solid var(--large-spinner-color);
+    border: 3px solid var(--spinner-color);
     border-radius: 50%;
     display: inline-block;
     position: relative;
     box-sizing: border-box;
     animation: rotation 1s linear infinite;
 
-    &.primary {
-      --large-spinner-color: var(--theme-primary);
-    }
     &.secondary {
-      --large-spinner-color: var(--theme-secondary);
-    }
-    &.dark {
-      --large-spinner-color: var(--dark);
+      --spinner-color: var(--jeffs-spinner-color, --theme-primary);
     }
   }
 
@@ -41,14 +39,8 @@
     height: 80%;
     border-radius: 50%;
     border: 3px solid transparent;
-    border-bottom-color: var(--red);
+    border-bottom-color: var(--spinner-spin-color);
     box-sizing: border-box;
-  }
-  .spinner.primary::after {
-    border-bottom-color: var(--theme-primary);
-  }
-  .spinner.secondary::after {
-    border-bottom-color: var(--theme-secondary);
   }
 
   @keyframes rotation {

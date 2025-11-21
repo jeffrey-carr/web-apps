@@ -45,4 +45,15 @@ func Map[T, K any](s []T, f func(T) K) []K {
 	}
 
 	return results
+// Filter accepts a slice and a predicate function. Items for which the predicate
+// returns true are retained in the returned slice.
+func Filter[T any](s []T, f func(item T) bool) []T {
+	var items []T
+	for _, item := range s {
+		if f(item) {
+			items = append(items, item)
+		}
+	}
+
+	return items
 }

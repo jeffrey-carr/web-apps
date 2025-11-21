@@ -14,4 +14,4 @@ type RequestData[T any] struct {
 	Body       *T
 }
 
-type EndpointFunc[T any, K any] func(context.Context, RequestData[T]) (K, *errors.JHTTPError)
+type EndpointFunc[T any, K any] func(context.Context, RequestData[T]) (*K, *errors.JHTTPError)

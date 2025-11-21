@@ -9,7 +9,7 @@ type JHTTPError struct {
 	error
 	StatusCode int    `json:"status"`
 	Message    string `json:"message"`
-	Data       any    `json:"data"`
+	Data       any    `json:"data,omitempty"`
 }
 
 func (e JHTTPError) Error() string {
@@ -25,6 +25,7 @@ func NewEmptyOKError() *JHTTPError {
 	}
 }
 
+// NewBadRequestError creates a new HTTP bad request error
 func NewBadRequestError(msg string) *JHTTPError {
 	return &JHTTPError{
 		StatusCode: http.StatusBadRequest,
@@ -32,6 +33,7 @@ func NewBadRequestError(msg string) *JHTTPError {
 	}
 }
 
+// NewInternalServerError creates a new HTTP Internal Server Error
 func NewInternalServerError(err error) *JHTTPError {
 	var errMsg string
 	if err != nil {
@@ -45,7 +47,7 @@ func NewInternalServerError(err error) *JHTTPError {
 	}
 }
 
-// NewUnauthorizedError creates a new unauthorized (401) error
+// NewUnauthorizedError creates a new HTTP Unauthorized error
 func NewUnauthorizedError() *JHTTPError {
 	return &JHTTPError{
 		StatusCode: http.StatusUnauthorized,
@@ -63,12 +65,8 @@ func NewForbiddenError() *JHTTPError {
 
 // NewValidationError creates a new HTTP validation error. The
 // `errs` parameter should be a map of field -> error
-func NewValidationError(errs map[string]string) *JHTTPError {
-	return &JHTTPError{
-		StatusCode: http.StatusBadRequest,
-		Message:    "Error validating some fields",
-		Data:       errs,
-	}
+func NewValidationError(validationErr string) *JHTTPError {
+	return NewBadRequestError(validationErr)
 }
 
 // NewNotFoundError creates a new NotFound error

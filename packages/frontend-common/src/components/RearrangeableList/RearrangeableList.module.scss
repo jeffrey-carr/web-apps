@@ -1,0 +1,55 @@
+.container {
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.grabHandle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+
+  height: 2rem;
+  width: 2rem;
+
+  background-color: transparent;
+  border: 1px solid var(--theme-border-color);
+
+  transition: background 100ms linear;
+
+  &:hover {
+    cursor: grab;
+    background: color-mix(in srgb, var(--theme-primary, #1a1a1a) 80%, #ffffff 20%);
+  }
+}
+
+.grabInner {
+  height: 1px;
+  width: 55%;
+
+  border: 1px solid black;
+}
+
+.orderInput {
+  width: 2rem;
+
+  padding: 0.5rem;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    display: none;
+    margin: 0;
+    -moz-appearance: textfield; /* Firefox */
+  }
+}
+
+.deleteButton {
+  height: 2rem;
+  width: 2rem;
+}

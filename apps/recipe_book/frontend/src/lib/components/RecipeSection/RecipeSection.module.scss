@@ -1,0 +1,106 @@
+.container {
+  position: relative;
+
+  margin-top: 2rem;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  border: 2px solid var(--bg-color-overlay);
+  border-radius: 10px;
+
+  padding: 1.5rem;
+}
+
+.topBorder {
+  position: absolute;
+  top: -1.5rem;
+  background-color: var(--bg-color);
+  padding: 0.5rem;
+}
+
+.sectionTitle {
+  left: 1.5rem;
+}
+
+.sectionDelete {
+  right: 1.5rem;
+}
+
+.title {
+  margin: 0.5rem 0 1rem 0;
+}
+
+.ingredientInput {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  margin-bottom: 1rem;
+}
+
+.ingredient {
+  display: grid;
+  width: 100%;
+  gap: 5px;
+  align-items: center;
+
+  grid-template-columns: minmax(0, 5fr) minmax(0, 1fr) minmax(0, 0.75fr) minmax(0, 0.5fr);
+
+  > * {
+    grid-column: span 1;
+    min-width: 0;
+  }
+}
+
+.direction {
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 0.5fr);
+
+  width: 100%;
+
+  margin-bottom: 0.5rem;
+}
+
+.deleteButton {
+  background-color: transparent;
+
+  border: 1px solid transparent;
+  border-radius: 10px;
+
+  padding: 0.5rem;
+
+  --transition-ms: 100ms;
+  --reactive-icon-transition-ms: var(--transition-ms);
+  transition: 
+    background-color var(--transition-ms) linear,
+    border-color var(--transition-ms) linear;
+
+  &:hover {
+    --reactive-icon-fill: red;
+
+    cursor: pointer;
+    background-color: color-mix(in hsl, var(--bg-color) 85%, white);
+    border-color: var(--app-theme-border-color);
+  }
+}
+
+.itemWithLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemWithLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemWithoutLabel {
+  align-self: flex-end;
+}

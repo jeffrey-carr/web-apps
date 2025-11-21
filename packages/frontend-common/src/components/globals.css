@@ -25,6 +25,7 @@
   --theme-overlay-light: var(--app-theme-overlay-light, lightgray);
   --theme-disabled: var(--app-theme-disabled, lightgray);
   --theme-disabled-text: var(--app-theme-disabled-text, gray);
+  --theme-border-color: var(--app-theme-border-color);
   
   /* This is the font used for special headers like custom banners, h1, etc. */
   --theme-header-font: var(--app-theme-header-font, serif);

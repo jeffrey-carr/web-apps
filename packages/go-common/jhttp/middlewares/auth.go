@@ -122,7 +122,9 @@ func (gu GetUser) Apply(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	return ctx, nil
 }
 
-// RequireAuth enforces a user is authenticated. The user should already be present in the context before calling this
+// RequireAuth enforces a user is authenticated.
+//
+// NOTE: The user should already be present in the context before calling this!
 type RequireAuth struct {
 	RequiresAdmin bool
 }

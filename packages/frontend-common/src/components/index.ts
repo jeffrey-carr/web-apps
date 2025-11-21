@@ -11,5 +11,11 @@ export { default as Notification } from './Notification/Notification.svelte';
 export { default as NotificationController } from './Notification/NotificationController.svelte';
 export { default as RadialTimer } from './RadialTimer.svelte';
 export { default as ReactiveIcon } from './ReactiveIcon.svelte';
+export { default as RearrangeableList } from './RearrangeableList/RearrangeableList.svelte';
+export { default as Select } from './Select/Select.svelte';
+export { default as Sidebar } from './Sidebar/Sidebar.svelte';
 export { default as Spinner } from './Spinner.svelte';
 export { default as TabbedContent } from './TabbedContent.svelte';
+export { default as Textarea } from './Textarea/Textarea.svelte';
+
+export * from './Select/SelectTypes';

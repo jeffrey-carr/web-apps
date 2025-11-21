@@ -1,0 +1,8 @@
+{
+  "name": "recipe_book-backend",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "air",
+    "build": "go build -o ./output/app ."
+  }
+}
