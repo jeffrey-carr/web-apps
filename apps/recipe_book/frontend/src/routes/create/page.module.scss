@@ -1,0 +1,48 @@
+.container {
+  padding: 2.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+
+    margin: 1.5rem 0;
+  }
+}
+
+.formItem {
+  margin-bottom: 1.25rem;
+}
+
+.cookTimeAndImportURL {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+
+  .cookTime {
+    flex: 1;
+  }
+  .importURL {
+    flex: 4;
+  }
+}
+
+.cookTimeInputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .cookTimeItem {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    min-width: 8rem;
+  }
+}

@@ -1,11 +1,13 @@
-package services
+package mongo
 
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type Mongo[T any] struct {
@@ -57,6 +59,61 @@ func (m *Mongo[T]) InsertItem(ctx context.Context, item T) error {
 func (m *Mongo[T]) UpdateItem(ctx context.Context, uuid string, updatedItem T) error {
 	_, err := m.collection.ReplaceOne(ctx, bson.M{"_id": uuid}, updatedItem)
 	return err
+}
+
+// ListItems returns a "page" of items from the collection.
+// - page is 1-based (page=1 is the first page)
+// - maxItems is the page size
+func (m *Mongo[T]) ListItems(ctx context.Context, page, limit int64) ([]T, error) {
+	limit = max(1, limit)
+	page = max(1, page)
+
+	skip := (page - 1) * limit
+
+	findOpts := options.Find().
+		SetSkip(skip).
+		SetLimit(limit)
+
+	cur, err := m.collection.Find(ctx, bson.M{}, findOpts)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	return readAllCursorResults[T](ctx, cur)
+}
+
+func (m *Mongo[T]) PrefixSearch(
+	ctx context.Context,
+	key string,
+	prefix string,
+) ([]T, error) {
+	return m.PrefixSearchOpts(
+		ctx,
+		key,
+		prefix,
+		PrefixSearchOptions{},
+	)
+}
+
+func (m *Mongo[T]) PrefixSearchOpts(
+	ctx context.Context,
+	key string,
+	prefix string,
+	opts PrefixSearchOptions,
+) ([]T, error) {
+	filter := bson.M{
+		key: bson.M{
+			"$regex": fmt.Sprintf("^%s", prefix),
+		},
+	}
+
+	cursor, err := m.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return readAllCursorResults[T](ctx, cursor)
 }
 
 func readAllCursorResults[T any](ctx context.Context, c *mongo.Cursor) ([]T, error) {

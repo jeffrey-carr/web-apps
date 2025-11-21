@@ -2,7 +2,8 @@
   import { isValidName, isValidEmail, isValidPassword } from '$lib/utils';
   import { Apps, Button, CHARACTERS, Input } from '@jeffrey-carr/frontend-common';
   import type { Character, RouteQuery } from '@jeffrey-carr/frontend-common';
-  import CharacterButton from './CharacterButton.svelte';
+  import CharacterButton from '../CharacterButton.svelte';
+  import sharedStyles from './shared.module.scss';
 
   let {
     createAccount,
@@ -80,12 +81,12 @@
   };
 </script>
 
-<div class="container">
+<div class={sharedStyles.container}>
   <h1>Create Account</h1>
 
-  <div class="inputs">
-    <div class="input">
-      <label class="label" for="email">Email</label>
+  <div class={sharedStyles.inputs}>
+    <div class={sharedStyles.input}>
+      <label class={sharedStyles.label} for="email">Email</label>
       <Input
         name="email"
         type="email"
@@ -96,8 +97,8 @@
       />
     </div>
 
-    <div class="input">
-      <label class="label" for="password">Password</label>
+    <div class={sharedStyles.input}>
+      <label class={sharedStyles.label} for="password">Password</label>
       <Input
         type="password"
         name="email"
@@ -107,8 +108,8 @@
       />
     </div>
 
-    <div class="input">
-      <label class="label" for="fName">First name</label>
+    <div class={sharedStyles.input}>
+      <label class={sharedStyles.label} for="fName">First name</label>
       <Input
         type="text"
         name="fName"
@@ -118,8 +119,8 @@
       />
     </div>
 
-    <div class="input">
-      <label class="label" for="lName">Last name</label>
+    <div class={sharedStyles.input}>
+      <label class={sharedStyles.label} for="lName">Last name</label>
       <Input
         type="text"
         name="fName"
@@ -144,22 +145,22 @@
   </div>
 
   {#if appName}
-    <p>Once you create your account, you'll be brought back to <span class="app-highlight">{appName}</span></p>
+    <p>
+      Once you create your account, you'll be brought back to <span class="app-highlight"
+        >{appName}</span
+      >
+    </p>
   {/if}
 
   <div class="buttons">
-    <Button size="medium" onclick={callCreateAccount} loading={creatingAccount}>
-      Create Account
-    </Button>
-    <Button size="medium" type="secondary" onclick={backToLogin}>Cancel</Button>
+    <Button size="md" onclick={callCreateAccount} loading={creatingAccount}>Create Account</Button>
+    <Button size="md" variant="outline" onclick={backToLogin}>Cancel</Button>
   </div>
 </div>
 
 <svelte:window onkeypress={callCreateAccountShortcut} />
 
 <style lang="scss">
-  @import 'shared.scss';
-
   .character-input {
     .title {
       margin: 1rem 0;

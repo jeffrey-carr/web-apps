@@ -1,6 +1,6 @@
-go 1.25.1
+go 1.25.3
 
 use (
-	./apps/calendar/backend
+	./apps/recipe_book/backend
 	./packages/go-common
 )

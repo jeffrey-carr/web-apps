@@ -56,10 +56,10 @@ export const getUser = async (environment: Environment, app: App): Promise<User 
     {
       path: `${backendURL}/api/auth/authed-user`,
       method: METHODS.GET,
+      credentials: 'required',
     },
     {
       query: { app },
-      credentials: true,
     }
   );
   

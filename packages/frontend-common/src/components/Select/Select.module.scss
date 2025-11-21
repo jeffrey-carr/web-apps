@@ -1,0 +1,21 @@
+.container {
+  background-color: var(--theme-transparent);
+
+  border: 1px solid var(--theme-border-color);
+  border-bottom: 3px solid var(--theme-border-color);
+  border-radius: 5px;
+
+  padding: 0.5rem;
+
+  --transition-ms: 100ms;
+  transition: background-color var(--transition-ms) linear;
+
+  &:hover {
+    cursor: pointer;
+    background-color: color-mix(in oklab, white, transparent 85%);
+  }
+
+  &:focus,&:active {
+    outline: 2px solid var(--theme-primary);
+  }
+}

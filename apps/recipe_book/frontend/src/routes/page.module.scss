@@ -1,0 +1,36 @@
+.headerContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .buttonContainer {
+    height: 3rem;
+  }
+}
+
+.filterContainer {
+  margin-top: 2rem;
+
+  .search {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+
+    width: 100%;
+
+    .inputContainer {
+      flex: 4;
+    }
+
+    .buttonContainer {
+      flex: 1;
+    }
+  }
+
+  .filters {
+    display: flex;
+    gap: 0.5rem;
+
+    margin-top: 0.5rem;
+  }
+}

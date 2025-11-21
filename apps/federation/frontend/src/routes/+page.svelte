@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
+  import { goto } from '$app/navigation';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
   import { CreateAccountCard, LoginCard } from '$lib/components';
   import { buildAppURL, isValidEmail, isValidName, isValidPassword } from '$lib/utils';
@@ -134,10 +134,10 @@
   };
 
   const buildRerouteURL = (): string => {
-    if (!data.app) return "";
+    if (!data.app) return '';
 
     let route = buildAppURL(PUBLIC_ENVIRONMENT, Apps[data.app]);
-    
+
     let path = `/${data.path ?? ''}`;
     if (path.length > 1) {
       route = `${route}${path}`;
