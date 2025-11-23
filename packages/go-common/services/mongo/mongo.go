@@ -4,16 +4,19 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"recipe-book/types"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
+// Mongo service handles interactions with a single MongoDB collection
 type Mongo[T any] struct {
 	collection *mongo.Collection
 }
 
+// NewMongo creates a new MongoDB service
 func NewMongo[T any](
 	client *mongo.Client,
 	db, coll string,
@@ -28,24 +31,30 @@ func NewMongo[T any](
 	}, nil
 }
 
+// GetByKey gets an entry in a MongoDB collection by a particular key
 func (m *Mongo[T]) GetByKey(ctx context.Context, key, value string) ([]T, error) {
 	results, err := m.collection.Find(ctx, bson.M{key: value})
 	if err != nil {
 		return nil, err
 	}
 
-	return readAllCursorResults[T](ctx, results)
+	parsedResults, err := readAllCursorResults[T](ctx, results)
+	if err != nil {
+		return nil, err
+	}
+	if len(parsedResults) == 0 {
+		return parsedResults, types.ErrNotFound
+	}
+
+	return parsedResults, nil
 }
 
+// GetByUUID searches a MongoDB collection by the `_id` key
 func (m *Mongo[T]) GetByUUID(ctx context.Context, uuid string) (T, error) {
 	var result T
 	results, err := m.GetByKey(ctx, "_id", uuid)
 	if err != nil {
 		return result, err
-	}
-
-	if len(results) < 1 {
-		return result, errors.New("No results")
 	}
 
 	return results[0], nil

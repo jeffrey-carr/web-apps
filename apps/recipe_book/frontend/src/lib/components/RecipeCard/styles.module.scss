@@ -1,0 +1,114 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;
+  width: 100%;
+
+  background: none;
+  border: 1px solid var(--app-theme-border-color);
+  border-radius: 10px;
+  overflow: hidden;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid transparent;
+    pointer-events: none;
+
+    /* 
+      Start as a very thin horizontal strip across the middle:
+      top: 49%, bottom: 49%, left/right: 0
+    */
+    clip-path: inset(49% 0 49% 0 round 10px);
+
+    transition: clip-path 150ms ease-out;
+  }
+
+  &:hover::before {
+    border-color: black;
+    /* Expand to full border */
+    clip-path: inset(0 0 0 0 round 10px);
+  }
+}
+
+.header {
+  flex: 2;
+  overflow: hidden;
+
+  padding: 1rem;
+
+  background-color: var(--bg-color-light);
+
+  .favoriteButton {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: none;
+    border: none;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    .favoriteIcon {
+      height: 1.5rem;
+      width: 1.5rem;
+    }
+  }
+
+  .image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+  }
+}
+
+.content {
+  flex: 3;
+
+  padding: 0.5rem 1rem;
+
+  max-height: 45%;
+  overflow: auto;
+
+  .title {
+    margin: 0.5rem 0 1rem;
+    text-align: center;
+  }
+}
+
+.footer {
+  flex: 0.5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  
+  padding: 0.7rem 1rem;
+}
+
+.cookTime {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  .cookTimeImg {
+    --size: 1.2rem;
+    height: var(--size);
+    width: var(--size);
+  }
+}

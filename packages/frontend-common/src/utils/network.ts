@@ -4,7 +4,11 @@ import type { Environment } from "../types";
 import { App, Apps, prodEnvironment } from "../types";
 import { ServerError } from "../types/errors";
 
-export const makeRequest = async <T, E>(info: RouteInformation, params?: makeRequestParams, f?: any): Promise<T> => { let headers: Record<string, string> = {};
+export const makeRequest = async <T, E>(
+  info: RouteInformation, 
+  params: makeRequestParams = {}, 
+  fetcher: typeof fetch = fetch,
+): Promise<T> => { let headers: Record<string, string> = {};
   if (info.method === METHODS.POST) {
     headers['Content-Type'] = 'application/json';
   }
@@ -33,16 +37,7 @@ export const makeRequest = async <T, E>(info: RouteInformation, params?: makeReq
     credentials = 'omit';
   }
 
-  if (f) {
-    return f(pathWithQuery, {
-    method: info.method,
-    credentials, 
-    headers,
-    body,
-    });
-  }
-
-  let response = await fetch(pathWithQuery, {
+  let response = await fetcher(pathWithQuery, {
     method: info.method,
     credentials, 
     headers,
@@ -72,3 +67,13 @@ export const getAppURL = (environment: Environment, app: App): string => {
   return `http://${info.subdomain}.jeffreycarr.local:${info.devPort}`;
 };
 
+export const getErrorFromServer = <T>(e: unknown): ServerError<T> => {
+  if (e instanceof ServerError) {
+      return e;
+    } else {
+      return {
+        status: 500,
+        message: "Unknown error",
+      } as ServerError<T>;
+    }
+}

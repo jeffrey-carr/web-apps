@@ -1,11 +1,26 @@
 <script lang="ts">
+  import clsx from 'clsx';
+
   let {
     icon,
-  }: { icon: 'left-arrow' | 'right-arrow' | 'account' | 'hamburger' | 'trash' | 'trash-fill' } =
-    $props();
+    class: className,
+  }: {
+    icon:
+      | 'left-arrow'
+      | 'right-arrow'
+      | 'account'
+      | 'hamburger'
+      | 'trash'
+      | 'trash-fill'
+      | 'stopwatch'
+      | 'stopwatch-fill'
+      | 'heart'
+      | 'heart-fill';
+    class?: string;
+  } = $props();
 </script>
 
-<svg class="container" fill="currentColor" viewBox="0 0 16 16">
+<svg class={clsx('container', className)} fill="currentColor" viewBox="0 0 16 16">
   {#if icon === 'left-arrow'}
     <path
       fill-rule="evenodd"
@@ -37,6 +52,24 @@
   {:else if icon === 'trash-fill'}
     <path
       d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"
+    />
+  {:else if icon === 'stopwatch'}
+    <path d="M8.5 5.6a.5.5 0 1 0-1 0v2.9h-3a.5.5 0 0 0 0 1H8a.5.5 0 0 0 .5-.5z" />
+    <path
+      d="M6.5 1A.5.5 0 0 1 7 .5h2a.5.5 0 0 1 0 1v.57c1.36.196 2.594.78 3.584 1.64l.012-.013.354-.354-.354-.353a.5.5 0 0 1 .707-.708l1.414 1.415a.5.5 0 1 1-.707.707l-.353-.354-.354.354-.013.012A7 7 0 1 1 7 2.071V1.5a.5.5 0 0 1-.5-.5M8 3a6 6 0 1 0 .001 12A6 6 0 0 0 8 3"
+    />
+  {:else if icon === 'stopwatch-fill'}
+    <path
+      d="M6.5 0a.5.5 0 0 0 0 1H7v1.07A7.001 7.001 0 0 0 8 16a7 7 0 0 0 5.29-11.584l.013-.012.354-.354.353.354a.5.5 0 1 0 .707-.707l-1.414-1.415a.5.5 0 1 0-.707.707l.354.354-.354.354-.012.012A6.97 6.97 0 0 0 9 2.071V1h.5a.5.5 0 0 0 0-1zm2 5.6V9a.5.5 0 0 1-.5.5H4.5a.5.5 0 0 1 0-1h3V5.6a.5.5 0 1 1 1 0"
+    />
+  {:else if icon === 'heart'}
+    <path
+      d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"
+    />
+  {:else if icon === 'heart-fill'}
+    <path
+      fill-rule="evenodd"
+      d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"
     />
   {/if}
 </svg>

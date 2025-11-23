@@ -9,13 +9,16 @@
     getAppURL,
     Input,
     PATH_QUERY_PARAM,
+    ServerError,
+    Spinner,
     type Environment,
   } from '@jeffrey-carr/frontend-common';
   import styles from './page.module.scss';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
   import type { Recipe } from '$lib/types/recipe';
   import { getHomeRecipes } from '$lib/requests/recipe';
-  import { msToCookTime } from '$lib/mappers/recipe';
+  import { cookTimeToStr } from '$lib/mappers/recipe';
+  import { RecipeCard } from '$lib/components';
 
   let recipes = $state<Recipe[]>([]);
   let loading = $state(false);
@@ -32,7 +35,13 @@
 
   // TODO - make this better (pull it out of page n stuff)
   const getRecipes = async (): Promise<Recipe[]> => {
-    return getHomeRecipes();
+    const results = await getHomeRecipes();
+    if (results instanceof ServerError) {
+      console.error(`error getting recipe: ${results.message}`);
+      return [];
+    }
+
+    return results;
   };
 
   const constructLoginURL = (environment: Environment, path?: string): string => {
@@ -43,29 +52,6 @@
     }
 
     return route;
-  };
-
-  const cookTimeToStr = (ms?: number): string => {
-    if (ms == null) {
-      return 'Unknown';
-    }
-
-    const hoursAndMinutes = msToCookTime(ms);
-    const hours = hoursAndMinutes.getFirst();
-    const minutes = hoursAndMinutes.getSecond();
-
-    let str = '';
-    if (hours > 0) {
-      const plural = hours > 1;
-      str += `${hours} hour${plural ? 's' : ''}`;
-    }
-
-    if (minutes > 0) {
-      const plural = minutes > 1;
-      str += `${minutes} minute${plural ? 's' : ''}`;
-    }
-
-    return str;
   };
 
   let loginURL = $derived(constructLoginURL(PUBLIC_ENVIRONMENT, page.url.pathname.slice(1)));
@@ -103,35 +89,29 @@
       <option>Sara</option>
     </select>
     <Button size="md" variant="outline" depth="flat" shape="rect">Clear filters</Button>
+    <Button size="md" variant="outline" depth="flat" shape="rect" onclick={() => (loading = true)}>
+      Start loading
+    </Button>
+    <Button size="md" variant="outline" depth="flat" shape="rect" onclick={() => (loading = false)}
+      >Stop loading</Button
+    >
   </div>
+</div>
 
-  <Button href="/create">Create recipe</Button>
+<Button href="/create">Create recipe</Button>
 
-  <div class={styles.recipeContainer}>
-    {#each recipes as recipe (recipe.uuid)}
-      <div id={recipe.uuid}>
-        <h3>{recipe.name}</h3>
-        <div class={styles.recipe}>
-          <ul>
-            <li>
-              <b>Description</b>
-              <br />
-              {@html recipe.description}
-            </li>
-            <li>
-              <b>Cook time: {cookTimeToStr(recipe.cookTimeMs)}</b>
-            </li>
-            <li>
-              <b>Author UUID: {recipe.authorUUID}</b>
-            </li>
-            <li><b>{recipe.sections.length}</b> sections</li>
-            <li>
-              <b>Created at:</b>
-              {epochStringToFriendlyPrintDate(recipe.createdAt)}
-            </li>
-          </ul>
+<div class={styles.contentContainer}>
+  {#if loading}
+    <div class={styles.pageLoading}>
+      <Spinner label="Loading recipes..." />
+    </div>
+  {:else}
+    <div class={styles.recipeContainer}>
+      {#each recipes as recipe (recipe.uuid)}
+        <div class={styles.recipeCardContainer}>
+          <RecipeCard {recipe} />
         </div>
-      </div>
-    {/each}
-  </div>
+      {/each}
+    </div>
+  {/if}
 </div>

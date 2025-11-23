@@ -1,4 +1,4 @@
-export class ServerError<T> extends Error {
+export class ServerError<T = undefined> extends Error {
   public readonly status: number;
   public readonly data?: T;
 
