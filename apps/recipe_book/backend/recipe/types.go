@@ -28,6 +28,27 @@ type Recipe struct {
 	ModifiedAt  int64     `json:"modifiedAt" bson:"modifiedAt"`
 }
 
+// PublicRecipe is the recipe that is sent to the frontend and is visible to
+// users
+type PublicRecipe struct {
+	UUID        string    `json:"uuid"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	CookTimeMs  int64     `json:"cookTimeMs"`
+	ImportedURL string    `json:"importedURL"`
+	Sections    []Section `json:"sections"`
+	Slug        string    `json:"slug"`
+	AuthorUUID  string    `json:"authorUUID"`
+	AuthorFName string    `json:"authorFName"`
+	AuthorLName string    `json:"authorLName"`
+	ImageURL    string    `json:"imageURL"`
+	Status      Status    `json:"status"`
+	IsFavorited bool      `json:"isFavorited"`
+
+	CreatedAt  int64 `json:"createdAt"`
+	ModifiedAt int64 `json:"modifiedAt"`
+}
+
 // Section represents one section of a recipe. A recipe may have multiple sections to split
 // different parts into multiple steps. Like when someone makes a cake, maybe there's a "cake" section
 // and a "frosting" section
@@ -62,4 +83,12 @@ type CreateRecipeRequest struct {
 	Sections    []Section `json:"sections"`
 	Publish     bool      `json:"publish"`
 	Slug        string    `json:"slug"`
+}
+
+// UserFavorite represents a UserFavorite object
+type UserFavorite struct {
+	UUID        string `json:"uuid" bson:"_id"`
+	RecipeUUID  string `json:"recipeUUID" bson:"recipeUUID"`
+	UserUUID    string `json:"userUUID" bson:"userUUID"`
+	FavoritedAt int64  `json:"favoritedAt" bson:"favoritedAt"`
 }

@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+// JHTTPError is a custom error that is returned by all Jeffrey Carr
+// certified endpoints
 type JHTTPError struct {
 	error
 	StatusCode int    `json:"status"`
@@ -30,6 +32,19 @@ func NewBadRequestError(msg string) *JHTTPError {
 	return &JHTTPError{
 		StatusCode: http.StatusBadRequest,
 		Message:    msg,
+	}
+}
+
+// NewNotFoundError creates a new HTTP Not Found error
+func NewNotFoundError[T any](requested T) *JHTTPError {
+	type NotFoundData struct {
+		Requested T
+	}
+
+	return &JHTTPError{
+		StatusCode: http.StatusNotFound,
+		Message:    "Not found",
+		Data:       NotFoundData{Requested: requested},
 	}
 }
 

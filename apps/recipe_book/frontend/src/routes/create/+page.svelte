@@ -1,6 +1,12 @@
 <script lang="ts">
   import { createRecipe } from '$lib/requests/recipe';
-  import { Button, generateUUID, Input, Textarea } from '@jeffrey-carr/frontend-common';
+  import {
+    Button,
+    generateUUID,
+    Input,
+    ServerError,
+    Textarea,
+  } from '@jeffrey-carr/frontend-common';
   import { goto } from '$app/navigation';
   import styles from './page.module.scss';
   import { RecipeSection } from '$lib/components';
@@ -18,7 +24,7 @@
   };
 
   const createEmptyIngredient = (): Ingredient => {
-    return { uuid: generateUUID(), name: '', amountStr: '0', unit: '' };
+    return { uuid: generateUUID(), name: '', amountStr: '', unit: '' };
   };
 
   const createEmptyDirection = (): Direction => {
@@ -62,17 +68,20 @@
       return;
     }
 
-    console.log(createRequest);
+    let response: string | ServerError = await createRecipe(createRequest);
+    if (response instanceof ServerError) {
+      console.error(`Error creating recipe: ${response.message}`);
+      loadingCreate = false;
+      return;
+    }
 
-    const errorMsg = await createRecipe(createRequest);
-    loadingCreate = false;
-
-    if (errorMsg == null) {
+    if (response == null) {
       goto('/');
       return;
     }
 
-    console.error(errorMsg);
+    goto(`/recipe/${response}`);
+    loadingCreate = false;
   };
 
   const addSection = () => {
@@ -137,11 +146,12 @@
         editing
       />
     {/each}
+    <Button class={styles.addSectionButton} onclick={addSection}>Add a section</Button>
 
-    <Button onclick={addSection}>Add a section</Button>
-
-    <label for="publishInput">Publish</label>
-    <input id="publishInput" type="checkbox" bind:checked={publish} />
+    <div class={clsx(styles.formItem, styles.publishSection)}>
+      <label for="publishInput">Publish</label>
+      <input id="publishInput" type="checkbox" bind:checked={publish} />
+    </div>
 
     <div class={styles.buttons}>
       <Button type="submit" size="md" loading={loadingCreate}>Create</Button>

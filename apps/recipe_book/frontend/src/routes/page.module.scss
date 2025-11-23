@@ -34,3 +34,31 @@
     margin-top: 0.5rem;
   }
 }
+
+.contentContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+
+  height: 100%;
+  width: 100%;
+}
+
+.pageLoading {
+  --size: 75px;
+  height: var(--size);
+  width: var(--size);
+}
+
+.recipeContainer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.recipeCardContainer {
+  height: 500px;
+  width: 300px;
+}

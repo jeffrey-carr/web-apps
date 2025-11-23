@@ -1,6 +1,6 @@
 import type { Direction, Ingredient, RecipeCreateRequest, Section } from "$lib/types/recipe";
 import { validateCookTime, validateRecipeName, validateSection } from "$lib/validators/recipe";
-import { Tuple } from '@jeffrey-carr/frontend-common';
+import { TIME, Tuple } from '@jeffrey-carr/frontend-common';
 
 // Converts a recipe input to a create request, and validates as it goes
 export const recipeInputsToCreateRecipeRequest = (
@@ -81,7 +81,34 @@ export const filterEmptyDirections = (directions: Direction[]): Direction[] => {
 };
 
 export const msToCookTime = (ms: number): Tuple<number, number> => {
-  const hours = Math.floor(ms / 6000);
-  const minutes = Math.floor(ms / 60000);
+  const hours = Math.floor(ms / TIME.HOUR);
+  const minutes = Math.floor((ms % TIME.HOUR) / TIME.MINUTE);
   return new Tuple(hours, minutes);
-}
+};
+
+export const cookTimeToStr = (ms?: number): string => {
+  if (ms == null) {
+    return 'Unknown';
+  }
+
+  const hoursAndMinutes = msToCookTime(ms);
+  const hours = hoursAndMinutes.getFirst();
+  const minutes = hoursAndMinutes.getSecond();
+
+  let str = '';
+  if (hours > 0) {
+    const plural = hours > 1;
+    str += `${hours} hour${plural ? 's' : ''}`;
+  }
+
+  if (minutes > 0) {
+    if (hours > 0) {
+      str += ", "
+    }
+    
+    const plural = minutes > 1;
+    str += `${minutes} minute${plural ? 's' : ''}`;
+  }
+
+  return str;
+};

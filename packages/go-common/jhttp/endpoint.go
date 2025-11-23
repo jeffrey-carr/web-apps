@@ -11,6 +11,18 @@ import (
 	"net/url"
 )
 
+// NewEndpointWithManager creates a new HTTP endpoint using a middleware
+// manager
+func NewEndpointWithManager[T any, K any](
+	f EndpointFunc[T, K],
+	pathKeys []string,
+	mwManager middlewares.Manager,
+) func(http.ResponseWriter, *http.Request) {
+	return NewEndpoint(f, pathKeys, mwManager.Middlewares...)
+}
+
+// NewEndpoint creates a new HTTP endpoint. It manages parsing path variables,
+// query parameters, and a JSON body.
 func NewEndpoint[T any, K any](
 	f EndpointFunc[T, K],
 	pathKeys []string,

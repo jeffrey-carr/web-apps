@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"go-common/jhttp"
+	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/jhttp/middlewares"
 	jMongo "go-common/services/mongo"
 	"go-common/utils"
@@ -13,6 +15,12 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
+
+// HandlePing handles the test 'ping' function
+func HandlePing(ctx context.Context, r jhttp.RequestData[struct{}]) (*string, *JHTTPErrors.JHTTPError) {
+	msg := "pong!"
+	return &msg, nil
+}
 
 func main() {
 	config, err := utils.OpenAndReadJSON[types.Config](".env")
@@ -31,16 +39,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	userFavoritesMongoCollection, err := jMongo.NewMongo[recipe.UserFavorite](mongoClient, "recipe_book", "user_favorites")
+	if err != nil {
+		panic(err)
+	}
 
 	// MIDDLEWARES //
 	userMiddleware := middlewares.GetUser{Environment: config.Environment}
 	authMiddleware := middlewares.RequireAuth{Environment: config.Environment}
+	middlewareManager := middlewares.Manager{Middlewares: []middlewares.Middleware{userMiddleware}}
 
 	// REPOSITORIES //
-	recipeRepo := recipe.Repository{MongoClient: recipeMongoCollection}
+	recipeRepo := recipe.NewRepository(recipeMongoCollection, userFavoritesMongoCollection)
+
+	// CONTROLLERS //
+	recipeController := recipe.NewController(recipeRepo)
 
 	// HANDLERS //
-	recipeHandler := recipe.Handler{Repo: recipeRepo}
+	recipeHandler := recipe.NewHandler(recipeController)
 
 	// ROUTER //
 	http.NewServeMux()
@@ -49,17 +65,35 @@ func main() {
 	// Recipe
 	http.HandleFunc(
 		"POST /api/recipe",
-		jhttp.NewEndpoint(
+		jhttp.NewEndpointWithManager(
 			recipeHandler.Create,
 			nil,
-			userMiddleware,
-			authMiddleware,
+			middlewareManager.WithMiddlewares(authMiddleware),
+		),
+	)
+
+	http.HandleFunc(
+		fmt.Sprintf("GET /api/recipe/{%s}", recipe.RecipeIDPathVar),
+		jhttp.NewEndpointWithManager(
+			recipeHandler.Get,
+			[]string{recipe.RecipeIDPathVar},
+			middlewareManager,
 		),
 	)
 	http.HandleFunc(
 		"GET /api/recipe",
-		jhttp.NewEndpoint(
+		jhttp.NewEndpointWithManager(
 			recipeHandler.GetRecipes,
+			nil,
+			middlewareManager,
+		),
+	)
+
+	// Test
+	http.HandleFunc(
+		"POST /api/ping",
+		jhttp.NewEndpoint(
+			HandlePing,
 			nil,
 		),
 	)

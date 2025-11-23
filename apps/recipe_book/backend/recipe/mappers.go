@@ -47,6 +47,42 @@ func recipeCreateRequestToRecipe(request CreateRecipeRequest, user types.CommonU
 		AuthorUUID:  user.UUID,
 		Status:      status,
 		Sections:    request.Sections,
-		CreatedAt:   time.Now().Unix(),
+		CreatedAt:   time.Now().UnixMilli(),
 	}, nil
+}
+
+func recipeFavoriteRequestToFavorite(
+	user types.CommonUser,
+	rec Recipe,
+) UserFavorite {
+	return UserFavorite{
+		UUID:        utils.NewUUID(),
+		RecipeUUID:  rec.UUID,
+		UserUUID:    user.UUID,
+		FavoritedAt: time.Now().UnixMilli(),
+	}
+}
+
+func recipeToPublicRecipe(
+	rec Recipe,
+	author types.CommonUser,
+	isFavorited bool,
+) PublicRecipe {
+	return PublicRecipe{
+		UUID:        rec.UUID,
+		Name:        rec.Name,
+		Description: rec.Description,
+		CookTimeMs:  rec.CookTimeMs,
+		ImportedURL: rec.ImportedURL,
+		Sections:    rec.Sections,
+		Slug:        rec.Slug,
+		AuthorUUID:  author.UUID,
+		AuthorFName: author.FName,
+		AuthorLName: author.LName,
+		ImageURL:    "",
+		Status:      rec.Status,
+		IsFavorited: isFavorited,
+		CreatedAt:   rec.CreatedAt,
+		ModifiedAt:  rec.ModifiedAt,
+	}
 }

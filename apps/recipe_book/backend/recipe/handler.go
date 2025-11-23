@@ -6,20 +6,23 @@ import (
 	"go-common/jcontext"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
-	"go-common/types"
-	"go-common/utils"
-	"recipe-book/mappers"
-	"strconv"
+	recipeBookTypes "recipe-book/types"
 )
 
 // Handler represents the recipe handler
 type Handler struct {
-	Repo Repository
+	controller Controller
+}
+
+func NewHandler(controller Controller) Handler {
+	return Handler{
+		controller: controller,
+	}
 }
 
 // Create allows users to create new recipes
 func (h Handler) Create(ctx context.Context, r jhttp.RequestData[CreateRecipeRequest]) (*string, *JHTTPErrors.JHTTPError) {
-	user, ok := ctx.Value(jcontext.UserKey).(types.CommonUser)
+	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		fmt.Println("no user :(")
 		return nil, JHTTPErrors.NewUnauthorizedError()
@@ -35,18 +38,7 @@ func (h Handler) Create(ctx context.Context, r jhttp.RequestData[CreateRecipeReq
 		return nil, JHTTPErrors.NewValidationError(validationErr)
 	}
 
-	slug, err := h.getAvailableSlug(ctx, request.Name)
-	if err != nil {
-		return nil, JHTTPErrors.NewInternalServerError(err)
-	}
-	request.Slug = slug
-
-	recipe, err := recipeCreateRequestToRecipe(request, user)
-	if err != nil {
-		return nil, JHTTPErrors.NewInternalServerError(err)
-	}
-
-	err = h.Repo.Create(ctx, recipe)
+	recipe, err := h.controller.CreateRecipe(ctx, user, request)
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
@@ -54,53 +46,49 @@ func (h Handler) Create(ctx context.Context, r jhttp.RequestData[CreateRecipeReq
 	return &recipe.Slug, nil
 }
 
+// Favorite recipe saves a recipe to a user's list of favorite recipes. Supports both UUID and slug identifiers
+func (h Handler) FavoriteRecipe(ctx context.Context, r jhttp.RequestData[struct{}]) (*struct{}, *JHTTPErrors.JHTTPError) {
+	user, ok := jcontext.GetUser(ctx)
+	if !ok {
+		return nil, JHTTPErrors.NewUnauthorizedError()
+	}
+
+	recipeID := r.Query.Get(RecipeIDQueryParameterName)
+	if recipeID == "" {
+		return nil, JHTTPErrors.NewBadRequestError("Recipe ID is required")
+	}
+
+	err := h.controller.FavoriteRecipe(ctx, user, recipeID)
+	if err != nil {
+		return nil, JHTTPErrors.NewInternalServerError(err)
+	}
+
+	return nil, nil
+}
+
+// Get gets a recipe. It can get a recipe by it's UUID or slug
+func (h Handler) Get(ctx context.Context, r jhttp.RequestData[struct{}]) (*Recipe, *JHTTPErrors.JHTTPError) {
+	recipeID, ok := r.PathValues[RecipeIDPathVar]
+	if !ok {
+		return nil, JHTTPErrors.NewBadRequestError("Recipe ID is required")
+	}
+
+	recipe, err := h.controller.GetRecipe(ctx, recipeID)
+	if err == recipeBookTypes.ErrNotFound {
+		return nil, JHTTPErrors.NewNotFoundError(recipeID)
+	} else if err != nil {
+		return nil, JHTTPErrors.NewInternalServerError(err)
+	}
+
+	return &recipe, nil
+}
+
 // GetRecipes isn't completed yet
 func (h Handler) GetRecipes(ctx context.Context, r jhttp.RequestData[struct{}]) (*[]Recipe, *JHTTPErrors.JHTTPError) {
-	// TODO - pageination
-	recipes, err := h.Repo.GetRecipes(ctx, 1, 10)
+	recipes, err := h.controller.GetHomeRecipes(ctx)
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
 	return &recipes, nil
-}
-
-func (h Handler) getAvailableSlug(ctx context.Context, recipeName string) (string, error) {
-	slugified, err := mappers.SlugifyString(recipeName)
-	if err != nil {
-		return "", err
-	}
-
-	sluggedRecipes, err := h.Repo.GetMatchingSlugPrefix(ctx, slugified)
-	if err != nil {
-		return "", err
-	}
-	fmt.Printf("got %d recipes with similar slugs:\n", len(sluggedRecipes))
-	for _, r := range sluggedRecipes {
-		fmt.Printf("\tRecipe: %s\n", r.Name)
-		fmt.Printf("\tSlug: %s\n", r.Slug)
-	}
-
-	// Find the next available number
-	if len(sluggedRecipes) == 0 {
-		return slugified, nil
-	}
-
-	utils.Filter(sluggedRecipes, func(r Recipe) bool { return len(r.Slug) > 0 })
-
-	biggest := 0
-	for _, r := range sluggedRecipes {
-		slugNumStr := r.Slug[len(r.Slug)-1:]
-		slugNum, err := strconv.ParseInt(slugNumStr, 0, 64)
-		if err != nil {
-			continue
-		}
-
-		biggest = max(biggest, int(slugNum))
-	}
-
-	slugified = fmt.Sprintf("%s-%d", slugified, biggest+1)
-	fmt.Printf("final slug: %s\n", slugified)
-
-	return slugified, nil
 }
