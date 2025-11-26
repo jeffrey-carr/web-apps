@@ -1,6 +1,9 @@
 <script lang="ts">
   import { Apps, Button, Input, type RouteQuery } from '@jeffrey-carr/frontend-common';
 
+  import styles from './LoginCard.module.scss';
+  import shared from './shared.module.scss';
+
   let {
     query,
     login,
@@ -30,33 +33,25 @@
   };
 </script>
 
-<div class="container">
-  <h1 class="title">Enter the Jeffiverse</h1>
+<div class={shared.container}>
+  <h1 class={styles.title}>Enter the Jeffiverse</h1>
   {#if appName}
     <p>Once you log in, you'll be brought back to <span class="app-highlight">{appName}</span></p>
   {/if}
-  <div class="inputs">
-    <div class="input">
-      <label class="label" for="email">Email</label>
+  <div class={shared.inputs}>
+    <div class={shared.input}>
+      <label class={shared.label} for="email">Email</label>
       <Input bind:value={email} name="email" type="email" placeholder="email@example.com" />
     </div>
-    <div class="input">
-      <label class="label" for="password">Password</label>
+    <div class={shared.input}>
+      <label class={shared.label} for="password">Password</label>
       <Input bind:value={password} name="password" type="password" />
     </div>
   </div>
-  <div class="buttons">
+  <div class={shared.buttons}>
     <Button size="medium" onclick={callLogin} loading={loggingIn}>Login</Button>
     <Button size="medium" type="secondary" onclick={switchToCreate}>Create Account</Button>
   </div>
 </div>
 
 <svelte:window onkeydown={callLoginShortcut} />
-
-<style lang="scss">
-  @import 'shared.scss';
-
-  .title {
-    justify-self: flex-start;
-  }
-</style>

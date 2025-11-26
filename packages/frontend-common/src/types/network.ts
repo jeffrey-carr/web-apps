@@ -33,3 +33,7 @@ export const GlobalRoutes: Record<string, RouteInformation> = {
     method: METHODS.POST,
   },
 };
+
+export type ServerMessage = {
+  message: string;
+};

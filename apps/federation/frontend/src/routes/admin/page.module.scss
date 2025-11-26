@@ -1,0 +1,98 @@
+.container {
+  padding: 1rem;
+}
+
+.createModal {
+  width: 40rem;
+
+  padding: 2rem;
+
+  .appInputLabel {
+    margin-bottom: 15px;
+  }
+
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+
+    margin: 1rem 0 0.5rem;
+  }
+}
+
+.table {
+  --border-bend: 8px;
+
+  tbody > * > td {
+    font-family: 'Source Code Pro';
+  }
+
+  border: 1px solid var(--app-theme-primary);
+  border-radius: var(--border-bend);
+  border-spacing: 0;
+
+  overflow: hidden;
+
+  * > td {
+    min-height: 1rem;
+    padding: 1rem;
+
+    border-right: 1px solid var(--app-theme-tertiary);
+
+    &:last-of-type {
+      border-right: none;
+    }
+  }
+
+  thead {
+    background-color: var(--bg-color-surface);
+
+    tr > td {
+      border: none;
+      border-bottom: 1px solid var(--app-theme-secondary);
+    }
+  }
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+
+  height: 100%;
+  width: 100%;
+
+  .spinner {
+    --size: 2rem;
+    height: var(--size);
+    width: var(--size);
+  }
+}
+
+.greeting {
+  margin: 1rem 0 0.25rem;
+
+  font-size: 1.2rem;
+}
+
+.logoutButton {
+  margin: 0.25rem 0 1rem;
+
+  border: none;
+  background: transparent;
+
+  text-decoration: underline;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.addKeyButton {
+  display: flex;
+  justify-content: center;
+
+  margin-top: 1rem;
+}

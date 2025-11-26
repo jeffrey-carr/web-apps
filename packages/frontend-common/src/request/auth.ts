@@ -1,13 +1,16 @@
-import { App, Environment, METHODS, prodEnvironment, RouteInformation, User } from "../types"
+import { App, Apps, Environment, METHODS, prodEnvironment, RouteInformation, User } from "../types"
 import { AUTH_COOKIE_NAME } from "../constants/auth";
 import { makeRequest } from "../utils";
 
 const getBackendAuthURL = (environment: Environment): string => {
+  const subdomain = Apps.Auth.subdomain;
+  const port = Apps.Auth.devPort;
+
   if (environment !== prodEnvironment) {
-    return 'http://login.jeffreycarr.local:9999';
+    return `http://${subdomain}.jeffreycarr.local:${port}`;
   }
   
-  return 'https://login.jeffreycarr.dev';
+  return `https://${subdomain}.jeffreycarr.dev`;
 };
 
 const getAuthRouteInfo = (environment: Environment): RouteInformation => {
@@ -15,6 +18,7 @@ const getAuthRouteInfo = (environment: Environment): RouteInformation => {
   return {
     path: `${backendURL}/api/auth/authed-user`,
     method: METHODS.GET,
+    credentials: 'required',
   };
 }
 
@@ -35,14 +39,14 @@ const handleUserResponse = async (response: Response): Promise<User | null> => {
 // the headers. And that's how we end up with 2 methods that do essentially the same thing
 
 /** backendGetUser manually adds the user cookie to the headers so it can be called from the backend */
-export const backendGetUser = async (environment: Environment, app: App, authCookie: string) => {
+export const backendGetUser = async (environment: Environment, app: App, authCookie: string, f?: typeof fetch) => {
   const response = await makeRequest(
     getAuthRouteInfo(environment),
     { 
       query: { app },
       additionalHeaders: { cookie: `${AUTH_COOKIE_NAME}=${authCookie}` },
     },
-    fetch,
+    f,
   );
 
   return handleUserResponse(response);
@@ -50,19 +54,12 @@ export const backendGetUser = async (environment: Environment, app: App, authCoo
 
 /** getUser uses 'credentials: true' to send the cookie to the backend, which is only available
  to the browser, so this method should only be called from the frontend */
-export const getUser = async (environment: Environment, app: App): Promise<User | null> => {
-  const backendURL = getBackendAuthURL(environment);
+export const getUser = async (environment: Environment, app: App, f?: typeof fetch): Promise<User | null> => {
   const response = await makeRequest(
-    {
-      path: `${backendURL}/api/auth/authed-user`,
-      method: METHODS.GET,
-    },
-    {
-      query: { app },
-      credentials: true,
-    }
+    getAuthRouteInfo(environment),
+    { query: { app } },
+    f,
   );
   
   return handleUserResponse(response);
 };
-

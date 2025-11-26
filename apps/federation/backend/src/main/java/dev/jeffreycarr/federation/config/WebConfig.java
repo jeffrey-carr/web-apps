@@ -10,13 +10,20 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(@NonNull CorsRegistry registry) {
+        // Protected routes
+        registry.addMapping("/api/auth/login")
+            .allowedOrigins("https://login.jeffreycarr.dev", "http://login.jeffreycarr.local:5175")
+            .allowedMethods("POST")
+            .allowedHeaders("*")
+            .allowCredentials(true);
+
         registry.addMapping("/api/**")
-                .allowedOriginPatterns(new String[]{
-                    "https://*.jeffreycarr.dev",
-                    "http://*.jeffreycarr.local:*",
-                })
-                .allowedMethods("GET", "POST")
-                .allowedHeaders("*")
-                .allowCredentials(true);
+            .allowedOriginPatterns(
+                "https://*.jeffreycarr.dev",
+                "http://*.jeffreycarr.local:*"
+            )
+            .allowedMethods("GET", "POST")
+            .allowedHeaders("Content-Type: application/json")
+            .allowCredentials(true);
     }
 }

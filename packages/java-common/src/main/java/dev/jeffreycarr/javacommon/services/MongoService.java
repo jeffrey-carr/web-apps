@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
@@ -30,6 +31,7 @@ import dev.jeffreycarr.javacommon.models.VariableNotDefinedException;
 import io.github.cdimascio.dotenv.Dotenv;
 
 @Component
+@Scope("prototype")
 public class MongoService<T> {
   private MongoClient client;
   private MongoCollection<T> collection;
@@ -60,6 +62,17 @@ public class MongoService<T> {
     MongoDatabase database = this.client.getDatabase(dbName).withCodecRegistry(this.pojoCodecRegistry);
     this.collection = database.getCollection(collectionName, clazz);
   }
+
+  public List<T> getAll() throws NotConnectedException {
+    if (this.collection == null) {
+      throw new NotConnectedException();
+    }
+
+    // Not scalable.
+    return this.readFindIntoList(
+      this.collection.find()
+    );
+  }
   
   public T getByUUID(String uuid) throws NotConnectedException, NotFoundException {
     if (this.collection == null) {
@@ -70,24 +83,49 @@ public class MongoService<T> {
     // getByKey throws not found, so we can safely get first item
     return result.get(0);
   }
+
+  public List<T> getByUUIDs(List<String> uuids) throws NotConnectedException {
+    if (uuids.size() == 0) {
+      return new ArrayList<T>();
+    }
+
+    return getMultipleByKey("_id", uuids);
+  }
   
   public List<T> getByKey(String key, String value) throws NotConnectedException, NotFoundException {
     if (this.collection == null) {
       throw new NotConnectedException();
     }
 
-    FindIterable<T> result = collection.find(Filters.eq(key, value));
-    List<T> aggregatedResults = new ArrayList<>();
-    MongoCursor<T> it = result.iterator();
-    while (it.hasNext()) {
-      aggregatedResults.add(it.next());
-    }
-    
-    if (aggregatedResults.isEmpty()) {
+    List<T> results = this.readFindIntoList(this.collection.find(Filters.eq(key, value)));
+    if (results.isEmpty()) {
       throw new NotFoundException();
     }
     
-    return aggregatedResults;
+    return results;
+  }
+
+  public List<T> getMultipleByKey(String key, List<String> values) throws NotConnectedException {
+    if (this.collection == null) {
+      throw new NotConnectedException();
+    }
+
+    int offset = 0;
+    int step = 1000;
+    List<T> results = new ArrayList<>();
+    while (offset < values.size()-1) {
+      int end = Math.min(values.size(), offset+step);
+
+      String[] currentValues = values.subList(offset, end).toArray(new String[0]);
+      List<T> currentItems = this.readFindIntoList(
+        this.collection.find(Filters.in(key, currentValues))
+      );
+
+      results.addAll(currentItems);
+      offset += end;
+    }
+
+    return results;
   }
   
   public InsertOneResult insertItem(T item) throws NotConnectedException {
@@ -110,5 +148,15 @@ public class MongoService<T> {
     if (result.getMatchedCount() == 0) {
       throw new NotFoundException();
     }
+  }
+
+  private List<T> readFindIntoList(FindIterable<T> iter) {
+    List<T> aggregatedResults = new ArrayList<>();
+    MongoCursor<T> it = iter.iterator();
+    while (it.hasNext()) {
+      aggregatedResults.add(it.next());
+    }
+
+    return aggregatedResults;
   }
 }
