@@ -5,26 +5,16 @@
     type WordChainGameData,
   } from '$lib/types/word-chain';
   import { Word } from '$lib/components/word-chain';
+  import { newGame as doNewGame, validateAnswer } from '$lib/requests/word-chain';
   import {
     Button,
     Confetti,
-    makeRequest,
     METHODS,
     Modal,
     Spinner,
     type RouteInformation,
+    type ServerResponse,
   } from '@jeffrey-carr/frontend-common';
-
-  const Routes: Record<string, RouteInformation> = {
-    NEW_GAME: {
-      path: '/api/word-chain/new-game',
-      method: METHODS.GET,
-    },
-    VALIDATE_ANSWER: {
-      path: '/api/word-chain/validate-answer',
-      method: METHODS.POST,
-    },
-  };
 
   const TIMEOUT_PENALTY = 5000;
 
@@ -54,14 +44,15 @@
     game = undefined;
     loading = true;
 
-    const response = await makeRequest(Routes.NEW_GAME, { credentials: true });
-    if (response.status !== 200) {
+    try {
+      game = await doNewGame();
+    } catch (e) {
       loading = false;
-      console.error('error getting new game', response);
+      const serverResponse = e as ServerResponse;
+      console.error(`Error creating game: ${serverResponse.data}`);
       return;
     }
 
-    game = await response.json();
     loading = false;
   };
 
@@ -97,16 +88,15 @@
       guess,
       payload: game,
     };
-    const rawResponse = await makeRequest(Routes.VALIDATE_ANSWER, {
-      body: request,
-      credentials: true,
-    });
-    if (rawResponse.status !== 200) {
-      console.error('error in request', rawResponse);
+    let response: ValidateAnswerResponse;
+    try {
+      response = await validateAnswer(request);
+    } catch (e) {
+      const serverResponse = e as ServerResponse;
+      console.error(`Error validating guess: ${serverResponse.data}`);
       return;
     }
 
-    const response: ValidateAnswerResponse = await rawResponse.json();
     game = response.game;
     if (response.correct) {
       if (response.victory) {

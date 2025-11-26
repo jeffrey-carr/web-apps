@@ -14,7 +14,8 @@
 		"lint": "prettier --check ."
 	},
 	"dependencies": {
-		"@jeffrey-carr/frontend-common": "file:../../../packages/frontend-common"
+		"@jeffrey-carr/frontend-common": "file:../../../packages/frontend-common",
+		"clsx": "^2.1.1"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^6.0.0",

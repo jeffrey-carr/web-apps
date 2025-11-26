@@ -17,11 +17,17 @@ public class WebConfig implements WebMvcConfigurer {
             .allowedHeaders("*")
             .allowCredentials(true);
 
-        registry.addMapping("/api/**")
+        registry.addMapping("/api/auth/**")
             .allowedOriginPatterns(
                 "https://*.jeffreycarr.dev",
                 "http://*.jeffreycarr.local:*"
             )
+            .allowedMethods("GET", "POST")
+            .allowedHeaders("*")
+            .allowCredentials(true);
+
+        registry.addMapping("/api/admin/**")
+            .allowedOriginPatterns("https://login.jeffreycarr.dev", "http://login.jeffreycarr.local:5175")
             .allowedMethods("GET", "POST")
             .allowedHeaders("Content-Type: application/json")
             .allowCredentials(true);

@@ -5,7 +5,7 @@ export * from './user';
 export { App, Apps, APP_QUERY_PARAM, isValidApp, PATH_QUERY_PARAM } from './apps';
 export type { AppInfo } from './apps';
 
-export type ServerResponse<T> = {
+export type ServerResponse<T = undefined> = {
   status: number;
   data: T;
 };
