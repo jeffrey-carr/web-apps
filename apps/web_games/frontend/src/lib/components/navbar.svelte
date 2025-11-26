@@ -5,11 +5,10 @@
   import { Sidebar } from './index';
   import type { User } from '@jeffrey-carr/frontend-common';
 
-  let { user }: { user?: User } = $props();
+  let { user, loadingUser }: { user?: User | null; loadingUser?: boolean } = $props();
   let height = $state('5rem');
   let bar = $state<HTMLDivElement>();
   let path = $state(page.url.pathname);
-  let loadingUser = $state(true);
   let isSidebarOpen = $state(false);
 
   $effect(() => {
@@ -66,6 +65,7 @@
     { title: 'Word Chain', action: wordChain },
   ]}
   bind:open={isSidebarOpen}
+  {loadingUser}
   {user}
 />
 

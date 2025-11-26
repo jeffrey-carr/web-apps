@@ -8,9 +8,11 @@
     METHODS,
     Modal,
     Spinner,
+    type ServerResponse,
   } from '@jeffrey-carr/frontend-common';
   import { type InvalidHint, type Coordinate, type ValidateGameResponse } from '$lib/types/binoku';
   import { onDestroy } from 'svelte';
+  import { newGame, validateAnswer } from '$lib/requests/binoku';
 
   const Routes: Record<string, RouteInformation> = {
     NEW_GAME: {
@@ -66,13 +68,16 @@
       generatingLevel = Math.min(GENERATING_MESSAGES.length, generatingLevel + 1);
     }, LOADING_INTERVAL);
 
-    const boardRequest = await makeRequest(Routes.NEW_GAME, { credentials: true, query: { size } });
-    if (boardRequest.status !== 200) {
-      console.error('error getting game', boardRequest);
+    try {
+      board = await newGame(size);
+    } catch (e) {
+      const err = e as ServerResponse;
+      console.error(`Error generating board`, err);
+      clearInterval(generatingTimeout);
+      generatingLevel = 0;
       return;
     }
 
-    board = await boardRequest.json();
     lockedCells = getLockedCells(board);
 
     clearInterval(generatingTimeout);
@@ -95,16 +100,14 @@
   const checkSolution = async () => {
     validating = true;
     const payload = JSON.parse(JSON.stringify(board));
-    const validateRequest = await makeRequest(Routes.VALIDATE_ANSWER, {
-      body: { board: payload },
-      credentials: true,
-    });
-    if (validateRequest.status !== 200) {
-      console.error(`[${validateRequest.status}] error validating guess`);
+    let response: ValidateGameResponse;
+    try {
+      response = await validateAnswer(payload);
+    } catch (e) {
+      const err = e as ServerResponse;
+      console.error(`Error checking solution: ${err.data}`);
       return;
     }
-
-    const response: ValidateGameResponse = await validateRequest.json();
 
     if (response.valid) {
       showCorrect = true;

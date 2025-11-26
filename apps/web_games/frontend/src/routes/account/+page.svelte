@@ -1,56 +1,15 @@
 <script lang="ts">
-  import { App, APP_QUERY_PARAM, CharacterIcon, getAppURL, PATH_QUERY_PARAM, TabbedContent } from '@jeffrey-carr/frontend-common';
-  import type { GetUserResponse } from '$lib/types';
-  import type { CommonStats, UserStats } from '$lib/types/stats';
+  import { CharacterIcon, TabbedContent } from '@jeffrey-carr/frontend-common';
+  import type { CommonStats } from '$lib/types/stats';
 
-  import {
-    makeRequest,
-    METHODS,
-    Spinner,
-    type RouteInformation,
-    type User,
-  } from '@jeffrey-carr/frontend-common';
-  import { onMount } from 'svelte';
-    import { PUBLIC_ENVIRONMENT } from '$env/static/public';
-    import { goto } from '$app/navigation';
+  import { Spinner } from '@jeffrey-carr/frontend-common';
+  import type { PageProps } from './$types';
 
-  const Routes: Record<string, RouteInformation> = {
-    ME: {
-      path: '/api/user/me',
-      method: METHODS.GET,
-    },
-  };
+  const loading = false;
 
-  let user = $state<User | null>(null);
-  let stats = $state<UserStats | null>(null);
-  let loading = $state(true);
-
-  const loadUser = async () => {
-    const rawResponse = await makeRequest(Routes.ME, { credentials: true });
-
-    if (rawResponse.status === 400) {
-      if (!window) {
-        console.error("Please log in again");
-        return;
-      }
-      const route = getAppURL(PUBLIC_ENVIRONMENT, App.Federation);
-      window.location.assign(`${route}?${APP_QUERY_PARAM}=${App.WebGames}&${PATH_QUERY_PARAM}=account`);
-      return;
-    }
-
-    if (rawResponse.status !== 200) {
-      console.error("error retrieving user info");
-      goto('/');
-      return;
-    }
-
-    const response: GetUserResponse = await rawResponse.json();
-    user = response.user;
-    stats = response.stats;
-    loading = false;
-  };
-
-  onMount(loadUser);
+  let { data }: PageProps = $props();
+  let user = $derived(data.user);
+  let stats = $derived(data.stats);
 </script>
 
 <main class="container">
