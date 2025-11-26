@@ -1,6 +1,5 @@
 go 1.25.1
 
 use (
-	./apps/calendar/backend
 	./packages/go-common
 )

@@ -2,7 +2,10 @@
   import { isValidName, isValidEmail, isValidPassword } from '$lib/utils';
   import { Apps, Button, CHARACTERS, Input } from '@jeffrey-carr/frontend-common';
   import type { Character, RouteQuery } from '@jeffrey-carr/frontend-common';
-  import CharacterButton from './CharacterButton.svelte';
+  import CharacterButton from '../CharacterButton/CharacterButton.svelte';
+
+  import styles from './CreateAccountCard.module.scss';
+  import shared from './shared.module.scss';
 
   let {
     createAccount,
@@ -80,12 +83,12 @@
   };
 </script>
 
-<div class="container">
+<div class={shared.container}>
   <h1>Create Account</h1>
 
-  <div class="inputs">
-    <div class="input">
-      <label class="label" for="email">Email</label>
+  <div class={shared.inputs}>
+    <div class={shared.input}>
+      <label class={shared.label} for="email">Email</label>
       <Input
         name="email"
         type="email"
@@ -96,8 +99,8 @@
       />
     </div>
 
-    <div class="input">
-      <label class="label" for="password">Password</label>
+    <div class={shared.input}>
+      <label class={shared.label} for="password">Password</label>
       <Input
         type="password"
         name="email"
@@ -107,31 +110,33 @@
       />
     </div>
 
-    <div class="input">
-      <label class="label" for="fName">First name</label>
-      <Input
-        type="text"
-        name="fName"
-        bind:value={fName}
-        message={fNameErr}
-        onkeypress={() => clearError('fName')}
-      />
+    <div class={styles.nameInputs}>
+      <div class={shared.input}>
+        <label class={shared.label} for="fName">First name</label>
+        <Input
+          type="text"
+          name="fName"
+          bind:value={fName}
+          message={fNameErr}
+          onkeypress={() => clearError('fName')}
+        />
+      </div>
+
+      <div class={shared.input}>
+        <label class={shared.label} for="lName">Last name</label>
+        <Input
+          type="text"
+          name="fName"
+          bind:value={lName}
+          message={lNameErr}
+          onkeypress={() => clearError('lName')}
+        />
+      </div>
     </div>
 
-    <div class="input">
-      <label class="label" for="lName">Last name</label>
-      <Input
-        type="text"
-        name="fName"
-        bind:value={lName}
-        message={lNameErr}
-        onkeypress={() => clearError('lName')}
-      />
-    </div>
-
-    <div class="character-input">
-      <h2 class="title">Choose your character</h2>
-      <div class="characters">
+    <div class={styles.characterInput}>
+      <h2 class={styles.title}>Choose your character</h2>
+      <div class={styles.characters}>
         {#each CHARACTERS as character}
           <CharacterButton
             {character}
@@ -144,10 +149,14 @@
   </div>
 
   {#if appName}
-    <p>Once you create your account, you'll be brought back to <span class="app-highlight">{appName}</span></p>
+    <p>
+      Once you create your account, you'll be brought back to <span class="app-highlight"
+        >{appName}</span
+      >
+    </p>
   {/if}
 
-  <div class="buttons">
+  <div class={shared.buttons}>
     <Button size="medium" onclick={callCreateAccount} loading={creatingAccount}>
       Create Account
     </Button>
@@ -156,18 +165,3 @@
 </div>
 
 <svelte:window onkeypress={callCreateAccountShortcut} />
-
-<style lang="scss">
-  @import 'shared.scss';
-
-  .character-input {
-    .title {
-      margin: 1rem 0;
-    }
-  }
-  .characters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-  }
-</style>

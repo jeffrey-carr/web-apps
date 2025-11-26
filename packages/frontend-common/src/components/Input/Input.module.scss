@@ -1,0 +1,64 @@
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  display: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield; /* Firefox */
+}
+
+.container {
+  position: relative;
+}
+
+.label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.input {
+  width: 100%;
+
+  padding: 0.5rem;
+  line-height: 1rem;
+
+  border: 1px solid var(--app-theme-border-color);
+  border-radius: 5px;
+
+  transition:
+    border 150ms linear,
+    box-shadow 150ms linear;
+
+  &.error {
+    border: 1px solid var(--app-theme-danger);
+  }
+
+  &:focus {
+    outline: none;
+    border: 1px solid var(--app-theme-primary);
+    box-shadow: 0 0 10px var(--app-theme-primary);
+  }
+}
+
+.errorArea {
+  --font-size: 0.8rem;
+  --margin-top: 5px;
+
+  position: relative;
+  height: calc(var(--font-size) + var(--margin-top));
+
+  .errorMessage {
+    position: absolute;
+    top: calc(-2 * var(--font-size));
+    z-index: -1;
+
+    font-size: var(--font-size);
+    color: var(--app-theme-danger);
+
+    transition: top 200ms linear;
+
+    &.active {
+      top: var(--margin-top);
+    }
+  }
+}

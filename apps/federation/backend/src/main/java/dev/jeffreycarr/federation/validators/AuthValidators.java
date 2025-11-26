@@ -66,7 +66,7 @@ public class AuthValidators {
     
     String password = request.password.trim();
     String passwordErr = validatePassword(password);
-    if (passwordErr.length() == 0) {
+    if (passwordErr.length() != 0) {
       return passwordErr;
     }
     

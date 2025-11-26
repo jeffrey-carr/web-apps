@@ -1,6 +1,7 @@
 package dev.jeffreycarr.federation.services;
 
 import java.security.spec.KeySpec;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -34,10 +35,21 @@ public class AuthService extends Exception {
   @Autowired
   public AuthService(MongoService<User> mongo) {
     this.mongo = mongo;
-    this.mongo.useCollection(MongoConstants.USER_DB, MongoConstants.USERS_COLL, User.class);
+    this.mongo.useCollection(MongoConstants.FEDERATION_DB, MongoConstants.USERS_COLL, User.class);
     
     this.random = new Random();
     this.b64Encoder = Base64.getEncoder();
+  }
+
+  public User getUserByUUID(String uuid) throws NotConnectedException, NotFoundException {
+    return this.mongo.getByUUID(uuid);
+  }
+
+  public List<User> getUsersByUUIDs(String[] uuids) throws NotConnectedException {
+    return this.getUsersByUUIDs(Arrays.asList(uuids));
+  }
+  public List<User> getUsersByUUIDs(List<String> uuids) throws NotConnectedException {
+    return this.mongo.getByUUIDs(uuids);
   }
   
   public User getUserByEmail(String email) throws NotConnectedException, NotFoundException {
@@ -56,6 +68,7 @@ public class AuthService extends Exception {
       salt,
       request.fName,
       request.lName,
+      false,
       request.character
     );
     
@@ -88,15 +101,26 @@ public class AuthService extends Exception {
       return Optional.empty();
     }
 
-    // Update the user's auth token and save it to the DB
+    // If their user is still valid, don't reset it so they don't
+    // get logged out elsewhere
+    if (user.isTokenValid()) {
+      return Optional.of(user);
+    }
+    
+    // but if it isn't valid, let's refresh it
     user.createToken();
     this.mongo.updateItem(user.getUUID(), user);
 
     return Optional.of(user);
   }
 
-  public Optional<User> validateToken(String uuid, String token) throws NotConnectedException, NotFoundException {
-    User user = this.mongo.getByUUID(uuid);
+  public Optional<User> validateToken(String token) throws NotConnectedException, NotFoundException {
+    List<User> possibleUsers = this.mongo.getByKey(MongoConstants.AUTH_TOKEN_KEY, token);
+    if (possibleUsers.isEmpty()) {
+      return Optional.empty();
+    }
+
+    User user = possibleUsers.get(0);
     if (!user.isTokenValid()) {
       return Optional.empty();
     }
@@ -105,15 +129,19 @@ public class AuthService extends Exception {
   }
   
   // logout logs the user out of all applications by invalidating their auth token
-  public void logoutEverywhere(String uuid) throws NotConnectedException, NotFoundException {
-    User user = this.mongo.getByUUID(uuid);
+  public void logoutEverywhere(String token) throws NotConnectedException, NotFoundException {
+    List<User> possibleUsers = this.mongo.getByKey(MongoConstants.AUTH_TOKEN_KEY, token);
+    if (possibleUsers.isEmpty()) {
+      return;
+    }
+
+    User user = possibleUsers.get(0);
     if (!user.isTokenValid()) {
       return;
     }
     
     user.invalidateToken();
-    this.mongo.updateItem(uuid, user);
-    return;
+    this.mongo.updateItem(user.getUUID(), user);
   }
   
   private byte[] generateSalt() {

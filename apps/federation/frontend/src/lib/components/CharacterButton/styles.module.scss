@@ -1,0 +1,43 @@
+.container {
+  position: relative;
+
+  --size: 3rem;
+  height: var(--size);
+  width: var(--size);
+
+  text-align: center;
+
+  border: 3px solid var(--app-theme-primary);
+  border-radius: 100%;
+
+  transition: background-color 200ms linear;
+
+  &:hover {
+    cursor: pointer;
+
+    animation: flashBorder 1s linear infinite;
+  }
+
+  &.chosen {
+    background-color: var(--app-theme-primary);
+
+    &:hover {
+      animation: none;
+    }
+  }
+}
+
+@keyframes flashBorder {
+  0% {
+    border-color: var(--app-theme-primary);
+  }
+  50% {
+    border-color: var(--app-theme-secondary);
+  }
+  75% {
+    border-color: var(--app-theme-secondary);
+  }
+  100% {
+    border-color: var(--app-theme-primary);
+  }
+}

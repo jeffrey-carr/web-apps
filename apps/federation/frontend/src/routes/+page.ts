@@ -7,6 +7,5 @@ export const load = ({ url }: { url: URL }): RouteQuery => {
     return {};
   }
   
-  app = app as App;
   return { app, path: url.searchParams.get(PATH_QUERY_PARAM) } as RouteQuery;
 };

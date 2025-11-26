@@ -28,6 +28,8 @@ public class User {
   private String token;
   @BsonProperty("character")
   private String character;
+  @BsonProperty("isAdmin")
+  private boolean isAdmin;
   @BsonProperty("tokenValidTo")
   private Instant tokenValidTo;
   
@@ -40,6 +42,7 @@ public class User {
     byte[] salt,
     String fName,
     String lName,
+    boolean isAdmin,
     String character
   ) {
     this.uuid = uuid;
@@ -48,6 +51,7 @@ public class User {
     this.salt = salt;
     this.fName = fName;
     this.lName = lName;
+    this.isAdmin = isAdmin;
     this.character = character;
   }
   
@@ -61,7 +65,7 @@ public class User {
   }
   
   public CommonUser toCommonUser() {
-    return new CommonUser(this.uuid, this.email, this.fName, this.lName, this.character);
+    return new CommonUser(this.uuid, this.email, this.fName, this.lName, this.isAdmin, this.character);
   }
   
   public String createToken() {
@@ -113,6 +117,12 @@ public class User {
   }
   public String getCharacter() {
     return this.character;
+  }
+  public void setIsAdmin(boolean isAdmin) {
+    this.isAdmin = isAdmin;
+  }
+  public boolean getIsAdmin() {
+    return this.isAdmin;
   }
   public void setToken(String newToken) {
     this.token = newToken;
