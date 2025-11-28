@@ -1,23 +1,18 @@
-version: '3.9'
-
 services:
   federation_frontend:
-    build:
-      context: ./frontend
+    image: ghcr.io/jeffrey-carr/federation-frontend:latest
     container_name: federation_frontend
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - PORT=3000
+      NODE_ENV: production
     ports:
-      - '3001:3000' # host:container
+      - '3001:3000'
 
   federation_backend:
-    build:
-      context: ./backend
+    image: ghcr.io/jeffrey-carr/federation-backend:latest
     container_name: federation_backend
     restart: unless-stopped
-    ports:
-      - '3101:9999' # host:container
     volumes:
-      - /opt/config/federation/.env.json:/app/.env.json:ro
+      - ./backend/.env.json:/app/.env.json:ro
+    ports:
+      - '3101:9999'
