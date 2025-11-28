@@ -85,6 +85,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Generate .env
+        working-directory: ./apps/${{ env.APP }}/frontend
+        run: |
+          cat > /opt/apps/${{ env.APP }}/frontend/.env << 'EOF'
+          PUBLIC_ENVIRONMENT=prod
+          EOF
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -117,21 +124,16 @@ jobs:
             set -e
 
             # Ensure directories exist
-            sudo mkdir -p /opt/apps/${{ env.APP }}
-            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }}
-            sudo mkdir -p /opt/apps/${{ env.APP }}/frontend
-            sudo mkdir -p /opt/apps/${{ env.APP }}/backend
-
-            # Generate frontend env
-            cat > /opt/apps/${{ env.APP }}/frontend/.env << 'EOF'
-            PUBLIC_ENVIRONMENT=prod
-            EOF
+            sudo mkdir -p /opt/apps/${{ needs.prep.outputs.app }}
+            sudo chown -R /opt/apps/${{ needs.prep.outputs.app }} ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }}
+            sudo mkdir -p /opt/apps/${{ needs.prep.outputs.app }}/frontend
+            sudo mkdir -p /opt/apps/${{ needs.prep.outputs.app }}/backend
 
             # Generate backend env
-            cat > /opt/apps/${{ env.APP }}/backend/.env.json << 'EOF'
+            cat > /opt/apps/${{ needs.prep.outputs.app }}/backend/.env.json << 'EOF'
             {
-              "environment": "prod"
-              "mongoConnectionURL": "${{ secrets.MONGO_CONNECTION_URL}}"
+              "environment": "prod",
+              "mongoConnectionURL": "${{ secrets.MONGO_CONNECTION_URL}}",
               "port": "${{ vars.PORT }}"
             }
             EOF

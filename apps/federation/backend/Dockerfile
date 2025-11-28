@@ -1,15 +1,24 @@
+# apps/federation/backend/Dockerfile
 FROM golang:1.23-alpine AS build
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+# Copy module files from src/
+COPY src/go.mod src/go.sum ./src/
+
+WORKDIR /app/src
 RUN go mod download
 
-COPY . .
+# Copy the rest of the source
+COPY src/ .
 
-RUN go build -o server ./src
+# Build binary to /app/server
+RUN go build -o /app/server .
 
+# --- Runtime image ---
 FROM alpine:3.20
+
+RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 
