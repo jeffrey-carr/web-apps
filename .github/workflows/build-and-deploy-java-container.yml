@@ -1,13 +1,13 @@
-name: Build & Deploy Go Containers
+name: Build & Deploy Java Containers
 
 on:
   push:
     tags:
-      - 'federation-v*'
+      - 'web_games-v*'
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to run (e.g. federation-v1.2.3)'
+        description: 'Tag to run (e.g. web_games-v1.2.3)'
         required: true
         type: string
 
