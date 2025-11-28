@@ -12,6 +12,7 @@ build/
 /dist
 dist/
 target
+output/
 
 # OS
 .DS_Store
