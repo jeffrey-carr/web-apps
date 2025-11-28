@@ -1,13 +1,12 @@
 # apps/federation/backend/Dockerfile
-FROM golang:1.23-alpine AS build
+FROM golang:1.25-alpine AS build
 
 WORKDIR /app
 
-# Copy module files from src/
-COPY src/go.mod src/go.sum ./src/
+COPY src/ ./src/
 
 WORKDIR /app/src
-RUN go mod download
+RUN go build -mod=vendor -o /app/server
 
 # Copy the rest of the source
 COPY src/ .
