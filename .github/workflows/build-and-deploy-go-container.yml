@@ -46,6 +46,9 @@ jobs:
 
   build-backend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     needs: [prep]
     environment: ${{ needs.prep.outputs.app }}
     env:
@@ -77,6 +80,9 @@ jobs:
 
   build-frontend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     needs: [prep]
     environment: ${{ needs.prep.outputs.app }}
     env:
