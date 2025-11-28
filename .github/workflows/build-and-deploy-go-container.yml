@@ -66,9 +66,11 @@ jobs:
       - name: Build & push backend image
         uses: docker/build-push-action@v6
         with:
-          context: ./apps/${{ env.APP }}/backend
+          context: . # ⬅️ use repo root as context
           file: ./apps/${{ env.APP }}/backend/Dockerfile
           push: true
+          build-args: | # ⬅️ pass APP into Dockerfile
+            APP=${{ env.APP }}
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-backend:latest
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-backend:${{ env.TAG }}
@@ -102,9 +104,11 @@ jobs:
       - name: Build & push frontend image
         uses: docker/build-push-action@v6
         with:
-          context: ./apps/${{ env.APP }}/frontend
+          context: . # ⬅️ repo root
           file: ./apps/${{ env.APP }}/frontend/Dockerfile
           push: true
+          build-args: | # ⬅️ pass APP into Dockerfile
+            APP=${{ env.APP }}
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-frontend:latest
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-frontend:${{ env.TAG }}
