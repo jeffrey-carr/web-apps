@@ -66,8 +66,8 @@ jobs:
       - name: Build & push backend image
         uses: docker/build-push-action@v6
         with:
-          context: ./apps/${{ ENV.app }}/backend
-          file: ./apps/${{ ENV.app }}/backend/Dockerfile
+          context: ./apps/${{ env.APP }}/backend
+          file: ./apps/${{ env.APP }}/backend/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-backend:latest
@@ -95,8 +95,8 @@ jobs:
       - name: Build & push frontend image
         uses: docker/build-push-action@v6
         with:
-          context: ./apps/${{ env.app }}/frontend
-          file: ./apps/${{ env.app }}/frontend/Dockerfile
+          context: ./apps/${{ env.APP }}/frontend
+          file: ./apps/${{ env.APP }}/frontend/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-frontend:latest
