@@ -1,19 +1,21 @@
 version: '3.9'
 
 services:
-  login_frontend:
+  federation_frontend:
     build:
       context: ./frontend
     container_name: federation_frontend
+    restart: unless-stopped
     environment:
       - NODE_ENV=production
       - PORT=3000
     ports:
       - '3001:3000' # host:container
 
-  login_backend:
+  federation_backend:
     build:
       context: ./backend
     container_name: federation_backend
+    restart: unless-stopped
     ports:
       - '3101:9999' # host:container
