@@ -135,10 +135,9 @@ jobs:
             set -e
 
             # Ensure directories exist
-            sudo mkdir -p /opt/apps/${{ needs.prep.outputs.app }}
-            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} /opt/apps/${{ needs.prep.outputs.app }}
             sudo mkdir -p /opt/apps/${{ needs.prep.outputs.app }}/frontend
             sudo mkdir -p /opt/apps/${{ needs.prep.outputs.app }}/backend
+            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} /opt/apps/${{ needs.prep.outputs.app }}
 
             # Generate backend env
             cat > /opt/apps/${{ needs.prep.outputs.app }}/backend/.env.json << 'EOF'
