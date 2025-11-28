@@ -3,7 +3,6 @@ package middlewares
 import (
 	"context"
 	"errors"
-	"fmt"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/utils"
 	"net/http"
@@ -106,9 +105,7 @@ func (c CORs) WithCredentials(useCredentials bool) CORs {
 // MatchOrigin matches the request origin with our allowed origins. Returns nil
 // if it does not match on the origin
 func (c CORs) MatchOrigin(requestOrigin string) (string, bool) {
-	fmt.Printf("Received MatchOrigin request for %s\n", requestOrigin)
 	if c.allowedOrigins.Has("*") {
-		fmt.Println("Wildcard origin, allowing")
 		return requestOrigin, true
 	}
 
@@ -118,7 +115,6 @@ func (c CORs) MatchOrigin(requestOrigin string) (string, bool) {
 	}
 
 	for origin := range c.allowedOrigins.Iter {
-		fmt.Printf("Comparing %s to %s...", requestOrigin, origin)
 		originParts := strings.Split(origin, ".")
 		if len(originParts) > len(requestParts) {
 			continue
@@ -140,7 +136,6 @@ func (c CORs) MatchOrigin(requestOrigin string) (string, bool) {
 						// If they don't match, break this loop to move on to the next origin in the list
 						break
 					} else {
-						fmt.Print("yes!\n")
 						// If they do match, this is the last part in the origin so we can confirm a match
 						return requestOrigin, true
 					}
@@ -149,8 +144,7 @@ func (c CORs) MatchOrigin(requestOrigin string) (string, bool) {
 
 			if part == requestParts[i] {
 				if i == len(originParts)-1 {
-					fmt.Print("yes!\n")
-					return requestOrigin, false
+					return requestOrigin, true
 				}
 			} else {
 				break
@@ -158,7 +152,6 @@ func (c CORs) MatchOrigin(requestOrigin string) (string, bool) {
 		}
 	}
 
-	fmt.Print("no\n")
 	return "", false
 }
 
