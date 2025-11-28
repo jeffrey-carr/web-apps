@@ -4,7 +4,6 @@
 </script>
 
 <main class="main">
-  <p>Hey there!</p>
   <div class="games-container">
     {#each AVAILABLE_GAMES as game}
       <GameButton
