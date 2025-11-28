@@ -1,0 +1,16 @@
+services:
+  web_games_frontend:
+    image: ghcr.io/jeffrey-carr/web_games-frontend:latest
+    container_name: web_games_frontend
+    ports:
+      - '5173:3000'
+    restart: unless-stopped
+
+  web_games_backend:
+    image: ghcr.io/jeffrey-carr/web_games-backend:latest
+    container_name: web_games_backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - '8082:8081'
+    restart: unless-stopped
