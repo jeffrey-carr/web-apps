@@ -1,18 +1,13 @@
 # apps/federation/backend/Dockerfile
 FROM golang:1.25-alpine AS build
 
-WORKDIR /app
-
-COPY src/ ./src/
-
 WORKDIR /app/src
-RUN go build -mod=vendor -o /app/server
 
-# Copy the rest of the source
+# Copy entire module (including go.mod, go.sum, vendor, etc.)
 COPY src/ .
 
-# Build binary to /app/server
-RUN go build -o /app/server .
+# Build the binary using vendored deps
+RUN go build -mod=vendor -o server .
 
 # --- Runtime image ---
 FROM alpine:3.20
@@ -21,7 +16,8 @@ RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 
-COPY --from=build /app/server ./server
+# Copy the binary from the build stage
+COPY --from=build /app/src/server ./server
 
 ENV PORT=9999
 EXPOSE 9999
