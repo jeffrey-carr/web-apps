@@ -202,6 +202,11 @@ func main() {
 		),
 	)
 
+	http.HandleFunc(
+		"OPTIONS /api/{rest...}",
+		jhttp.NewEndpoint[struct{}, struct{}](nil, nil, openCORsMiddleware),
+	)
+
 	fmt.Printf("Starting server on port %s\n", config.Port)
 	http.ListenAndServe(fmt.Sprintf(":%s", config.Port), nil)
 }
