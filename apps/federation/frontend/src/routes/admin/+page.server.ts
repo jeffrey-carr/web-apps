@@ -1,7 +1,7 @@
-import { App, AUTH_COOKIE_NAME, backendGetUser } from '@jeffrey-carr/frontend-common';
+import { AUTH_COOKIE_NAME } from '@jeffrey-carr/frontend-common';
 import type { PageServerLoad } from './$types';
-import { PUBLIC_ENVIRONMENT } from '$env/static/public';
 import { error, redirect } from '@sveltejs/kit';
+import { authRouteBackend } from '$lib/requests';
 
 export const load: PageServerLoad = async ({ cookies, fetch }) => {
   const cookieValue = cookies.get(AUTH_COOKIE_NAME);
@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ cookies, fetch }) => {
     throw redirect(302, '/');
   }
 
-  const user = await backendGetUser(PUBLIC_ENVIRONMENT, App.Federation, cookieValue, fetch);
+  const user = await authRouteBackend(cookieValue, fetch);
   if (user == null) {
     throw redirect(302, "/");
   }

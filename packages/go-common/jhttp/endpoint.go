@@ -32,9 +32,9 @@ func NewEndpoint[T any, K any](
 		ctx := context.Background()
 		var middlewareErr *errors.JHTTPError
 		// Add on common headers first, that way they can be clobbered by custom headers
-		ctx, _ = middlewares.AddCommonHeaders{}.Apply(ctx, &w, r)
+		ctx, _ = middlewares.AddCommonHeaders{}.Apply(ctx, w, r)
 		for _, mw := range mws {
-			ctx, middlewareErr = mw.Apply(ctx, &w, r)
+			ctx, middlewareErr = mw.Apply(ctx, w, r)
 			if middlewareErr != nil {
 				writeErr(w, *middlewareErr)
 				return
@@ -69,6 +69,7 @@ func NewEndpoint[T any, K any](
 		v, err := f(
 			ctx,
 			RequestData[T]{
+				Writer:     &w,
 				PathValues: pathValues,
 				Query:      query,
 				Body:       &body,
@@ -86,7 +87,6 @@ func NewEndpoint[T any, K any](
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
 		w.Write(vBytes)
 	}
 }

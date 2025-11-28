@@ -1,8 +1,8 @@
 {
   "name": "federation-backend",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "scripts": {
-    "dev": "mvn spring-boot:run",
-    "build": "mvn clean install"
+    "dev": "air",
+    "build": "go build -o ./output/app ./src/"
   }
 }

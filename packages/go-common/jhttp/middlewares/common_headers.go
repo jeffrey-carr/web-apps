@@ -8,7 +8,7 @@ import (
 
 type AddCommonHeaders struct{}
 
-func (m AddCommonHeaders) Apply(ctx context.Context, w *http.ResponseWriter, r *http.Request) (context.Context, *errors.JHTTPError) {
-	(*w).Header().Add("Content-Type", "application/json")
+func (m AddCommonHeaders) Apply(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, *errors.JHTTPError) {
+	w.Header().Add("Content-Type", "application/json")
 	return ctx, nil
 }

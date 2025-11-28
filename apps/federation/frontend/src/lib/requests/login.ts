@@ -1,5 +1,5 @@
 import { isValidEmail, isValidPassword } from "$lib/utils";
-import { makeRequest, METHODS, type AuthRequest, type RouteInformation, type ServerMessage } from "@jeffrey-carr/frontend-common";
+import { AUTH_COOKIE_NAME, makeRequest, METHODS, type AuthRequest, type RouteInformation, type ServerMessage, type User } from "@jeffrey-carr/frontend-common";
 
 const authRoute: RouteInformation = {
   path: '/api/auth/login',
@@ -56,4 +56,22 @@ export const logout = async () => {
   }
 
   return;
+};
+
+const authRouteBackendInfo: RouteInformation = {
+  path: '/api/auth/authed-user',
+  method: METHODS.GET,
+  credentials: 'required',
+}
+// authRouteBackend is used when we want to validate a user's cookie server-side
+export const authRouteBackend = async (cookie: string, f: typeof fetch): Promise<User | null> => {
+  const response = await makeRequest(authRouteBackendInfo, {
+    additionalHeaders: { cookie: `${AUTH_COOKIE_NAME}=${cookie}`}
+  }, f);
+
+  if (response.status !== 200) {
+    return null;
+  }
+
+  return await response.json();
 };

@@ -7,11 +7,23 @@ import (
 
 // GetUser gets a user from the context and returns a boolean if the user was present
 func GetUser(ctx context.Context) (types.CommonUser, bool) {
-	untypedUser := ctx.Value(UserKey)
-	if untypedUser == nil {
-		return types.CommonUser{}, false
+	return getValueFromContext[types.CommonUser](ctx, UserKey)
+}
+
+// GetFullUser gets a full user object from the context
+func GetFullUser(ctx context.Context) (*types.User, bool) {
+	return getValueFromContext[*types.User](ctx, FullUserKey)
+}
+
+func getValueFromContext[T any](ctx context.Context, key string) (T, bool) {
+	var typed T
+	var ok bool
+
+	untyped := ctx.Value(key)
+	if untyped == nil {
+		return typed, false
 	}
 
-	user, ok := untypedUser.(types.CommonUser)
-	return user, ok
+	typed, ok = untyped.(T)
+	return typed, ok
 }
