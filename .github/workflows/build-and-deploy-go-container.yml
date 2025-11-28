@@ -136,7 +136,7 @@ jobs:
 
             # Ensure directories exist
             sudo mkdir -p /opt/apps/${{ needs.prep.outputs.app }}
-            sudo chown -R /opt/apps/${{ needs.prep.outputs.app }} ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }}
+            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} /opt/apps/${{ needs.prep.outputs.app }}
             sudo mkdir -p /opt/apps/${{ needs.prep.outputs.app }}/frontend
             sudo mkdir -p /opt/apps/${{ needs.prep.outputs.app }}/backend
 
