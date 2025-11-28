@@ -187,10 +187,6 @@ func (c CORs) Apply(ctx context.Context, w http.ResponseWriter, r *http.Request)
 		return ctx, JHTTPErrors.NewUnauthorizedError()
 	}
 
-	if r.Method == http.MethodOptions {
-		return nil, JHTTPErrors.NewEmptyOKError()
-	}
-
 	allMethods := append(alwaysAllowedMethods.ToSlice(), c.allowedMethods.ToSlice()...)
 	methods := strings.Join(allMethods, ",")
 	headers := strings.Join(c.allowedHeaders.ToSlice(), ",")
@@ -199,6 +195,10 @@ func (c CORs) Apply(ctx context.Context, w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Access-Control-Allow-Methods", methods)
 	w.Header().Set("Access-Control-Allow-Headers", headers)
 	w.Header().Set("Access-Control-Allow-Credentials", strconv.FormatBool(c.allowCredentials))
+
+	if r.Method == http.MethodOptions {
+		return nil, JHTTPErrors.NewEmptyOKError()
+	}
 
 	return ctx, nil
 }
