@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+var alwaysAllowedMethods = utils.NewSet("OPTIONS")
+
 // CORs handles cross origin requests. You pass it a list of allowed origins
 // and methods that will apply to all requests
 type CORs struct {
@@ -179,14 +181,18 @@ func (c CORs) Apply(ctx context.Context, w http.ResponseWriter, r *http.Request)
 	if origin == "" {
 		return ctx, nil
 	}
+
 	matchedOrigin, matched := c.MatchOrigin(origin)
 	if !matched {
 		return ctx, JHTTPErrors.NewUnauthorizedError()
 	}
+
 	if r.Method == http.MethodOptions {
 		return nil, JHTTPErrors.NewEmptyOKError()
 	}
-	methods := strings.Join(c.allowedMethods.ToSlice(), ",")
+
+	allMethods := append(alwaysAllowedMethods.ToSlice(), c.allowedMethods.ToSlice()...)
+	methods := strings.Join(allMethods, ",")
 	headers := strings.Join(c.allowedHeaders.ToSlice(), ",")
 
 	w.Header().Set("Access-Control-Allow-Origin", matchedOrigin)
