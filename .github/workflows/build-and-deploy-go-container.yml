@@ -121,6 +121,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ needs.prep.outputs.app }}
     needs: [prep, build-backend, build-frontend]
     steps:
       - name: SSH to server
