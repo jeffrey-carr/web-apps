@@ -110,10 +110,10 @@ jobs:
       - name: Build & push frontend image
         uses: docker/build-push-action@v6
         with:
-          context: . # ⬅️ repo root
+          context: .
           file: ./apps/${{ env.APP }}/frontend/Dockerfile
           push: true
-          build-args: | # ⬅️ pass APP into Dockerfile
+          build-args: |
             APP=${{ env.APP }}
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-frontend:latest
