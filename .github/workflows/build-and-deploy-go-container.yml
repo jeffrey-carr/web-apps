@@ -116,14 +116,34 @@ jobs:
           script: |
             set -e
 
-              # Login to GHCR on the server so it can pull private images
-              echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
+            # Ensure directories exist
+            sudo mkdir -p /opt/apps/${{ env.APP }}
+            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }}
+            sudo mkdir -p /opt/apps/${{ env.APP }}/frontend
+            sudo mkdir -p /opt/apps/${{ env.APP }}/backend
 
-              cd /opt/apps/${{ needs.prep.outputs.app }}
+            # Generate frontend env
+            cat > /opt/apps/${{ env.APP }}/frontend/.env << 'EOF'
+            PUBLIC_ENVIRONMENT=prod
+            EOF
 
-              # Pull new images and restart containers
-              docker compose pull
-              docker compose up -d
+            # Generate backend env
+            cat > /opt/apps/${{ env.APP }}/backend/.env.json << 'EOF'
+            {
+              "environment": "prod"
+              "mongoConnectionURL": "${{ secrets.MONGO_CONNECTION_URL}}"
+              "port": "${{ vars.PORT }}"
+            }
+            EOF
 
-              # Optional: clean up old dangling images
-              docker image prune -f
+            # Login to GHCR on the server so it can pull private images
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
+
+            cd /opt/apps/${{ needs.prep.outputs.app }}
+
+            # Pull new images and restart containers
+            docker compose pull
+            docker compose up -d
+
+            # Optional: clean up old dangling images
+            docker image prune -f

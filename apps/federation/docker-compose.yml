@@ -19,3 +19,5 @@ services:
     restart: unless-stopped
     ports:
       - '3101:9999' # host:container
+    volumes:
+      - /opt/config/federation/.env.json:/app/.env.json:ro
