@@ -1,5 +1,6 @@
-go 1.25.1
+go 1.25.3
 
 use (
+	./apps/federation/backend/src
 	./packages/go-common
 )

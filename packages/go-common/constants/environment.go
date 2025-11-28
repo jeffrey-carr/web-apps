@@ -1,6 +1,7 @@
 package constants
 
 const (
-	EnvProd = "prod"
-	EnvDev  = "dev"
+	EnvProd           = "prod"
+	EnvDev            = "dev"
+	EnvEnvironmentVar = "env"
 )

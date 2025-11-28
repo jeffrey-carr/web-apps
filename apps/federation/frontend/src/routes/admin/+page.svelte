@@ -22,8 +22,8 @@
 
   let hasLoadedKeys = false;
   let loadingKeys = $state(false);
-  let activeKeys = $derived(keys.filter(key => key.active));
-  let inactiveKeys = $derived(keys.filter(key => !key.active));
+  let activeKeys = $derived(keys.filter(key => key.isActive));
+  let inactiveKeys = $derived(keys.filter(key => !key.isActive));
 
   let notif = $state<{ title?: string; message: string; level: NotificationLevel }>();
 
@@ -87,7 +87,7 @@
     newAppName = '';
   };
 
-  const revokeKey = async (key: string, idx: number) => {
+  const revokeKey = async (key: APIKey, idx: number) => {
     loadingRevoke[idx] = true;
     let updatedKey;
     try {
@@ -103,7 +103,7 @@
       return;
     }
 
-    const keyIndex = keys.findIndex(currentKey => currentKey.key === key);
+    const keyIndex = keys.findIndex(currentKey => currentKey.key === key.key);
     if (keyIndex < 0) return;
 
     keys[keyIndex] = updatedKey;
@@ -166,7 +166,7 @@
             <td
               ><Button
                 onclick={() => {
-                  revokeKey(key.key, idx);
+                  revokeKey(key, idx);
                 }}
                 type="secondary"
                 size="medium"

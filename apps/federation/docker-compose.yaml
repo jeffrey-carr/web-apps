@@ -1,0 +1,19 @@
+version: '3.9'
+
+services:
+  login_frontend:
+    build:
+      context: ./frontend
+    container_name: federation_frontend
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    ports:
+      - '3001:3000' # host:container
+
+  login_backend:
+    build:
+      context: ./backend
+    container_name: federation_backend
+    ports:
+      - '3101:9999' # host:container

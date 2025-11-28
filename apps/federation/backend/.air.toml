@@ -1,0 +1,9 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "cd src && go build -o ../tmp/app ."
+bin = "tmp/app"
+include_ext = ["go"]
+include_dir = ["src"]
+exclude_dir = ["tmp", "output"]

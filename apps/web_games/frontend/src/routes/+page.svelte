@@ -1,8 +1,19 @@
 <script lang="ts">
   import { AVAILABLE_GAMES, GamesInfo } from '$lib';
   import { GameButton } from '$lib/components';
+  import { makeRequest, METHODS } from '@jeffrey-carr/frontend-common';
 
   let open = $state(false);
+
+  const testCORs = async () => {
+    const response = await makeRequest({
+      path: 'http://login.jeffreycarr.local:9999/api/admin/keys',
+      method: METHODS.GET,
+      credentials: 'required',
+    });
+
+    console.log(response);
+  };
 </script>
 
 <main class="main">
@@ -15,6 +26,8 @@
       />
     {/each}
   </div>
+
+  <button onclick={testCORs}>Test</button>
 </main>
 
 <style lang="scss">

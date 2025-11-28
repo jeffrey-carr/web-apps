@@ -38,7 +38,7 @@ const revokeAPIKeyInfo: RouteInformation = {
   method: METHODS.POST,
   credentials: 'required',
 };
-export const revokeAPIKey = async (key: string): Promise<APIKey> => {
+export const revokeAPIKey = async (key: APIKey): Promise<APIKey> => {
   const response = await makeRequest(revokeAPIKeyInfo, { body: { key } });
   if (response.status !== 200) {
     const serverMessage: ServerMessage = await response.json();

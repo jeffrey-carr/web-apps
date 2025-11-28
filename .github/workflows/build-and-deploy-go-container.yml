@@ -1,0 +1,129 @@
+name: Build & Deploy Go Containers
+
+on:
+  push:
+    tags:
+      - 'federation-v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to run (e.g. federation-v1.2.3)'
+        required: true
+        type: string
+
+run-name: Build ${{ (github.event_name == 'workflow_dispatch' && inputs.tag) || github.ref_name }}
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.extract.outputs.tag }}
+      app: ${{ steps.extract.outputs.app }}
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - name: Extract app/version from tag
+        id: extract
+        shell: bash
+        run: |
+          # Prefer manual input on workflow_dispatch, otherwise use the pushed tag name
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          # Expect <app>-v<MAJOR>.<MINOR>.<PATCH>, e.g. federation-v1.2.3
+          if [[ "$TAG" =~ ^([a-zA-Z0-9_-]+)-v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            APP="${BASH_REMATCH[1]}"
+            VERSION="v${BASH_REMATCH[2]}.${BASH_REMATCH[3]}.${BASH_REMATCH[4]}"
+            echo "app=$APP" >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unrecognized app tag: $TAG"
+            exit 1
+          fi
+
+  build-backend:
+    runs-on: ubuntu-latest
+    needs: [prep]
+    environment: ${{ needs.prep.outputs.app }}
+    env:
+      REGISTRY: ghcr.io
+      TAG: ${{ needs.prep.outputs.tag }}
+      APP: ${{ needs.prep.outputs.app }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/${{ ENV.app }}/backend
+          file: ./apps/${{ ENV.app }}/backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-backend:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-backend:${{ env.TAG }}
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: [prep]
+    environment: ${{ needs.prep.outputs.app }}
+    env:
+      REGISTRY: ghcr.io
+      TAG: ${{ needs.prep.outputs.tag }}
+      APP: ${{ needs.prep.outputs.app }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/${{ env.app }}/frontend
+          file: ./apps/${{ env.app }}/frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-frontend:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP }}-frontend:${{ env.TAG }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [prep, build-backend, build-frontend]
+    steps:
+      - name: SSH to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_IP }}
+          username: ${{ vars.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+
+              # Login to GHCR on the server so it can pull private images
+              echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
+
+              cd /opt/apps/${{ needs.prep.outputs.app }}
+
+              # Pull new images and restart containers
+              docker compose pull
+              docker compose up -d
+
+              # Optional: clean up old dangling images
+              docker image prune -f

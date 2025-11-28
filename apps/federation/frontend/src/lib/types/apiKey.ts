@@ -1,7 +1,7 @@
 export type APIKey = {
   key: string;
   app: string;
-  active: boolean;
+  isActive: boolean;
   grantedAt: Date;
   revokedAt?: Date;
   lastSeenAt: Date;
