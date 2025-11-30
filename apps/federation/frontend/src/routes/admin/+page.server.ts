@@ -1,4 +1,4 @@
-import { App, AUTH_COOKIE_NAME, backendGetUser } from '@jeffrey-carr/frontend-common';
+import { App, AUTH_COOKIE_NAME, backendGetUser, makeRequest, METHODS } from '@jeffrey-carr/frontend-common';
 import type { PageServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
 import { PUBLIC_ENVIRONMENT } from '$env/static/public';
@@ -10,9 +10,22 @@ export const load: PageServerLoad = async ({ cookies, fetch }) => {
     throw redirect(302, '/');
   }
 
-  const user = await backendGetUser(PUBLIC_ENVIRONMENT, App.Federation, cookieValue, fetch);
+  const additionalHeaders = {
+      cookie: `${AUTH_COOKIE_NAME}=${cookieValue}`,
+  }
+  const response = await makeRequest({
+    path: 'http://localhost:3101/api/auth/authed-user',
+    method: METHODS.POST,
+  }, { additionalHeaders }, fetch);
+  if (response.status !== 200) {
+    console.error(response);
+    throw redirect(302, `/non-200/${response.status}`);
+  }
+
+  const user = await response.json();
+  // const user = await backendGetUser(PUBLIC_ENVIRONMENT, App.Federation, cookieValue, fetch);
   if (user == null) {
-    throw redirect(302, "/");
+    throw redirect(302, "/no-user");
   }
 
   if (!user.isAdmin) {
