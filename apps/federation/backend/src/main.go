@@ -59,11 +59,6 @@ func main() {
 
 	// MIDDLEWARES
 	corsMiddleware := middlewares.NewCORs()
-	corsMiddleware = corsMiddleware.WithOrigins("http://login.jeffreycarr.local:5173")
-	if config.Environment == globalConstants.EnvProd {
-		corsMiddleware = corsMiddleware.OverrideOrigins("https://login.jeffreycarr.dev")
-	}
-	openCORsMiddleware := corsMiddleware.WithOrigins("*")
 	userMiddleware := middlewares.NewGetUser(
 		&middlewares.GetUserOpts{UserFetcher: authController.GetUserFromCookie},
 	)
@@ -83,7 +78,6 @@ func main() {
 		jhttp.NewEndpoint(
 			authHandler.CreateUser,
 			nil,
-			corsMiddleware.WithMethods("POST"),
 		),
 	)
 
@@ -92,7 +86,6 @@ func main() {
 		jhttp.NewEndpoint(
 			authHandler.Login,
 			nil,
-			corsMiddleware.WithMethods("POST"),
 			userMiddleware,
 		),
 	)
@@ -102,7 +95,7 @@ func main() {
 		jhttp.NewEndpoint(
 			authHandler.Logout,
 			nil,
-			openCORsMiddleware.WithMethods("POST"),
+			corsMiddleware,
 			userMiddleware,
 		),
 	)
@@ -112,7 +105,7 @@ func main() {
 		jhttp.NewEndpoint(
 			authHandler.ValidateCookie,
 			nil,
-			openCORsMiddleware.WithMethods("GET"),
+			corsMiddleware,
 			userMiddleware,
 		),
 	)
@@ -122,7 +115,7 @@ func main() {
 		jhttp.NewEndpoint(
 			authHandler.GetUserByUUID,
 			[]string{constants.UserUUIDPathVariable},
-			openCORsMiddleware.WithMethods("GET"),
+			corsMiddleware,
 			apiKeyMiddleware,
 		),
 	)
@@ -132,7 +125,7 @@ func main() {
 		jhttp.NewEndpoint(
 			authHandler.BulkGetUsersByUUIDs,
 			nil,
-			openCORsMiddleware.WithMethods("POST"),
+			corsMiddleware,
 			apiKeyMiddleware,
 		),
 	)
@@ -143,7 +136,6 @@ func main() {
 		jhttp.NewEndpoint(
 			adminHandler.GetAllKeys,
 			nil,
-			corsMiddleware.WithMethods("GET"),
 			userMiddleware,
 			adminMiddleware,
 		),
@@ -154,7 +146,6 @@ func main() {
 		jhttp.NewEndpoint(
 			adminHandler.CreateNewAPIKey,
 			nil,
-			corsMiddleware.WithMethods("POST"),
 			userMiddleware,
 			adminMiddleware,
 		),
@@ -165,7 +156,6 @@ func main() {
 		jhttp.NewEndpoint(
 			adminHandler.RevokeAPIKey,
 			nil,
-			corsMiddleware.WithMethods("POST"),
 			userMiddleware,
 			adminMiddleware,
 		),
@@ -177,7 +167,7 @@ func main() {
 		jhttp.NewEndpoint(
 			HandlePing,
 			nil,
-			openCORsMiddleware.WithMethods("POST"),
+			corsMiddleware,
 			apiKeyMiddleware,
 		),
 	)
@@ -187,7 +177,7 @@ func main() {
 		jhttp.NewEndpoint(
 			HandlePing,
 			nil,
-			openCORsMiddleware.WithMethods("POST"),
+			corsMiddleware,
 			userMiddleware,
 			adminMiddleware,
 		),
@@ -198,13 +188,13 @@ func main() {
 		jhttp.NewEndpoint(
 			HandlePing,
 			nil,
-			openCORsMiddleware.WithMethods("POST"),
+			corsMiddleware,
 		),
 	)
 
 	http.HandleFunc(
 		"OPTIONS /api/{rest...}",
-		jhttp.NewEndpoint[struct{}, struct{}](nil, nil, openCORsMiddleware),
+		jhttp.NewEndpoint[struct{}, struct{}](nil, nil, corsMiddleware),
 	)
 
 	fmt.Printf("Starting server on port %s\n", config.Port)
