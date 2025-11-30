@@ -70,27 +70,10 @@ func main() {
 	adminHandler := handlers.NewAdminHandler(adminController, authController)
 
 	// ROUTER //
-	http.NewServeMux()
+	mux := http.NewServeMux()
 
-	// Auth
-	http.HandleFunc(
-		"POST /api/auth/create",
-		jhttp.NewEndpoint(
-			authHandler.CreateUser,
-			nil,
-		),
-	)
-
-	http.HandleFunc(
-		"POST /api/auth/login",
-		jhttp.NewEndpoint(
-			authHandler.Login,
-			nil,
-			userMiddleware,
-		),
-	)
-
-	http.HandleFunc(
+	// Public endpoints
+	mux.HandleFunc(
 		"POST /api/auth/logout",
 		jhttp.NewEndpoint(
 			authHandler.Logout,
@@ -100,7 +83,7 @@ func main() {
 		),
 	)
 
-	http.HandleFunc(
+	mux.HandleFunc(
 		"GET /api/auth/authed-user",
 		jhttp.NewEndpoint(
 			authHandler.ValidateCookie,
@@ -110,7 +93,7 @@ func main() {
 		),
 	)
 
-	http.HandleFunc(
+	mux.HandleFunc(
 		"GET /api/auth/user/{userUUID}",
 		jhttp.NewEndpoint(
 			authHandler.GetUserByUUID,
@@ -120,7 +103,7 @@ func main() {
 		),
 	)
 
-	http.HandleFunc(
+	mux.HandleFunc(
 		"POST /api/auth/users",
 		jhttp.NewEndpoint(
 			authHandler.BulkGetUsersByUUIDs,
@@ -130,39 +113,7 @@ func main() {
 		),
 	)
 
-	// Admin
-	http.HandleFunc(
-		"GET /api/admin/keys",
-		jhttp.NewEndpoint(
-			adminHandler.GetAllKeys,
-			nil,
-			userMiddleware,
-			adminMiddleware,
-		),
-	)
-
-	http.HandleFunc(
-		"POST /api/admin/keys",
-		jhttp.NewEndpoint(
-			adminHandler.CreateNewAPIKey,
-			nil,
-			userMiddleware,
-			adminMiddleware,
-		),
-	)
-
-	http.HandleFunc(
-		"POST /api/admin/keys/revoke",
-		jhttp.NewEndpoint(
-			adminHandler.RevokeAPIKey,
-			nil,
-			userMiddleware,
-			adminMiddleware,
-		),
-	)
-
-	// Test
-	http.HandleFunc(
+	mux.HandleFunc(
 		"POST /api/ping/api-key",
 		jhttp.NewEndpoint(
 			HandlePing,
@@ -172,7 +123,7 @@ func main() {
 		),
 	)
 
-	http.HandleFunc(
+	mux.HandleFunc(
 		"POST /api/ping/admin",
 		jhttp.NewEndpoint(
 			HandlePing,
@@ -183,7 +134,7 @@ func main() {
 		),
 	)
 
-	http.HandleFunc(
+	mux.HandleFunc(
 		"POST /api/ping",
 		jhttp.NewEndpoint(
 			HandlePing,
@@ -192,11 +143,60 @@ func main() {
 		),
 	)
 
-	http.HandleFunc(
-		"OPTIONS /api/{rest...}",
+	// Auth
+	mux.HandleFunc(
+		"POST /api/auth/create",
+		jhttp.NewEndpoint(
+			authHandler.CreateUser,
+			nil,
+		),
+	)
+
+	mux.HandleFunc(
+		"POST /api/auth/login",
+		jhttp.NewEndpoint(
+			authHandler.Login,
+			nil,
+			userMiddleware,
+		),
+	)
+
+	// Admin
+	mux.HandleFunc(
+		"GET /api/admin/keys",
+		jhttp.NewEndpoint(
+			adminHandler.GetAllKeys,
+			nil,
+			userMiddleware,
+			adminMiddleware,
+		),
+	)
+
+	mux.HandleFunc(
+		"POST /api/admin/keys",
+		jhttp.NewEndpoint(
+			adminHandler.CreateNewAPIKey,
+			nil,
+			userMiddleware,
+			adminMiddleware,
+		),
+	)
+
+	mux.HandleFunc(
+		"POST /api/admin/keys/revoke",
+		jhttp.NewEndpoint(
+			adminHandler.RevokeAPIKey,
+			nil,
+			userMiddleware,
+			adminMiddleware,
+		),
+	)
+
+	mux.HandleFunc(
+		"OPTIONS /api/auth/{rest...}",
 		jhttp.NewEndpoint[struct{}, struct{}](nil, nil, corsMiddleware),
 	)
 
 	fmt.Printf("Starting server on port %s\n", config.Port)
-	http.ListenAndServe(fmt.Sprintf(":%s", config.Port), nil)
+	http.ListenAndServe(fmt.Sprintf(":%s", config.Port), mux)
 }
