@@ -1,5 +1,7 @@
 package utils
 
+import "iter"
+
 // Set represents a Set data structure
 type Set[T comparable] struct {
 	data map[T]struct{}
@@ -18,6 +20,12 @@ func NewSet[T comparable](initialValues ...T) Set[T] {
 // Add adds an item to the set
 func (s *Set[T]) Add(items ...T) {
 	for _, item := range items {
+		s.data[item] = struct{}{}
+	}
+}
+
+func (s *Set[T]) AddIter(items iter.Seq[T]) {
+	for item := range items {
 		s.data[item] = struct{}{}
 	}
 }

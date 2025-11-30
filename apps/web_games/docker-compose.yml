@@ -10,7 +10,7 @@ services:
     image: ghcr.io/jeffrey-carr/web_games-backend:latest
     container_name: web_games_backend
     volumes:
-      - ./backend/.env:/app/.env
+      - ./backend/.env:/app/.env:ro
     ports:
       - '8082:8081'
     restart: unless-stopped

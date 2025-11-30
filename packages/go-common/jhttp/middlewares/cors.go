@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go-common/constants"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/utils"
 	"net/http"
@@ -186,14 +187,19 @@ func (c CORs) Apply(ctx context.Context, w http.ResponseWriter, r *http.Request)
 	if !matched {
 		return ctx, JHTTPErrors.NewUnauthorizedError()
 	}
-
-	allMethods := append(alwaysAllowedMethods.ToSlice(), c.allowedMethods.ToSlice()...)
-	methods := strings.Join(allMethods, ",")
-	headers := strings.Join(c.allowedHeaders.ToSlice(), ",")
+	headers := c.allowedHeaders.Clone()
+	if headers.Has("*") {
+		headers = utils.NewSet("Content-Type", string(constants.APIKeyHeaderKey))
+	}
+	methods := c.allowedMethods.Clone()
+	if methods.Has("*") {
+		methods = utils.NewSet("OPTIONS", "GET", "POST")
+	}
+	methods.AddIter(alwaysAllowedMethods.Iter)
 
 	w.Header().Set("Access-Control-Allow-Origin", matchedOrigin)
-	w.Header().Set("Access-Control-Allow-Methods", methods)
-	w.Header().Set("Access-Control-Allow-Headers", headers)
+	w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods.ToSlice(), ","))
+	w.Header().Set("Access-Control-Allow-Headers", strings.Join(headers.ToSlice(), ","))
 	w.Header().Set("Access-Control-Allow-Credentials", strconv.FormatBool(c.allowCredentials))
 
 	if r.Method == http.MethodOptions {

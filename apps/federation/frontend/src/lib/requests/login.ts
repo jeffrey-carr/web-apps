@@ -69,6 +69,8 @@ export const authRouteBackend = async (cookie: string, f: typeof fetch): Promise
     additionalHeaders: { cookie: `${AUTH_COOKIE_NAME}=${cookie}`}
   }, f);
 
+  console.log(response);
+
   if (response.status !== 200) {
     return null;
   }
