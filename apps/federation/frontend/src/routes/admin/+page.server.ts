@@ -15,17 +15,17 @@ export const load: PageServerLoad = async ({ cookies, fetch }) => {
   }
   const response = await makeRequest({
     path: 'http://localhost:3101/api/auth/authed-user',
-    method: METHODS.POST,
+    method: METHODS.GET,
   }, { additionalHeaders }, fetch);
   if (response.status !== 200) {
     console.error(response);
-    throw redirect(302, `/non-200/${response.status}`);
+    throw redirect(302, "/");
   }
 
   const user = await response.json();
   // const user = await backendGetUser(PUBLIC_ENVIRONMENT, App.Federation, cookieValue, fetch);
   if (user == null) {
-    throw redirect(302, "/no-user");
+    throw redirect(302, "/");
   }
 
   if (!user.isAdmin) {
