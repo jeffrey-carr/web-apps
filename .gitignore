@@ -13,6 +13,7 @@ build/
 dist/
 target
 output/
+/tmp/
 
 # OS
 .DS_Store
@@ -25,7 +26,9 @@ Thumbs.db
 !.env.example
 !.env.test
 
-# Vite
+# Languages
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+.classpath
+.settings
 

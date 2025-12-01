@@ -2,9 +2,11 @@ services:
   web_games_frontend:
     image: ghcr.io/jeffrey-carr/web_games-frontend:latest
     container_name: web_games_frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
     ports:
       - '5173:3000'
-    restart: unless-stopped
 
   web_games_backend:
     image: ghcr.io/jeffrey-carr/web_games-backend:latest

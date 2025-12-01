@@ -10,11 +10,12 @@ export const load: PageServerLoad = async ({ cookies, fetch }) => {
     throw redirect(302, '/');
   }
 
+  // TODO - don't hardcode this
   const additionalHeaders = {
       cookie: `${AUTH_COOKIE_NAME}=${cookieValue}`,
   }
   const response = await makeRequest({
-    path: 'http://federation:backend:9999/api/auth/authed-user',
+    path: 'http://federation_backend:9999/api/auth/authed-user',
     method: METHODS.GET,
   }, { additionalHeaders }, fetch);
   if (response.status !== 200) {
