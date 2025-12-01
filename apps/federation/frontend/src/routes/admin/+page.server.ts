@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ cookies, fetch }) => {
       cookie: `${AUTH_COOKIE_NAME}=${cookieValue}`,
   }
   const response = await makeRequest({
-    path: 'http://localhost:3101/api/auth/authed-user',
+    path: 'http://federation:backend:9999/api/auth/authed-user',
     method: METHODS.GET,
   }, { additionalHeaders }, fetch);
   if (response.status !== 200) {
