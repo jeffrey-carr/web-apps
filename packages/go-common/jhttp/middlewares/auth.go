@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go-common/constants"
 	"go-common/jcontext"
 	JHTTPErrors "go-common/jhttp/errors"
@@ -104,6 +105,7 @@ func (gu GetUser) Apply(ctx context.Context, w http.ResponseWriter, r *http.Requ
 		return ctx, nil
 	}
 	if err != nil {
+		fmt.Printf("Error getting cookie: %s\n", err.Error())
 		return ctx, JHTTPErrors.NewInternalServerError(err)
 	}
 

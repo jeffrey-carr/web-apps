@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"go-common/jcontext"
 	"go-common/services/jmongo"
 	globalTypes "go-common/types"
@@ -51,23 +52,29 @@ type controller struct {
 }
 
 func (c *controller) GetUserFromCookie(ctx context.Context, cookie *http.Cookie) (globalTypes.CommonUser, error) {
+	fmt.Println("Getting user from cookie")
 	if cookie == nil {
+		fmt.Println("No cookie")
 		return globalTypes.CommonUser{}, nil
 	}
 
 	if cookie.Value == "" {
+		fmt.Println("No value")
 		return globalTypes.CommonUser{}, nil
 	}
 
 	user, err := c.GetUserByAuthToken(context.TODO(), cookie.Value)
 	if err == globalTypes.ErrNotFound {
+		fmt.Println("Failed to find user")
 		return globalTypes.CommonUser{}, nil
 	}
 	if err != nil {
+		fmt.Printf("Error getting user: %s\n", err.Error())
 		return globalTypes.CommonUser{}, err
 	}
 
 	if !user.IsTokenValid() {
+		fmt.Println("User token is not valid")
 		return globalTypes.CommonUser{}, nil
 	}
 
