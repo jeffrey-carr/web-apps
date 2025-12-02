@@ -61,7 +61,6 @@
   };
 
   const addKey = async () => {
-    console.log(`Creating API key for ${newAppName}`);
     if (validateNewAppName(newAppName).length !== 0) return;
 
     loadingCreate = true;

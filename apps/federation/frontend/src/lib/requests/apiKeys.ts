@@ -15,7 +15,7 @@ export const getAllAPIKeys = async (): Promise<APIKey[]> => {
     return [];
   }
 
-  return await response.json();
+  return await response.json() ?? [];
 };
 
 const newAPIKeyInfo: RouteInformation = {
