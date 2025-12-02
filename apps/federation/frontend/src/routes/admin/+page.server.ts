@@ -1,7 +1,7 @@
-// src/routes/admin/+page.server.ts
-import { AUTH_COOKIE_NAME, makeRequest, METHODS } from '@jeffrey-carr/frontend-common';
+import { AUTH_COOKIE_NAME, makeRequest, METHODS, prodEnvironment } from '@jeffrey-carr/frontend-common';
 import type { PageServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
+import { PUBLIC_ENVIRONMENT } from '$env/static/public';
 
 export const load: PageServerLoad = async ({ cookies, fetch }) => {
 
@@ -15,13 +15,17 @@ export const load: PageServerLoad = async ({ cookies, fetch }) => {
     Cookie: `${AUTH_COOKIE_NAME}=${cookieValue}`,
   };
 
+  let path = "http://login.jeffreycarr.dev";
+  if (PUBLIC_ENVIRONMENT === prodEnvironment) {
+    path = "http://federation_backend";
+  }
+  path = `${path}:9999/api/auth/authed-user`;
+  const method = METHODS.GET;
+
   let response: Response;
   try {
     response = await makeRequest(
-      {
-        path: 'http://federation_backend:9999/api/auth/authed-user',
-        method: METHODS.GET,
-      },
+      { path, method },
       { additionalHeaders },
       fetch
     );
