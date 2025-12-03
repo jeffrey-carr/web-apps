@@ -29,15 +29,16 @@ func NewAdminHandler(
 }
 
 // GetAllKeys gets all API keys
-func (h Admin) GetAllKeys(ctx context.Context, r jhttp.RequestData[struct{}]) ([]types.APIKey, *JHTTPErrors.JHTTPError) {
+func (h Admin) GetAllKeys(ctx context.Context, r jhttp.RequestData[struct{}]) (*[]types.APIKey, *JHTTPErrors.JHTTPError) {
 	keys, err := h.adminController.GetAllAPIKeys(ctx)
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
-	return keys, nil
+	return &keys, nil
 }
 
+// CreateNewAPIKey creates a new API key
 func (h Admin) CreateNewAPIKey(ctx context.Context, r jhttp.RequestData[admin.CreateNewAPIKeyRequest]) (*types.APIKey, *JHTTPErrors.JHTTPError) {
 	if strings.TrimSpace(r.Body.App) == "" {
 		return nil, JHTTPErrors.NewBadRequestError("App name is required")

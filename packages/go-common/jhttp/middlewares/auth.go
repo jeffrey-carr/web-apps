@@ -12,7 +12,6 @@ import (
 	"go-common/utils"
 	"io"
 	"net/http"
-	"os"
 )
 
 const (
@@ -22,7 +21,7 @@ const (
 
 func defaultUserFetcher(ctx context.Context, cookie *http.Cookie) (types.CommonUser, error) {
 	endpoint := devEndpoint
-	if os.Getenv(constants.EnvEnvironmentVar) == constants.EnvProd {
+	if utils.GetEnv() == constants.EnvProd {
 		endpoint = prodEndpoint
 	}
 	endpoint += "/authed-user"

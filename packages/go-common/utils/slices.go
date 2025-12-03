@@ -1,5 +1,6 @@
 package utils
 
+// Fill fills an array with zeroed values
 func Fill[T any](length int) []T {
 	var items []T
 	for range length {
@@ -45,6 +46,8 @@ func Map[T, K any](s []T, f func(T) K) []K {
 	}
 
 	return results
+}
+
 // Filter accepts a slice and a predicate function. Items for which the predicate
 // returns true are retained in the returned slice.
 func Filter[T any](s []T, f func(item T) bool) []T {

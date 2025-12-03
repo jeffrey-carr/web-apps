@@ -61,7 +61,7 @@ const authRouteBackendInfo: RouteInformation = {
   path: '/api/auth/authed-user',
   method: METHODS.GET,
   credentials: 'required',
-}
+};
 // authRouteBackend is used when we want to validate a user's cookie server-side
 export const authRouteBackend = async (cookie: string, f: typeof fetch): Promise<User | null> => {
   let user: User | null;

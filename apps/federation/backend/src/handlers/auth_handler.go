@@ -62,7 +62,7 @@ func (h *Auth) GetUserByUUID(ctx context.Context, r jhttp.RequestData[struct{}])
 
 	user, err := h.controller.GetUserByUUID(ctx, userUUID)
 	if err == globalTypes.ErrNotFound {
-		return nil, JHTTPErrors.NewNotFoundError()
+		return nil, JHTTPErrors.NewNotFoundError(userUUID)
 	}
 
 	return utils.Ptr(auth.UserToCommonUser(user)), nil

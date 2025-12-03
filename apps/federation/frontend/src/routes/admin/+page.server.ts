@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ cookies, fetch }) => {
     user = await makeRequest(
       { path, method },
       { additionalHeaders },
-      fetch
+      fetch,
     );
   } catch (e) {
     throw redirect(302, '/');

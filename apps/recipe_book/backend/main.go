@@ -45,8 +45,8 @@ func main() {
 	}
 
 	// MIDDLEWARES //
-	userMiddleware := middlewares.GetUser{Environment: config.Environment}
-	authMiddleware := middlewares.RequireAuth{Environment: config.Environment}
+	userMiddleware := middlewares.NewGetUser(nil)
+	authMiddleware := middlewares.NewRequireAuth(false)
 	middlewareManager := middlewares.Manager{Middlewares: []middlewares.Middleware{userMiddleware}}
 
 	// REPOSITORIES //

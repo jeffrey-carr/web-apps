@@ -7,7 +7,6 @@
     ServerError,
     Spinner,
     type NotificationLevel,
-    type ServerMessage,
     type User,
   } from '@jeffrey-carr/frontend-common';
   import { onMount } from 'svelte';
@@ -92,7 +91,7 @@
     try {
       updatedKey = await revokeAPIKey(key);
     } catch (e) {
-      const err = e as ServerMessage;
+      const err = e as ServerError;
       loadingRevoke[idx] = false;
       notif = {
         title: 'Error revoking key',
@@ -112,7 +111,7 @@
     try {
       await logout();
     } catch (e) {
-      const serverResponse = e as ServerMessage;
+      const serverResponse = e as ServerError;
       notif = {
         title: 'Error logging out',
         message: serverResponse.message,

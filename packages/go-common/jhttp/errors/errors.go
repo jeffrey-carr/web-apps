@@ -83,11 +83,3 @@ func NewForbiddenError() *JHTTPError {
 func NewValidationError(validationErr string) *JHTTPError {
 	return NewBadRequestError(validationErr)
 }
-
-// NewNotFoundError creates a new NotFound error
-func NewNotFoundError() *JHTTPError {
-	return &JHTTPError{
-		StatusCode: http.StatusNotFound,
-		Message:    "Not found",
-	}
-}

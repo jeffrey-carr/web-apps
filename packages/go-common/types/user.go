@@ -1,7 +1,6 @@
 package types
 
 import (
-	"go-common/utils"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -81,7 +80,8 @@ func (u User) MarshalBSON() ([]byte, error) {
 
 	var tokenValidTo *int64
 	if u.TokenValidTo != nil {
-		tokenValidTo = utils.Ptr(u.TokenValidTo.UnixMilli())
+		validToMs := u.TokenValidTo.UnixMilli()
+		tokenValidTo = &validToMs
 	}
 	aux := userBSON{
 		UserAlias:    userAlias(u),
@@ -113,7 +113,8 @@ func (u *User) UnmarshalBSON(data []byte) error {
 	u.ModifiedAt = time.Unix(0, aux.ModifiedAt*int64(time.Millisecond))
 	u.LastSeenAt = time.Unix(0, aux.LastSeenAt*int64(time.Millisecond))
 	if aux.TokenValidTo != nil {
-		u.TokenValidTo = utils.Ptr(time.Unix(0, *aux.TokenValidTo*int64(time.Millisecond)))
+		validToTime := time.Unix(0, *aux.TokenValidTo*int64(time.Millisecond))
+		u.TokenValidTo = &validToTime
 	}
 
 	return nil

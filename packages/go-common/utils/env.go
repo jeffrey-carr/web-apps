@@ -2,10 +2,12 @@ package utils
 
 import (
 	"bufio"
+	"go-common/constants"
 	"os"
 	"strings"
 )
 
+// ReadEnv reads an environment config file and returns it as a map
 func ReadEnv(path string) (map[string]string, error) {
 	envFile, err := os.Open(path)
 	if err != nil {
@@ -24,4 +26,15 @@ func ReadEnv(path string) (map[string]string, error) {
 	}
 
 	return envVars, scanner.Err()
+}
+
+// GetEnv gets the current environment
+func GetEnv() string {
+	liveEnv := os.Getenv(constants.EnvEnvironmentVar)
+	switch liveEnv {
+	case constants.EnvProd:
+		return constants.EnvProd
+	default:
+		return constants.EnvDev
+	}
 }

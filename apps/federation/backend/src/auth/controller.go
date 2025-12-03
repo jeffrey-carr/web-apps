@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go-common/jcontext"
 	"go-common/services/jmongo"
 	globalTypes "go-common/types"
@@ -50,7 +49,6 @@ type controller struct {
 }
 
 func (c *controller) GetUserFromCookie(ctx context.Context, cookie *http.Cookie) (globalTypes.CommonUser, error) {
-	fmt.Println("Getting user from cookie")
 	if cookie == nil {
 		return globalTypes.CommonUser{}, nil
 	}
