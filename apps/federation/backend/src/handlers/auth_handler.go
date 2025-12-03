@@ -47,6 +47,9 @@ func (h *Auth) CreateUser(ctx context.Context, r jhttp.RequestData[auth.CreateUs
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
+	cookie := auth.CreateAuthCookie(*user.Token, auth.CookieOpts{ExpiresAt: user.TokenValidTo})
+	http.SetCookie(*r.Writer, &cookie)
+
 	return utils.Ptr(auth.UserToCommonUser(user)), nil
 }
 

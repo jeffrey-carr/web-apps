@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+const loginTokenValidDuration = time.Hour * 24 * 30 // 30 days
+
 // UserToCommonUser converts a User into a global CommonUser
 func UserToCommonUser(user globalTypes.User) globalTypes.CommonUser {
 	return globalTypes.CommonUser{
@@ -35,6 +37,7 @@ func CreateUserRequestToUser(
 	salt []byte,
 ) globalTypes.User {
 	now := time.Now()
+	userToken, userTokenValidTo := GenerateNewUserToken()
 	return globalTypes.User{
 		UUID:           utils.NewUUID(),
 		Email:          request.Email,
@@ -46,6 +49,11 @@ func CreateUserRequestToUser(
 		CreatedAt:      now,
 		ModifiedAt:     now,
 		LastSeenAt:     now,
+
+		// We generate a token when creating the user so they can be logged in
+		// as soon as they create their account
+		Token:        &userToken,
+		TokenValidTo: &userTokenValidTo,
 	}
 }
 
@@ -71,6 +79,11 @@ func HashPassword(salt []byte, plaintext string) (string, error) {
 	return base64.StdEncoding.EncodeToString(derivedKey), nil
 }
 
+// GenerateNewUserToken generates a new user token with
+func GenerateNewUserToken() (string, time.Time) {
+	return utils.NewUUID(), time.Now().Add(loginTokenValidDuration)
+}
+
 // CreateAuthCookie creates a new auth cookie
 func CreateAuthCookie(token string, opts CookieOpts) http.Cookie {
 	var expiresAt time.Time
@@ -80,7 +93,7 @@ func CreateAuthCookie(token string, opts CookieOpts) http.Cookie {
 		expiresAt = time.Now().Add(*opts.MaxAge)
 	} else {
 		// Default to 30 days
-		expiresAt = time.Now().Add(time.Hour * 24 * 30)
+		expiresAt = time.Now().Add(loginTokenValidDuration)
 	}
 
 	cookie := http.Cookie{
