@@ -28,8 +28,6 @@ func main() {
 		panic(fmt.Errorf("could not load config %w", err))
 	}
 
-	fmt.Printf("Loaded config: %+v\n", config)
-
 	// SERVICES //
 	mongoClient, err := mongo.Connect(options.Client().ApplyURI(config.MongoURL))
 	if err != nil {
@@ -47,7 +45,6 @@ func main() {
 	// MIDDLEWARES //
 	userMiddleware := middlewares.NewGetUser(nil)
 	authMiddleware := middlewares.NewRequireAuth(false)
-	middlewareManager := middlewares.Manager{Middlewares: []middlewares.Middleware{userMiddleware}}
 
 	// REPOSITORIES //
 	recipeRepo := recipe.NewRepository(recipeMongoCollection, userFavoritesMongoCollection)
@@ -59,33 +56,33 @@ func main() {
 	recipeHandler := recipe.NewHandler(recipeController)
 
 	// ROUTER //
-	http.NewServeMux()
+	mux := http.NewServeMux()
 
 	// ENDPOINTS //
 	// Recipe
-	http.HandleFunc(
+	mux.HandleFunc(
 		"POST /api/recipe",
-		jhttp.NewEndpointWithManager(
+		jhttp.NewEndpoint(
 			recipeHandler.Create,
 			nil,
-			middlewareManager.WithMiddlewares(authMiddleware),
+			userMiddleware,
+			authMiddleware,
 		),
 	)
 
-	http.HandleFunc(
+	mux.HandleFunc(
 		fmt.Sprintf("GET /api/recipe/{%s}", recipe.RecipeIDPathVar),
-		jhttp.NewEndpointWithManager(
+		jhttp.NewEndpoint(
 			recipeHandler.Get,
 			[]string{recipe.RecipeIDPathVar},
-			middlewareManager,
+			userMiddleware,
 		),
 	)
-	http.HandleFunc(
+	mux.HandleFunc(
 		"GET /api/recipe",
-		jhttp.NewEndpointWithManager(
+		jhttp.NewEndpoint(
 			recipeHandler.GetRecipes,
 			nil,
-			middlewareManager,
 		),
 	)
 

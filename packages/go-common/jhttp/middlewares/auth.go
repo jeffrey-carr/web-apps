@@ -3,7 +3,6 @@ package middlewares
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"go-common/constants"
 	"go-common/jcontext"
@@ -49,13 +48,13 @@ func defaultUserFetcher(ctx context.Context, cookie *http.Cookie) (types.CommonU
 
 	// If it's an internal server error, throw that error
 	if authResponse.StatusCode >= http.StatusInternalServerError {
-		var message serverMessage
-		parseErr := json.Unmarshal(bodyBytes, &message)
+		var fedErr JHTTPErrors.JHTTPError
+		parseErr := json.Unmarshal(bodyBytes, &fedErr)
 		if parseErr != nil {
 			return types.CommonUser{}, parseErr
 		}
 
-		return types.CommonUser{}, errors.New(message.Message)
+		return types.CommonUser{}, fedErr
 	}
 
 	// If it's any other error, just don't save the user

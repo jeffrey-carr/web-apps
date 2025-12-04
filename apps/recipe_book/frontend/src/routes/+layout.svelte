@@ -10,10 +10,7 @@
     App,
     type NotificationInfo,
     Notification,
-    getRandomElement,
     Spinner,
-    NOTIFICATION_LEVELS,
-    generateRandomInt,
   } from '@jeffrey-carr/frontend-common';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
   import { USER_CONTEXT_KEY } from '$lib/constants';
@@ -70,61 +67,6 @@
     setContext(USER_CONTEXT_KEY, u);
   };
 
-  const createNotification = () => {
-    const SAMPLE_NOTIFS: NotificationInfo[] = [
-      {
-        title: 'Security Alert',
-        message: "Your cat has successfully deployed 'butt_on_keyboard.exe'. Input blocked.",
-      },
-      {
-        title: 'Hydration Station',
-        message: 'Your houseplant is dramatically wilting just to get your attention.',
-      },
-      {
-        title: 'Miracle Detected',
-        message: 'Your code compiled on the first try. This is highly suspicious.',
-      },
-      {
-        title: 'Caffeine Critical',
-        message: 'Bloodstream indicates insufficient bean juice. Please refill coffee immediately.',
-      },
-      {
-        title: 'Pizza Tracker',
-        message: 'The pizza has arrived. This is not a drill. I repeat: THE PIZZA IS HERE.',
-      },
-      {
-        title: 'Bug Report',
-        message: 'We found a bug. We named him Kevin. He lives in the navigation bar now.',
-      },
-      {
-        title: 'Social Battery',
-        message: "Energy at 4%. Please initiate 'Irish Goodbye' protocol immediately.",
-      },
-      {
-        title: 'Wifi Status',
-        message: 'Connected, but no Internet. The ultimate modern tragedy.',
-      },
-      {
-        title: 'Sleep Reminder',
-        message: 'Go to bed. The syntax errors will still be there in the morning.',
-      },
-      {
-        title: 'Server Status',
-        message: 'The server is taking a nap. Please use inside voices.',
-      },
-    ];
-
-    const info = getRandomElement(SAMPLE_NOTIFS);
-    const levelN = generateRandomInt(0, NOTIFICATION_LEVELS.length);
-    info.level = NOTIFICATION_LEVELS[levelN];
-
-    addNotificationToQueue(info);
-  };
-
-  const addNotificationToQueue = (notif: NotificationInfo) => {
-    notificationQueue.push(notif);
-  };
-
   const closeNotification = () => {
     notification = notificationQueue.shift();
   };
@@ -140,9 +82,6 @@
 </svelte:head>
 
 <main class="container">
-  <div class="notification-button">
-    <button onclick={createNotification}>Add notification to queue</button>
-  </div>
   <div class="child-container">
     {#if loadingMessage}
       <div class="loading-container">
@@ -176,12 +115,6 @@
     margin: 0;
 
     background-color: var(--app-theme-background);
-  }
-
-  .notification-button {
-    position: absolute;
-    top: 0;
-    left: 0;
   }
 
   .loading-container {

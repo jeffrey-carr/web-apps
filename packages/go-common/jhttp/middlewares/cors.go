@@ -3,7 +3,6 @@ package middlewares
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go-common/constants"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/utils"
@@ -109,9 +108,7 @@ func (c CORs) WithCredentials(useCredentials bool) CORs {
 // MatchOrigin matches the request origin with our allowed origins. Returns nil
 // if it does not match on the origin
 func (c CORs) MatchOrigin(requestOrigin string) (string, bool) {
-	fmt.Printf("MatchOrigin for %s\n", requestOrigin)
 	if c.allowedOrigins.Has("*") {
-		fmt.Println("All origins are allowed, allowing")
 		return requestOrigin, true
 	}
 
@@ -121,7 +118,6 @@ func (c CORs) MatchOrigin(requestOrigin string) (string, bool) {
 	}
 
 	for origin := range c.allowedOrigins.Iter {
-		fmt.Printf("Comparing %s to %s\n", origin, requestOrigin)
 		originParts := strings.Split(origin, ".")
 		if len(originParts) > len(requestParts) {
 			continue

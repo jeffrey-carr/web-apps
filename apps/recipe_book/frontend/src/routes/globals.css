@@ -1,36 +1,43 @@
 :root {
   /* App colors */
   /* Backgrounds */
-  --bg-color: #FAF3EC;              /* Canvas background (warm cream) */
-  --bg-color-light: #F9E7D8;        /* Lighter beige panels (Favorites, Timers) */
-  --bg-color-surface: #fcdfc9;      /* Card surface (recipe cards) */
+  --bg-color: var(--white); /* Canvas background (warm cream) */
+  --bg-color-light: #f9e7d8; /* Lighter beige panels (Favorites, Timers) */
+  --bg-color-surface: #fcdfc9; /* Card surface (recipe cards) */
   /* --bg-color-overlay: #F5ECE3;      Input/search bar background */
-  --bg-color-overlay: #f7ddc3;
+  /* --bg-color-overlay: #f7ddc3; */
+  --bg-color-overlay: #8ecae6;
 
   /* Core tones */
-  --black: #3E2C24;                 /* Primary text (Dark cocoa) */
-  --rust: #BB4430;                  /* Brand accent (Persian Red) */
-  --red: #BB4430;                   /* Red accents, same as rust */
-  --green: #7EBDC2;                 /* Verdigris (teal-green tone) */
-  --yellow: #F3DFA2;                /* Vanilla warm yellow */
-  --blue: #7EBDC2;                  /* Verdigris reused for blue-green accent */
-  --mauve: #EFE6DD;                 /* Linen soft neutral */
-  --rosewater: #FCEDE3;             /* Highlight / hover background */
-  --sky: #B9DDE0;                   /* Lighter Verdigris tint */
-  --periwinkle: #F2D9C8;            /* Timer panel highlight (soft coral-cream) */
-  --ebony-clay: #231F20;            /* Deep neutral / shadow */
-  --gray: #E1D2C5;                  /* Border / divider */
-  --gray-light: #F9E7D8;            /* Lighter neutral beige */
-  --gray-dark: #6B5546;             /* Secondary text (muted brown) */
+  --white: #f0f0f0;
+  --black: #3e2c24; /* Primary text (Dark cocoa) */
+  --rust: #bb4430; /* Brand accent (Persian Red) */
+  --red: #bb4430; /* Red accents, same as rust */
+  --green: #7ebdc2; /* Verdigris (teal-green tone) */
+  --yellow: #f3dfa2; /* Vanilla warm yellow */
+  --blue: #7ebdc2; /* Verdigris reused for blue-green accent */
+  --mauve: #efe6dd; /* Linen soft neutral */
+  --rosewater: #fcede3; /* Highlight / hover background */
+  --sky: #b9dde0; /* Lighter Verdigris tint */
+  --periwinkle: #f2d9c8; /* Timer panel highlight (soft coral-cream) */
+  --ebony-clay: #231f20; /* Deep neutral / shadow */
+  --gray: #e1d2c5; /* Border / divider */
+  --gray-light: #f9e7d8; /* Lighter neutral beige */
+  --gray-dark: #6b5546; /* Secondary text (muted brown) */
 
   --default-transition-ms: 100ms;
 
   /* Main theme colors */
-  --app-theme-primary: #fcdfc9;       /* Primary text tone */
-  --app-theme-secondary: var(--rust);      /* Persian Red accent */
-  --app-theme-tertiary: var(--green);      /* Verdigris highlight */
-  --app-theme-text-primary: var(--black);  /* Cocoa text */
-  --app-theme-text-secondary: var(--app-theme-primary); /* Muted brown for subtext */
+  /*--app-theme-primary: #fcdfc9; /* Primary text tone */
+  /*--app-theme-secondary: var(--rust); /* Persian Red accent */
+  /*--app-theme-tertiary: var(--green); /* Verdigris highlight */
+  /*--app-theme-text-primary: var(--black); /* Cocoa text */
+  /*--app-theme-text-secondary: var(--app-theme-primary); /* Muted brown for subtext */
+  --app-theme-primary: #ffb705;
+  --app-theme-secondary: #fb8500;
+  --app-theme-tertiary: #023047;
+  --app-theme-text-primary: var(--black);
+  --app-theme-text-secondary: var(--white);
 
   /* Basic colors */
   --app-theme-gray: var(--gray);
@@ -38,22 +45,22 @@
   --app-theme-gray-dark: var(--gray-dark);
 
   /* Special colors */
-  --app-theme-success: var(--green);       /* Verdigris success tone */
-  --app-theme-success-light: var(--sky);   /* Soft teal success background */
-  --app-theme-warning: var(--yellow);      /* Vanilla warm warning */
-  --app-theme-warning-light: #F8EBC7;      /* Light Vanilla tint */
-  --app-theme-danger: var(--red);          /* Persian Red for errors */
-  --app-theme-danger-light: #D87662;       /* Light Persian Red tint */
-  --app-theme-subtle: var(--mauve);        /* Linen neutral tone */
+  --app-theme-success: var(--green); /* Verdigris success tone */
+  --app-theme-success-light: var(--sky); /* Soft teal success background */
+  --app-theme-warning: var(--yellow); /* Vanilla warm warning */
+  --app-theme-warning-light: #f8ebc7; /* Light Vanilla tint */
+  --app-theme-danger: var(--red); /* Persian Red for errors */
+  --app-theme-danger-light: #d87662; /* Light Persian Red tint */
+  --app-theme-subtle: var(--mauve); /* Linen neutral tone */
   --app-theme-subtle-dark: var(--bg-color);
-  --app-theme-link: var(--green);          /* Verdigris link color */
+  --app-theme-link: var(--green); /* Verdigris link color */
   --app-theme-overlay: var(--bg-color-overlay);
   --app-theme-overlay-light: var(--bg-color-overlay);
 
   /* Component colors */
-  --app-theme-border-color: #E1D2C5;
+  --app-theme-border-color: #e1d2c5;
 
-   /* This is the font used for special headers like custom banners, h1, etc. */
+  /* This is the font used for special headers like custom banners, h1, etc. */
   --app-theme-header-font: 'Atma';
 
   /* This is the main font for the app. Used for paragraphs, labels, etc. */
@@ -67,29 +74,33 @@
   padding: 0;
   box-sizing: border-box;
 
-  transition:
-    color var(--default-transition-ms) linear
-    background-color var(--default-transition-ms) linear
-    border-color var(--default-transition-ms) linear;
+  transition: color var(--default-transition-ms) linear background-color
+    var(--default-transition-ms) linear border-color var(--default-transition-ms) linear;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
 
   border: 0;
-  
+
   background-color: var(--bg-color);
-  
+
   line-height: 1;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--app-theme-text-primary);
   font-family: var(--app-theme-header-font);
 }
 h1 {
-  font-size: 4rem;  
+  font-size: 4rem;
 }
 h2 {
   font-size: 2rem;
@@ -101,7 +112,12 @@ h4 {
   font-size: 1.2rem;
 }
 
-body, div, p, a, label, li {
+body,
+div,
+p,
+a,
+label,
+li {
   color: var(--app-theme-text-primary);
   font-family: var(--app-theme-font);
 }
@@ -110,7 +126,8 @@ a {
   color: var(--app-theme-link);
 }
 
-ol, ul {
+ol,
+ul {
   padding: 0.5rem 0.5rem;
   color: var(--app-theme-text-primary);
 }
