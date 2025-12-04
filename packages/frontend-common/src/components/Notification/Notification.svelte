@@ -23,7 +23,7 @@
 
   const onClose = () => {
     closing = true;
-    closeTimeoutID = setTimeout(close, 1000);
+    closeTimeoutID = setTimeout(close, 201);
   };
 
   const onTimerUpdate = (remainingMs: number) => {
@@ -108,7 +108,7 @@
     background-color: transparent;
 
     --transition-ms: 200ms;
-    transition: 
+    transition:
       background-color var(--transition-ms) linear,
       color var(--transition-ms) linear;
 

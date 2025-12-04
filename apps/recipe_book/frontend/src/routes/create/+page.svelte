@@ -13,6 +13,7 @@
   import type { Direction, Ingredient, RecipeCreateRequest, Section } from '$lib/types/recipe';
   import { recipeInputsToCreateRecipeRequest } from '$lib/mappers/recipe';
   import clsx from 'clsx';
+  import { notificationQueue } from '$lib/globals/notifications.svelte';
 
   const createEmptySection = (): Section => {
     return {
@@ -65,12 +66,21 @@
       );
     } catch (e) {
       loadingCreate = false;
+      notificationQueue.push({
+        level: 'error',
+        title: 'Invalid recipe',
+        message: e as string,
+      });
       return;
     }
 
     let response: string | ServerError = await createRecipe(createRequest);
     if (response instanceof ServerError) {
-      console.error(`Error creating recipe: ${response.message}`);
+      notificationQueue.push({
+        level: 'error',
+        title: 'Error creating recipe',
+        message: response.message,
+      });
       loadingCreate = false;
       return;
     }

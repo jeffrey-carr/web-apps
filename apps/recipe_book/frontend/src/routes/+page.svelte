@@ -19,6 +19,7 @@
   import { getHomeRecipes } from '$lib/requests/recipe';
   import { cookTimeToStr } from '$lib/mappers/recipe';
   import { RecipeCard } from '$lib/components';
+  import { notificationQueue } from '$lib/globals/notifications.svelte';
 
   let recipes = $state<Recipe[]>([]);
   let loading = $state(false);
@@ -38,6 +39,11 @@
     const results = await getHomeRecipes();
     if (results instanceof ServerError) {
       console.error(`error getting recipe: ${results.message}`);
+      notificationQueue.push({
+        level: 'error',
+        title: 'Error getting recipes',
+        message: results.message,
+      });
       return [];
     }
 
