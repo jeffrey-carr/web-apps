@@ -4,6 +4,7 @@
     Input,
     Modal,
     Notification,
+    ServerError,
     Spinner,
     type NotificationLevel,
     type ServerMessage,
@@ -68,9 +69,8 @@
     try {
       newKey = await createAPIKey(newAppName);
     } catch (e) {
-      console.error(e);
-      const serverMessage = e as ServerMessage;
-      notif = { title: 'Error creating key', message: serverMessage.message, level: 'error' };
+      const errMessage = e as string;
+      notif = { title: 'Error creating key', message: errMessage, level: 'error' };
       loadingCreate = false;
       return;
     }

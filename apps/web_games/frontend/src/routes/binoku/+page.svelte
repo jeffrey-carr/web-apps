@@ -3,9 +3,6 @@
   import {
     Button,
     Confetti,
-    makeRequest,
-    type RouteInformation,
-    METHODS,
     Modal,
     Spinner,
     type ServerResponse,
@@ -13,17 +10,6 @@
   import { type InvalidHint, type Coordinate, type ValidateGameResponse } from '$lib/types/binoku';
   import { onDestroy } from 'svelte';
   import { newGame, validateAnswer } from '$lib/requests/binoku';
-
-  const Routes: Record<string, RouteInformation> = {
-    NEW_GAME: {
-      path: '/api/binoku/new-game',
-      method: METHODS.GET,
-    },
-    VALIDATE_ANSWER: {
-      path: '/api/binoku/validate-board',
-      method: METHODS.POST,
-    },
-  };
 
   // Hints
   const HINT_DURATION_MS = 3500;

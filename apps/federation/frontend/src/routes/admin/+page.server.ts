@@ -1,4 +1,4 @@
-import { AUTH_COOKIE_NAME, makeRequest, METHODS, prodEnvironment } from '@jeffrey-carr/frontend-common';
+import { AUTH_COOKIE_NAME, makeRequest, METHODS, prodEnvironment, type User } from '@jeffrey-carr/frontend-common';
 import type { PageServerLoad } from './$types';
 import { error, redirect } from '@sveltejs/kit';
 import { PUBLIC_ENVIRONMENT } from '$env/static/public';
@@ -15,36 +15,21 @@ export const load: PageServerLoad = async ({ cookies, fetch }) => {
     Cookie: `${AUTH_COOKIE_NAME}=${cookieValue}`,
   };
 
-  let path = "http://login.jeffreycarr.dev";
+  let path = "http://login.jeffreycarr.local";
   if (PUBLIC_ENVIRONMENT === prodEnvironment) {
     path = "http://federation_backend";
   }
   path = `${path}:9999/api/auth/authed-user`;
   const method = METHODS.GET;
 
-  let response: Response;
+  let user: User;
   try {
-    response = await makeRequest(
+    user = await makeRequest(
       { path, method },
       { additionalHeaders },
       fetch
     );
   } catch (e) {
-    throw redirect(302, '/');
-  }
-
-  if (response.status !== 200) {
-    throw redirect(302, '/');
-  }
-
-  let user: any;
-  try {
-    user = await response.json();
-  } catch (e) {
-    throw redirect(302, '/');
-  }
-
-  if (!user) {
     throw redirect(302, '/');
   }
 

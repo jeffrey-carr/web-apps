@@ -2,8 +2,13 @@ import type { makeRequestParams, RouteInformation } from "../types/network";
 import { METHODS } from '../types/network';
 import type { Environment } from "../types";
 import { App, Apps, prodEnvironment } from "../types";
+import { ServerError } from "../types/errors";
 
-export const makeRequest = async (info: RouteInformation, params?: makeRequestParams, f?: any): Promise<Response> => { let headers: Record<string, string> = {};
+export const makeRequest = async <T, E = undefined>(
+  info: RouteInformation, 
+  params: makeRequestParams = {}, 
+  fetcher: typeof fetch = fetch,
+): Promise<T> => { let headers: Record<string, string> = {};
   if (info.method === METHODS.POST) {
     headers['Content-Type'] = 'application/json';
   }
@@ -32,22 +37,23 @@ export const makeRequest = async (info: RouteInformation, params?: makeRequestPa
     credentials = 'omit';
   }
 
-  if (f) {
-    return f(pathWithQuery, {
-    method: info.method,
-    credentials, 
-    headers,
-    body,
-    });
-  }
-
-  return fetch(pathWithQuery, {
+  let response = await fetcher(pathWithQuery, {
     method: info.method,
     credentials, 
     headers,
     body,
   });
+  
+  // Just commenting because someday I'm predicting I'll return a non-200 that isn't an error
+  // and this will be my told-you-so
+  if (response.status !== 200) {
+    const errorResponse: ServerError<E> = await response.json();
+    throw new ServerError(response.status, errorResponse.message, errorResponse.data);
+  }
+
+  return await response.json();
 }
+
 
 export const getAppURL = (environment: Environment, app: App): string => {
   const info = Apps[app];

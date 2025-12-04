@@ -1,6 +1,6 @@
 import type { createAccountRequest } from "$lib/types";
 import { isValidEmail, isValidName, isValidPassword } from "$lib/utils";
-import { makeRequest, METHODS, type RouteInformation } from "@jeffrey-carr/frontend-common";
+import { makeRequest, METHODS, ServerError, type RouteInformation } from "@jeffrey-carr/frontend-common";
 
 const createRoute: RouteInformation = {
   path: '/api/auth/create',
@@ -40,12 +40,13 @@ export const createAccount = async (
     return lNameErr;
   }
 
-  const response = await makeRequest(createRoute, {
-    body: { email, password, fName, lName, character: request.character },
-  });
-
-  if (response.status !== 200) {
-    return "Error creating user";
+  try {
+    await makeRequest(createRoute, {
+      body: { email, password, fName, lName, character: request.character },
+    });
+  } catch (e) {
+    const err = e as ServerError;
+    return err.message;
   }
 
   return "";

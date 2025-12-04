@@ -1,5 +1,7 @@
 import type { APIKey } from "$lib/types/apiKey";
-import { makeRequest, METHODS, type RouteInformation, type ServerMessage } from "@jeffrey-carr/frontend-common";
+import { makeRequest, METHODS, ServerError, type RouteInformation, type ServerMessage } from "@jeffrey-carr/frontend-common";
+
+// TODO - notifications //
 
 const getAllKeysInfo: RouteInformation = {
   path: '/api/admin/keys',
@@ -7,15 +9,16 @@ const getAllKeysInfo: RouteInformation = {
   credentials: 'required',
 };
 export const getAllAPIKeys = async (): Promise<APIKey[]> => {
-  const response = await makeRequest(getAllKeysInfo);
-  // TODO - notification
-  if (response.status !== 200) {
-    const serverMessage: ServerMessage = await response.json();
-    console.error(`Error fetching API keys: ${serverMessage.message}`);
+  let keys: APIKey[];
+  try {
+    keys = await makeRequest(getAllKeysInfo);
+  } catch (e) {
+    const err = e as ServerError;
+    console.error(`Error fetching API keys: ${err.message}`);
     return [];
   }
 
-  return await response.json() ?? [];
+  return keys;
 };
 
 const newAPIKeyInfo: RouteInformation = {
@@ -24,13 +27,15 @@ const newAPIKeyInfo: RouteInformation = {
   credentials: 'required',
 };
 export const createAPIKey = async (app: string): Promise<APIKey> => {
-  const response = await makeRequest(newAPIKeyInfo, { body: { app } });
-  if (response.status !== 200) {
-    const serverMessage: ServerMessage = await response.json();
-    throw serverMessage;
+  let key: APIKey;
+  try {
+    key = await makeRequest(newAPIKeyInfo, { body: { app } });
+  } catch (e) {
+    const err = e as ServerError;
+    throw err.message;
   }
 
-  return await response.json();
+  return key;
 };
 
 const revokeAPIKeyInfo: RouteInformation = {
@@ -39,11 +44,13 @@ const revokeAPIKeyInfo: RouteInformation = {
   credentials: 'required',
 };
 export const revokeAPIKey = async (key: APIKey): Promise<APIKey> => {
-  const response = await makeRequest(revokeAPIKeyInfo, { body: { key } });
-  if (response.status !== 200) {
-    const serverMessage: ServerMessage = await response.json();
-    throw serverMessage;
+  let revokedKey: APIKey;
+  try {
+    revokedKey = await makeRequest(revokeAPIKeyInfo, { body: { key } });
+  } catch (e) {
+    const err = e as ServerError;
+    throw err.message;
   }
 
-  return await response.json();
+  return revokedKey;
 };

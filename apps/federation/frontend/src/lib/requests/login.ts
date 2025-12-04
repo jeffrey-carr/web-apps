@@ -1,5 +1,5 @@
 import { isValidEmail, isValidPassword } from "$lib/utils";
-import { AUTH_COOKIE_NAME, makeRequest, METHODS, type AuthRequest, type RouteInformation, type ServerMessage, type User } from "@jeffrey-carr/frontend-common";
+import { AUTH_COOKIE_NAME, makeRequest, METHODS, ServerError, type AuthRequest, type RouteInformation, type ServerMessage, type User } from "@jeffrey-carr/frontend-common";
 
 const authRoute: RouteInformation = {
   path: '/api/auth/login',
@@ -28,14 +28,14 @@ export const loginRequest = async (
   }
 
   const cleanRequest: AuthRequest = { email, password };
-  const response = await makeRequest(authRoute, {
-    body: cleanRequest,
-  });
-  if (response.status >= 500) {
-    return "Error contacting server."
-  }
-  if (response.status !== 200) {
-    return  await response.text();
+
+  try {
+    await makeRequest(authRoute, {
+      body: cleanRequest,
+    });
+  } catch (e) {
+    const err = e as ServerError;
+    return err.message;
   }
 
   return "";
@@ -47,15 +47,14 @@ const fullInfo: RouteInformation = {
   credentials: 'required',
 };
 export const logout = async () => {
-  const response = await makeRequest(fullInfo, {
-    body: { logoutEverywhere: true },
-  });
-  if (response.status !== 200) {
-    const serverMessage: ServerMessage = await response.json();
-    throw serverMessage;
+  try {
+    await makeRequest(fullInfo, {
+      body: { logoutEverywhere: true },
+    });
+  } catch (e) {
+    const err = e as ServerError;
+    throw err.message;
   }
-
-  return;
 };
 
 const authRouteBackendInfo: RouteInformation = {
@@ -65,13 +64,16 @@ const authRouteBackendInfo: RouteInformation = {
 }
 // authRouteBackend is used when we want to validate a user's cookie server-side
 export const authRouteBackend = async (cookie: string, f: typeof fetch): Promise<User | null> => {
-  const response = await makeRequest(authRouteBackendInfo, {
-    additionalHeaders: { cookie: `${AUTH_COOKIE_NAME}=${cookie}`}
-  }, f);
-
-  if (response.status !== 200) {
+  let user: User | null;
+  try {
+    user = await makeRequest(authRouteBackendInfo, {
+      additionalHeaders: { cookie: `${AUTH_COOKIE_NAME}=${cookie}`},
+    }, f);
+  } catch (e) {
+    const err = e as ServerError;
+    console.error(`Error getting user: ${err.message}`);
     return null;
   }
 
-  return await response.json();
+  return user;
 };

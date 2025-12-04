@@ -8,6 +8,7 @@
     getUser,
     Notification,
     NOTIFICATION_LEVELS,
+    ServerError,
     Spinner,
     type NotificationLevel,
     type User,
@@ -40,7 +41,12 @@
 
   onMount(() => {
     const loadUser = async () => {
-      user = await getUser(PUBLIC_ENVIRONMENT, App.WebGames);
+      try {
+        user = await getUser(PUBLIC_ENVIRONMENT, App.WebGames);
+      } catch (e) {
+        user = null;
+      }
+
       loadingUser = false;
     };
 
