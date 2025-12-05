@@ -49,8 +49,8 @@
     </div>
   </div>
   <div class={shared.buttons}>
-    <Button size="medium" onclick={callLogin} loading={loggingIn}>Login</Button>
-    <Button size="medium" type="secondary" onclick={switchToCreate}>Create Account</Button>
+    <Button onclick={callLogin} loading={loggingIn}>Login</Button>
+    <Button variant="secondary" onclick={switchToCreate}>Create Account</Button>
   </div>
 </div>
 

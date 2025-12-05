@@ -157,10 +157,8 @@
   {/if}
 
   <div class={shared.buttons}>
-    <Button size="medium" onclick={callCreateAccount} loading={creatingAccount}>
-      Create Account
-    </Button>
-    <Button size="medium" type="secondary" onclick={backToLogin}>Cancel</Button>
+    <Button onclick={callCreateAccount} loading={creatingAccount}>Create Account</Button>
+    <Button variant="secondary" onclick={backToLogin}>Cancel</Button>
   </div>
 </div>
 

@@ -103,12 +103,8 @@
   </div>
   {#if showButtons}
     <div class="buttons-container">
-      <Button onclick={undoMove} size="medium" type="secondary" disabled={noMoves}
-        >Undo last move</Button
-      >
-      <Button onclick={resetBoard} size="medium" type="secondary" disabled={noMoves}
-        >Reset board</Button
-      >
+      <Button onclick={undoMove} variant="secondary" disabled={noMoves}>Undo last move</Button>
+      <Button onclick={resetBoard} variant="secondary" disabled={noMoves}>Reset board</Button>
     </div>
   {/if}
 </div>

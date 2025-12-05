@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Button, Modal, ReactiveIcon } from '../index';
 
+  import styles from './multiModal.module.scss';
+
   let {
     open = $bindable(),
     currentPage = $bindable(),
@@ -46,136 +48,33 @@
 
 <Modal bind:open>
   <div
-    class="container"
+    class={styles.container}
     style={`--height: ${height}; --width: ${width}; --position: ${currentPage}`}
   >
     <!-- {#each pages as page} -->
-    <div class="page-container">
+    <div class={styles.pageContainer}>
       {#each { length: numPages } as _, page}
-        <div class="page">
-          <div class="content">
+        <div class={styles.page}>
+          <div class={styles.content}>
             {@render content(page)}
           </div>
         </div>
       {/each}
-      <div class="footer">
-        <Button size="small" onclick={previousPage} disabled={currentPage === 0}>
+      <div class={styles.footer}>
+        <Button class={styles.pageButton} onclick={previousPage} disabled={currentPage === 0}>
           <ReactiveIcon icon="left-arrow" />
         </Button>
         {#each { length: numPages } as _, i}
           <div class={`dot ${currentPage === i ? 'highlighted' : ''}`}></div>
         {/each}
-        <Button size="small" onclick={nextPage} disabled={currentPage === numPages - 1}>
+        <Button
+          class={styles.pageButton}
+          onclick={nextPage}
+          disabled={currentPage === numPages - 1}
+        >
           <ReactiveIcon icon={'right-arrow'} />
         </Button>
       </div>
     </div>
   </div>
 </Modal>
-
-<style lang="scss">
-  .container {
-    --height: 55vh;
-    --width: 70vw;
-    --position: 0;
-    --gap: 5rem;
-    --footer-height: 1.5rem;
-
-    position: relative;
-
-    height: var(--height);
-    max-width: 95vw;
-    width: var(--width);
-
-    text-align: center;
-
-    overflow-x: hidden;
-  }
-
-  .page-container {
-    display: flex;
-    gap: var(--gap);
-
-    height: 100%;
-
-    margin-bottom: 2rem;
-  }
-
-  .page {
-    position: relative;
-    left: calc((-100% - var(--gap)) * var(--position));
-
-    display: flex;
-    flex-direction: column;
-
-    height: 100%;
-    width: var(--width);
-    max-width: 95vw;
-    flex-shrink: 0;
-
-    padding: 1rem;
-
-    transition: left 350ms ease;
-
-    .content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-
-      height: 100%;
-      width: 100%;
-    }
-  }
-
-  .footer {
-    --height: calc(var(--footer-height) / 2);
-
-    position: fixed;
-    bottom: 0;
-    z-index: 1001;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-
-    width: 100%;
-
-    padding: var(--height) 0;
-
-    transition: background-color 350ms ease;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.1);
-    }
-
-    .dot {
-      --transition-ms: 250ms;
-      --button-gap: 10rem;
-
-      height: 1rem;
-      width: 1rem;
-
-      border-radius: 100%;
-      border: 1px solid var(--theme-primary);
-
-      background-color: transparent;
-
-      transition:
-        border var(--transition-ms) ease,
-        background-color var(--transition-ms) ease;
-
-      &:first-child {
-        margin-right: var(--button-gap);
-      }
-      &:last-child {
-        margin-left: var(--button-gap);
-      }
-
-      &.highlighted {
-        border: 1px solid var(--theme-secondary);
-        background-color: var(--theme-primary);
-      }
-    }
-  }
-</style>

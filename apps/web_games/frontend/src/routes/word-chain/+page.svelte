@@ -118,10 +118,9 @@
       <!-- <p>You completed a {board.length}x{board.length} puzzle in {0}</p> -->
       <p>Would you like to play again?</p>
       <div class="buttons-container">
-        <Button size="medium" onclick={newGame}>New Game</Button>
+        <Button onclick={newGame}>New Game</Button>
         <Button
-          size="medium"
-          type="secondary"
+          variant="secondary"
           onclick={() => {
             showWin = false;
           }}>View board</Button
@@ -136,7 +135,7 @@
     </div>
 
     <div class="buttons-container">
-      <Button onclick={newGame} size="medium">New Game</Button>
+      <Button onclick={newGame}>New Game</Button>
     </div>
   </div>
 

@@ -167,8 +167,7 @@
                 onclick={() => {
                   revokeKey(key, idx);
                 }}
-                type="secondary"
-                size="medium"
+                variant="secondary"
                 loading={loadingRevoke[idx]}>Revoke</Button
               ></td
             >
@@ -189,8 +188,8 @@
       validator={validateNewAppName}
     />
     <div class={styles.buttons}>
-      <Button onclick={addKey} size="medium" loading={loadingCreate}>Create key</Button>
-      <Button onclick={closeModal} type="secondary" size="medium">Cancel</Button>
+      <Button onclick={addKey} loading={loadingCreate}>Create key</Button>
+      <Button onclick={closeModal} variant="secondary">Cancel</Button>
     </div>
   </div>
 </Modal>
@@ -224,7 +223,7 @@
       {@render keyTable(activeKeys, true)}
     {/if}
     <div class={styles.addKeyButton}>
-      <Button size="medium" onclick={() => (showModal = true)}>New Key</Button>
+      <Button onclick={() => (showModal = true)}>New Key</Button>
     </div>
 
     <h2>Revoked keys</h2>

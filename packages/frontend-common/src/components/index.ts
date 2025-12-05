@@ -1,7 +1,6 @@
 import './globals.css';
 
 export { default as Button } from './Button/Button.svelte';
-export type { ButtonOptions } from './Button/types.js';
 export { default as Confetti } from './Confetti.svelte';
 export { default as CharacterIcon } from './Character/CharacterIcon.svelte';
 export { default as ExpandButton } from './Button/ExpandButton.svelte';

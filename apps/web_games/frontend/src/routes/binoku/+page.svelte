@@ -108,6 +108,7 @@
   // Modal
   let showInstructions = $state(false);
   const toggleModal = () => {
+    console.log('toggling modal');
     showInstructions = !showInstructions;
   };
 
@@ -132,7 +133,6 @@
         {/each}
       </div>
       <Button
-        size="medium"
         onclick={() => {
           showCorrect = false;
         }}>View board</Button
@@ -160,10 +160,10 @@
         {/each}
       </div>
     </div>
-    <Button size="medium" onclick={checkSolution} disabled={!canValidate} loading={validating}>
+    <Button size="md" onclick={checkSolution} disabled={!canValidate} loading={validating}>
       Check Solution
     </Button>
-    <Button size="medium" type="secondary" onclick={toggleModal}>How To Play</Button>
+    <Button size="md" variant="secondary" onclick={toggleModal}>How To Play</Button>
   </div>
 
   <!-- Board -->

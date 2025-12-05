@@ -1,6 +1,9 @@
 <script lang="ts">
   import { Button } from '../.';
 
+  import styles from './modal.module.scss';
+  import clsx from 'clsx';
+
   let {
     open = $bindable(),
     children,
@@ -28,80 +31,10 @@
   };
 </script>
 
-<div class={`container ${open ? 'open' : ''}`}>
-  <button class="background" onclick={close} aria-label="Close modal"></button>
-  <div class="content-container">
-    <div class="close-button">
-      <Button onclick={close} size="fill">X</Button>
-    </div>
+<div class={clsx(styles.container, { [styles.open]: open })}>
+  <button class={styles.background} onclick={close} aria-label="Close modal"></button>
+  <div class={styles.contentContainer}>
+    <Button class={styles.closeButton} onclick={close}>&#x2715;</Button>
     {@render children?.()}
   </div>
 </div>
-
-<style lang="scss">
-  .container {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-
-    height: 100dvh;
-    width: 100vw;
-
-    margin: 0;
-    padding: 0;
-
-    background-color: rgba(0, 0, 0, 0.3);
-
-    transition: opacity 100ms linear;
-
-    overflow: auto;
-
-    /* Hidden settings */
-    opacity: 0;
-    pointer-events: none;
-
-    &.open {
-      opacity: 1;
-      pointer-events: all;
-    }
-  }
-
-  .background {
-    position: absolute;
-    top: 0;
-    left: 0;
-
-    height: 100vh;
-    width: 100vw;
-
-    background: transparent;
-    border: none;
-    box-shadow: none;
-  }
-
-  .content-container {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1001;
-
-    border: 1px solid var(--dark);
-    border-radius: 5px;
-    color: var(--theme-overlay);
-    background-color: var(--theme-overlay-light);
-  }
-
-  .close-button {
-    --gap: 1rem;
-    --size: 2rem;
-
-    position: absolute;
-    top: var(--gap);
-    left: calc(100% - var(--size) - var(--gap));
-    z-index: 1002;
-
-    height: var(--size);
-    width: var(--size);
-  }
-</style>
