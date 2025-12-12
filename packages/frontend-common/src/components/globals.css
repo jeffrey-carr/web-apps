@@ -1,39 +1,40 @@
 :root {
   /* Main theme colors */
+  --theme-bg-color: var(--app-theme-bg-color, #f0f0f0);
   --theme-primary: var(--app-theme-primary, #000000);
   --theme-secondary: var(--app-theme-secondary, #ffffff);
   --theme-tertiary: var(--app-theme-tertiary, #c7c7c7);
   --theme-text-primary: var(--app-theme-text-primary, #000000);
   --theme-text-secondary: var(--app-theme-text-secondary, #ffffff);
-  
+
   /* Basic colors */
   --theme-gray: var(--app-theme-gray, gray);
   --theme-gray-light: var(--app-theme-gray-light, lightgray);
   --theme-gray-dark: var(--app-theme-gray-dark, darkgray);
-  
+
   /* Special colors */
-  --theme-success: var(--app-theme-success, #77DD77);
+  --theme-success: var(--app-theme-success, #77dd77);
   --theme-success-light: var(--app-theme-success-light, #346134);
-  --theme-warning: var(--app-theme-warning, #FDFD96);
-  --theme-warning-light: var(--app-theme-warning-light, #69693E);
-  --theme-danger: var(--app-theme-danger, #FF6961);
+  --theme-warning: var(--app-theme-warning, #fdfd96);
+  --theme-warning-light: var(--app-theme-warning-light, #69693e);
+  --theme-danger: var(--app-theme-danger, #ff6961);
   --theme-danger-light: var(--app-theme-danger-light, #6e242a);
   --theme-subtle: var(--app-theme-subtle, #838ba7);
   --theme-subtle-dark: var(--app-theme-subtle-dark, black);
-  --theme-link: var(--app-theme-link, #8CAAEE);
+  --theme-link: var(--app-theme-link, #8caaee);
   --theme-overlay: var(--app-theme-overlay, gray);
   --theme-overlay-light: var(--app-theme-overlay-light, lightgray);
   --theme-disabled: var(--app-theme-disabled, lightgray);
   --theme-disabled-text: var(--app-theme-disabled-text, gray);
   --theme-border-color: var(--app-theme-border-color);
-  
+
   /* This is the font used for special headers like custom banners, h1, etc. */
   --theme-header-font: var(--app-theme-header-font, serif);
   /* This is the main font for the app. Used for paragraphs, labels, etc. */
   --theme-font: var(--app-theme-font, Arial, sans-serif);
   /* The readable font is meant to be easy to read for utility. Used for button text, etc. */
   --theme-readable-font: var(--app-readable-font, Arial, sans-serif);
-  
+
   --default-border-radius: 5px;
 }
 

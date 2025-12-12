@@ -46,7 +46,7 @@
 </script>
 
 {#if isAnchor}
-  <a class={steez} {...rest}>
+  <a class={clsx(styles.anchor, steez)} {...rest}>
     {#if loading}
       <Spinner theme={spinnerTheme} />
     {:else}

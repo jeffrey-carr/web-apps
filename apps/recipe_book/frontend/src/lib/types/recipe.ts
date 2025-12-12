@@ -8,6 +8,7 @@ export type Section = {
 export type Ingredient = {
 	uuid: string;
 	name: string;
+	prep: string;
 	amount?: number;
 	amountStr: string;
 	unit: string;
@@ -19,6 +20,7 @@ export type Direction = {
 }
 
 export const INGREDIENT_UNITS = [
+	"",
 	"tsp",
 	"tbsp",
 	"oz",
@@ -28,7 +30,6 @@ export const INGREDIENT_UNITS = [
 	"quart",
 	"gallon",
 	"lb",
-	"item",
 ];
 export type IngredientUnit = typeof INGREDIENT_UNITS[number];
 
@@ -55,3 +56,10 @@ export type Recipe = {
 	createdAt: number;
 	modifiedAt: number;
 };
+
+export type UserFavoriteRecipe = {
+	uuid: string;
+	recipeUUID: string;
+	userUUID: string;
+	favoritedAt: number;
+}

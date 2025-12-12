@@ -47,10 +47,21 @@ func (r *Repository) Create(ctx context.Context, recipe Recipe) error {
 	return r.recipeClient.InsertItem(ctx, recipe)
 }
 
+// DeleteRecipe deletes a recipe
+func (r *Repository) DeleteRecipe(ctx context.Context, recipeUUID string) error {
+	return r.recipeClient.DeleteItem(ctx, recipeUUID)
+}
+
 // SaveUserFavorite saves a user favorite in Mongo
-func (r *Repository) SaveUserFavorite(ctx context.Context, favorite UserFavorite) error {
+func (r *Repository) SaveUserFavorite(ctx context.Context, favorite UserFavorite) (UserFavorite, error) {
 	favorite.FavoritedAt = time.Now().UnixMilli()
-	return r.favoritesClient.InsertItem(ctx, favorite)
+	err := r.favoritesClient.InsertItem(ctx, favorite)
+	return favorite, err
+}
+
+// UnFavoriteRecipe removes a user favorite from the db
+func (r *Repository) UnFavoriteRecipe(ctx context.Context, favoriteUUID string) error {
+	return r.favoritesClient.DeleteItem(ctx, favoriteUUID)
 }
 
 // GetRecipeByUUID gets a recipe by its UUID

@@ -7,6 +7,8 @@
   flex-direction: column;
   gap: 1rem;
 
+  min-width: 29rem;
+
   border: 2px solid var(--bg-color-overlay);
   border-radius: 10px;
 
@@ -18,10 +20,16 @@
   top: -1.5rem;
   background-color: var(--bg-color);
   padding: 0.5rem;
+
+  max-height: 5rem;
+}
+
+.leftBorder {
+  left: 1.5rem;
 }
 
 .sectionTitle {
-  left: 1.5rem;
+  top: -3rem;
 }
 
 .sectionDelete {
@@ -35,22 +43,44 @@
 .ingredientInput {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 5rem;
 
   margin-bottom: 1rem;
 }
 
 .ingredient {
-  display: grid;
+  display: flex;
   width: 100%;
   gap: 5px;
   align-items: center;
 
-  grid-template-columns: minmax(0, 5fr) minmax(0, 1fr) minmax(0, 0.75fr) minmax(0, 0.5fr);
-
   > * {
     grid-column: span 1;
     min-width: 0;
+  }
+
+  .nameInput {
+    flex: 3;
+    min-width: 7rem;
+  }
+
+  .prepInput {
+    flex: 5;
+    min-width: 10rem;
+  }
+
+  .amountInput {
+    flex: 1;
+    min-width: 2rem;
+  }
+
+  .unitInput {
+    flex: 1;
+  }
+
+  .deleteButton {
+    flex: 0.3;
+    min-width: 2.5rem;
   }
 }
 
@@ -76,7 +106,7 @@
 
   --transition-ms: 100ms;
   --reactive-icon-transition-ms: var(--transition-ms);
-  transition: 
+  transition:
     background-color var(--transition-ms) linear,
     border-color var(--transition-ms) linear;
 
@@ -87,6 +117,11 @@
     background-color: color-mix(in hsl, var(--bg-color) 85%, white);
     border-color: var(--app-theme-border-color);
   }
+}
+
+.addButton {
+  align-self: center;
+  max-width: 10rem;
 }
 
 .itemWithLabel {
@@ -102,5 +137,9 @@
 }
 
 .itemWithoutLabel {
-  align-self: flex-end;
+  align-self: flex-start;
+}
+
+.hidden {
+  visibility: hidden;
 }

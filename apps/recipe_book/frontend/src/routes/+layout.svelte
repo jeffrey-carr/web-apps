@@ -2,25 +2,25 @@
   import './reset.css';
   import './globals.css';
 
-  import { onMount, setContext } from 'svelte';
+  import { onMount } from 'svelte';
   import { navigating } from '$app/state';
   import {
     getUser,
-    type User,
     App,
     type NotificationInfo,
     Notification,
     Spinner,
   } from '@jeffrey-carr/frontend-common';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
-  import { USER_CONTEXT_KEY } from '$lib/constants';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
+  import { userFavorites, userState } from '$lib/globals/user.svelte';
+  import { getUserFavorites } from '$lib/requests/recipe';
 
   // TODO - make these more fun
   const routeToLoadingMessage = (nav: typeof navigating): string | null => {
     if (nav.to == null) return null;
 
-    if (loadingUser) {
+    if (userState.isLoading) {
       return 'Loading your info...';
     }
 
@@ -37,23 +37,36 @@
 
   let { children }: { children?: () => any } = $props();
 
-  let loadingUser = $state(true);
-  let user = $state<User | null>(null);
-
   let loadingMessage = $derived(routeToLoadingMessage(navigating));
 
   let notification = $state<NotificationInfo>();
 
   onMount(() => {
     const loadUser = async () => {
-      user = await getUser(PUBLIC_ENVIRONMENT, App.RecipeBook);
-      loadingUser = false;
-      updateUserContext(user);
+      const promises: Promise<any>[] = [];
+      promises.push(getUser(PUBLIC_ENVIRONMENT, App.RecipeBook));
+      promises.push(getUserFavorites());
+
+      let resolved = [];
+      try {
+        resolved = await Promise.all(promises);
+      } catch (e) {
+        // Any errors here we can just swallow, it's probably an expired cookie
+        userState.isLoading = false;
+        userFavorites.isLoading = false;
+        return;
+      }
+
+      userState.user = resolved[0];
+      userFavorites.favorites = resolved[1];
+
+      userState.isLoading = false;
+      userFavorites.isLoading = false;
     };
 
-    if (user != null) return;
+    if (userState.user != null) return;
 
-    loadingUser = true;
+    userState.isLoading = true;
     loadUser();
   });
 
@@ -62,10 +75,6 @@
       notification = notificationQueue.shift();
     }
   });
-
-  const updateUserContext = (u: User | null) => {
-    setContext(USER_CONTEXT_KEY, u);
-  };
 
   const closeNotification = () => {
     notification = notificationQueue.shift();
@@ -110,7 +119,6 @@
 
     position: relative;
     height: 100vh;
-    width: 100vw;
 
     margin: 0;
 
@@ -124,9 +132,8 @@
 
     height: 100%;
     width: 100%;
-  }
-
-  .child-container {
-    padding: 1rem;
+    --min-size: 1rem;
+    min-height: var(--min-size);
+    min-width: var(--min-size);
   }
 </style>

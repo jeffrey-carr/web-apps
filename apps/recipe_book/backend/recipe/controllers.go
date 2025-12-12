@@ -2,12 +2,22 @@ package recipe
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"go-common/types"
 	"go-common/utils"
 	"recipe-book/mappers"
 	recipeBookTypes "recipe-book/types"
 	"strconv"
+)
+
+var (
+	// ErrAlreadyFavorited is returned when you try to favorite a recipe that
+	// has already been favorited
+	ErrAlreadyFavorited = errors.New("recipe is already favorited")
+	// ErrNotFavorited is returned when you try to unfavorite a recipe you
+	// don't have favorited
+	ErrNotFavorited = errors.New("recipe is not favorited")
 )
 
 // Controller controls the business logic for recipes
@@ -42,15 +52,43 @@ func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, cre
 	return Recipe{}, nil
 }
 
+// DeleteRecipe deletes a recipe
+func (c Controller) DeleteRecipe(ctx context.Context, recipeUUID string) error {
+	return c.repo.DeleteRecipe(ctx, recipeUUID)
+}
+
 // FavoriteRecipe saves a user's favorite recipe
-func (c Controller) FavoriteRecipe(ctx context.Context, user types.CommonUser, recipeID string) error {
+func (c Controller) FavoriteRecipe(ctx context.Context, user types.CommonUser, recipeID string) (UserFavorite, error) {
+	exists, err := c.GetAllUserFavorites(ctx, user)
+	if err != nil {
+		return UserFavorite{}, err
+	}
+	if utils.Any(exists, func(favorite UserFavorite) bool { return favorite.RecipeUUID == recipeID }) {
+		return UserFavorite{}, ErrAlreadyFavorited
+	}
+
 	rec, err := c.GetRecipe(ctx, recipeID)
 	if err != nil {
-		return err
+		return UserFavorite{}, err
 	}
 
 	favObject := recipeFavoriteRequestToFavorite(user, rec)
 	return c.repo.SaveUserFavorite(ctx, favObject)
+}
+
+// UnFavoriteRecipe unfavorites a recipe
+func (c Controller) UnFavoriteRecipe(ctx context.Context, user types.CommonUser, recipeUUID string) error {
+	favorites, err := c.repo.GetAllUserFavorites(ctx, user.UUID)
+	if err != nil {
+		return err
+	}
+
+	favorite, found := utils.Find(favorites, func(favorite UserFavorite) bool { return favorite.RecipeUUID == recipeUUID })
+	if !found {
+		return ErrNotFavorited
+	}
+
+	return c.repo.UnFavoriteRecipe(ctx, favorite.UUID)
 }
 
 // GetRecipe gets a recipe by it's ID. It supports both UUID and slug identifiers

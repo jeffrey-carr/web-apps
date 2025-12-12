@@ -5,9 +5,9 @@
     App,
     APP_QUERY_PARAM,
     Button,
-    epochStringToFriendlyPrintDate,
+    CharacterIcon,
     getAppURL,
-    Input,
+    getUser,
     PATH_QUERY_PARAM,
     ServerError,
     Spinner,
@@ -15,11 +15,17 @@
   } from '@jeffrey-carr/frontend-common';
   import styles from './page.module.scss';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
-  import type { Recipe } from '$lib/types/recipe';
-  import { getHomeRecipes } from '$lib/requests/recipe';
-  import { cookTimeToStr } from '$lib/mappers/recipe';
-  import { RecipeCard } from '$lib/components';
+  import type { Recipe, UserFavoriteRecipe } from '$lib/types/recipe';
+  import {
+    deleteRecipe,
+    favoriteRecipe,
+    getHomeRecipes,
+    unFavoriteRecipe,
+  } from '$lib/requests/recipe';
+  import { MainSidebar, RecipeCard } from '$lib/components';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
+  import { userFavorites, userState } from '$lib/globals/user.svelte';
+  import { greetUser } from '$lib/mappers/greeting';
 
   let recipes = $state<Recipe[]>([]);
   let loading = $state(false);
@@ -33,6 +39,10 @@
     loading = false;
     hasLoaded = true;
   });
+
+  let favoritedRecipes = $derived(
+    userFavorites.favorites?.map(favorite => favorite.recipeUUID) ?? []
+  );
 
   // TODO - make this better (pull it out of page n stuff)
   const getRecipes = async (): Promise<Recipe[]> => {
@@ -61,63 +71,111 @@
   };
 
   let loginURL = $derived(constructLoginURL(PUBLIC_ENVIRONMENT, page.url.pathname.slice(1)));
+
+  const applyFilters = () => {
+    loading = !loading;
+  };
+
+  const onFavoriteRecipe = async (recipeUUID: string): Promise<boolean> => {
+    let result;
+    let errTitle;
+    if (favoritedRecipes.includes(recipeUUID)) {
+      result = await unFavoriteRecipe(recipeUUID);
+      errTitle = 'Error unfavoriting recipe';
+      if (result == null && userFavorites.favorites != null && userFavorites.favorites.length > 0) {
+        const idx = userFavorites.favorites.findIndex(fav => fav.recipeUUID === recipeUUID);
+        if (idx >= 0) {
+          userFavorites.favorites.splice(idx, 1);
+        }
+      }
+    } else {
+      result = await favoriteRecipe(recipeUUID);
+      errTitle = 'Error favoriting recipe';
+      if (!(result instanceof ServerError)) {
+        if (userFavorites.favorites == null) {
+          userFavorites.favorites = [];
+        }
+
+        userFavorites.favorites.push(result);
+      }
+    }
+
+    if (result instanceof ServerError) {
+      notificationQueue.push({
+        level: 'error',
+        title: errTitle,
+        message: result.message,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const onDeleteRecipe = async (recipeUUID: string) => {
+    const recipeIdx = recipes.findIndex(recipe => recipe.uuid === recipeUUID);
+    if (recipeIdx < 0) {
+      notificationQueue.push({
+        level: 'error',
+        title: 'Error deleting recipe',
+        message: 'Recipe not found',
+      });
+      return;
+    }
+
+    const response = await deleteRecipe(recipeUUID);
+    if (response instanceof ServerError) {
+      notificationQueue.push({
+        level: 'error',
+        title: 'Error deleting recipe',
+        message: response.message,
+      });
+      return;
+    }
+
+    recipes.splice(recipeIdx, 1);
+  };
 </script>
 
-<header class={styles.headerContainer}>
-  <div class={styles.headerText}>
-    <h1>Jean's Recipe Book</h1>
-    <span>A Jeffrey Carr jawn</span>
-  </div>
-
-  <div class={styles.buttonContainer}>
-    <Button size="sm" variant="outline" href={loginURL}>Log in</Button>
-  </div>
-</header>
-
-<div class={styles.filterContainer}>
-  <div class={styles.search}>
-    <div class={styles.inputContainer}>
-      <Input type="text" placeholder="Search recipes or ingredients..." />
+<div class={styles.container}>
+  <div class={styles.header}>
+    <div class={styles.title}>
+      <h1>Jean's Recipe Book</h1>
+      <span>A Jeffrey Carr jawn</span>
     </div>
-    <div class={styles.buttonContainer}>
-      <Button size="md">Search</Button>
+
+    <div class={styles.userContainer}>
+      {#if userState.isLoading}
+        <Spinner class={styles.userLoadingSpinner} />
+      {:else if userState.user != null}
+        <CharacterIcon character={userState.user.character} />
+        <p>{greetUser(userState.user.fName)}</p>
+      {:else}
+        <Button size="sm" variant="secondary" href={loginURL}>Log in</Button>
+      {/if}
     </div>
   </div>
-  <div class={styles.filters}>
-    <select>
-      <option>Category</option>
-      <option>Beef</option>
-      <option>Chicken</option>
-    </select>
-    <select>
-      <option>Author</option>
-      <option>Jeff</option>
-      <option>Sara</option>
-    </select>
-    <Button size="md" variant="outline" depth="flat" shape="rect">Clear filters</Button>
-    <Button size="md" variant="outline" depth="flat" shape="rect" onclick={() => (loading = true)}>
-      Start loading
-    </Button>
-    <Button size="md" variant="outline" depth="flat" shape="rect" onclick={() => (loading = false)}
-      >Stop loading</Button
-    >
+
+  <div class={styles.sidebar}>
+    <MainSidebar onApplyFilters={applyFilters} />
   </div>
-</div>
 
-<Button href="/create">Create recipe</Button>
-
-<div class={styles.contentContainer}>
-  {#if loading}
-    <div class={styles.pageLoading}>
-      <Spinner label="Loading recipes..." />
-    </div>
-  {:else}
-    <div class={styles.recipeContainer}>
-      {#each recipes as recipe (recipe.uuid)}
-        <div class={styles.recipeCardContainer}>
-          <RecipeCard {recipe} />
-        </div>
-      {/each}
-    </div>
-  {/if}
+  <div class={styles.main}>
+    {#if loading || userFavorites.isLoading}
+      <Spinner class={styles.pageLoading} label="Loading recipes..." />
+    {:else}
+      <div class={styles.recipeContainer}>
+        {#each recipes as recipe (recipe.uuid)}
+          <div class={styles.recipeCardContainer}>
+            <RecipeCard
+              {recipe}
+              isFavorited={favoritedRecipes.includes(recipe.uuid)}
+              onFavorite={() => onFavoriteRecipe(recipe.uuid)}
+              onDelete={() => onDeleteRecipe(recipe.uuid)}
+            />
+          </div>
+        {/each}
+      </div>
+    {/if}
+  </div>
 </div>

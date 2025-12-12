@@ -9,7 +9,7 @@
     Textarea,
   } from '@jeffrey-carr/frontend-common';
   import { INGREDIENT_UNITS } from '$lib/types/recipe';
-  import type { Direction, Ingredient, Section } from '$lib/types/recipe';
+  import type { Direction, Ingredient } from '$lib/types/recipe';
   import styles from './RecipeSection.module.scss';
   import clsx from 'clsx';
 
@@ -23,7 +23,9 @@
     name = '',
     uuid = generateUUID(),
     title = $bindable(''),
-    ingredients = $bindable([{ uuid: generateUUID(), name: '', amountStr: '0', unit: '' }]),
+    ingredients = $bindable([
+      { uuid: generateUUID(), name: '', prep: '', amountStr: '0', unit: '' },
+    ]),
     directions = $bindable([{ uuid: generateUUID(), step: '' }]),
     editing = false,
     class: className = '',
@@ -44,7 +46,7 @@
   } = $props();
 
   const addIngredient = () => {
-    ingredients.push({ uuid: generateUUID(), name: '', amountStr: '0', unit: '' });
+    ingredients.push({ uuid: generateUUID(), name: '', prep: '', amountStr: '0', unit: '' });
   };
 
   const removeIngredient = (i: number) => {
@@ -77,46 +79,64 @@
 
 <div class={clsx(styles.container, className)}>
   {#if showTitle}
-    <div class={clsx(styles.topBorder, styles.sectionTitle)}>
-      {#if editing}
+    {#if editing}
+      <div class={clsx(styles.topBorder, styles.leftBorder, styles.sectionTitle)}>
         <Input
+          class={styles.titleInput}
           id="sectionTitle"
           bind:value={title}
           placeholder="Make the topping"
           label="Section Title"
         />
-      {:else}
-        <h3>{title}</h3>
-      {/if}
-    </div>
+      </div>
+    {:else}
+      <div class={clsx(styles.topBorder, styles.leftBorder, styles.sectionText)}>
+        <!-- <h3>{title}</h3> -->
+        <h3>heeeey</h3>
+      </div>
+    {/if}
   {/if}
 
   {#if editing && showDelete}
     <div class={clsx(styles.topBorder, styles.sectionDelete)}>
-      <Button variant="outline" onclick={onDelete}>
-        Delete Section <ReactiveIcon icon="trash" />
-      </Button>
+      <Button type="button" variant="secondary" onclick={onDelete}>Delete Section</Button>
     </div>
   {/if}
 
   <div>
-    <h3 class={styles.title}>Ingredients</h3>
+    <h4 class={styles.title}>Ingredients</h4>
     <div class={styles.ingredientInput}>
       {#snippet ingredientTemplate(_: Ingredient, i: number)}
         <div class={styles.ingredient}>
-          <Input bind:value={ingredients[i].name} label={i === 0 ? 'Name' : ''} />
-          <Input bind:value={ingredients[i].amountStr} label={i === 0 ? 'Amount' : ''} />
-          <div class={styles.itemWithoutLabel}>
+          <Input
+            class={styles.nameInput}
+            bind:value={ingredients[i].name}
+            label={i === 0 ? 'Name' : ''}
+          />
+          <Input
+            class={styles.prepInput}
+            bind:value={ingredients[i].prep}
+            label={i === 0 ? 'Prep' : ''}
+          />
+          <Input
+            class={styles.amountInput}
+            bind:value={ingredients[i].amountStr}
+            label={i === 0 ? 'Amount' : ''}
+          />
+          <div class={{ [styles.itemWithoutLabel]: i > 0 }}>
             <Select
+              class={styles.unitInput}
               bind:value={ingredients[i].unit}
               options={UNITS_OPTIONS.map(unit => ({ label: unit, value: unit }))}
             />
           </div>
-          {#if i > 0}
-            <button class={styles.deleteButton} onclick={() => removeIngredient(i)}>
-              <ReactiveIcon icon="trash" />
-            </button>
-          {/if}
+          <button
+            class={clsx(styles.deleteButton, { [styles.hidden]: i === 0 })}
+            type="button"
+            onclick={() => removeIngredient(i)}
+          >
+            <ReactiveIcon icon="trash" />
+          </button>
         </div>
       {/snippet}
       <RearrangeableList
@@ -127,19 +147,23 @@
         minItems={1}
       />
     </div>
-    <Button onclick={addIngredient} variant="outline" depth="flat">Add Ingredient</Button>
+    <Button class={styles.addButton} type="button" onclick={addIngredient} variant="secondary"
+      >Add Ingredient</Button
+    >
   </div>
 
   <div>
-    <h3 class={styles.title}>Directions</h3>
+    <h4 class={styles.title}>Directions</h4>
     {#snippet directionsTemplate(_: Direction, index: number)}
       <div class={styles.direction}>
         <Textarea bind:value={directions[index].step} />
-        {#if index > 0}
-          <button class={styles.deleteButton} onclick={() => removeDirection(index)}>
-            <ReactiveIcon icon="trash" />
-          </button>
-        {/if}
+        <button
+          type="button"
+          class={clsx(styles.deleteButton, { [styles.hidden]: index === 0 })}
+          onclick={() => removeDirection(index)}
+        >
+          <ReactiveIcon icon="trash" />
+        </button>
       </div>
     {/snippet}
     <RearrangeableList
@@ -150,7 +174,9 @@
       onUpdateOrder={reorderDirections}
       minItems={1}
     />
-    <Button onclick={addDirection} variant="outline" depth="flat">Add Step</Button>
+    <Button class={styles.addButton} type="button" onclick={addDirection} variant="secondary"
+      >Add Step</Button
+    >
   </div>
 </div>
 

@@ -1,7 +1,9 @@
 <script lang="ts">
   import { createRecipe } from '$lib/requests/recipe';
   import {
+    AutocompleteInput,
     Button,
+    Checkbox,
     generateUUID,
     Input,
     ServerError,
@@ -25,7 +27,7 @@
   };
 
   const createEmptyIngredient = (): Ingredient => {
-    return { uuid: generateUUID(), name: '', amountStr: '', unit: '' };
+    return { uuid: generateUUID(), name: '', prep: '', amountStr: '', unit: '' };
   };
 
   const createEmptyDirection = (): Direction => {
@@ -39,6 +41,7 @@
   let cookTimeHours = $derived(Number(cookTimeHoursStr));
   let cookTimeMinutesStr = $state('0');
   let cookTimeMinutes = $derived(Number(cookTimeMinutesStr));
+  let category = $state('');
   let importURL = $state('');
   let publish = $state(true);
 
@@ -47,6 +50,7 @@
   // reset is called when the form is reset
   const reset = () => {
     recipeSections = [createEmptySection()];
+    publish = true;
   };
 
   const create = async (e: SubmitEvent) => {
@@ -85,7 +89,7 @@
       return;
     }
 
-    if (response == null) {
+    if (response == null || response === '') {
       goto('/');
       return;
     }
@@ -124,7 +128,7 @@
       <Textarea rich={true} bind:value={recipeDescription} />
     </div>
 
-    <div class={styles.cookTimeAndImportURL}>
+    <div class={styles.cookTimeAndCategoryAndImportURL}>
       <!-- Cook time -->
       <div class={clsx(styles.formItem, styles.cookTime)}>
         <h3>Cook Time</h3>
@@ -138,6 +142,13 @@
         </div>
       </div>
 
+      <!-- Category -->
+      <div class={clsx(styles.formItem, styles.category)}>
+        <h3>Category</h3>
+        <AutocompleteInput bind:value={category} options={{ test: 'test' }} />
+      </div>
+
+      <!-- Import URL -->
       <div class={clsx(styles.formItem, styles.importURL)}>
         <h3>Import URL</h3>
         <Input bind:value={importURL} />
@@ -156,16 +167,17 @@
         editing
       />
     {/each}
-    <Button class={styles.addSectionButton} onclick={addSection}>Add a section</Button>
+    <Button class={styles.addSectionButton} onclick={addSection} variant="secondary" type="button"
+      >Add a section</Button
+    >
 
     <div class={clsx(styles.formItem, styles.publishSection)}>
-      <label for="publishInput">Publish</label>
-      <input id="publishInput" type="checkbox" bind:checked={publish} />
+      <Checkbox label="Publish" bind:checked={publish} defaultChecked={true} />
     </div>
 
     <div class={styles.buttons}>
       <Button type="submit" size="md" loading={loadingCreate}>Create</Button>
-      <Button type="reset" size="md" variant="outline">Clear</Button>
+      <Button type="reset" size="md" variant="secondary">Clear</Button>
       <Button href="/" size="md" class={styles.cancelButton}>Cancel</Button>
     </div>
   </form>

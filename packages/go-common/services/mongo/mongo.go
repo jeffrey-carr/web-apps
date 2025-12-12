@@ -70,6 +70,21 @@ func (m *Mongo[T]) UpdateItem(ctx context.Context, uuid string, updatedItem T) e
 	return err
 }
 
+func (m *Mongo[T]) DeleteItem(ctx context.Context, uuid string) error {
+	result, err := m.collection.DeleteOne(ctx, bson.M{"_id": uuid})
+	if err != nil {
+		return err
+	}
+	if result == nil {
+		return errors.New("no result returned")
+	}
+	if result.DeletedCount == 0 {
+		return types.ErrNotFound
+	}
+
+	return nil
+}
+
 // ListItems returns a "page" of items from the collection.
 // - page is 1-based (page=1 is the first page)
 // - maxItems is the page size

@@ -16,7 +16,7 @@
   }
 
   &::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
@@ -47,10 +47,9 @@
 
   background-color: var(--bg-color-light);
 
-  .favoriteButton {
+  .managementButton {
     position: absolute;
     top: 1rem;
-    right: 1rem;
     z-index: 2;
 
     display: flex;
@@ -64,10 +63,20 @@
       cursor: pointer;
     }
 
-    .favoriteIcon {
+    .icon {
       height: 1.5rem;
       width: 1.5rem;
+
+      fill: var(--red);
     }
+  }
+
+  .favoriteButton {
+    right: 1rem;
+  }
+
+  .trashButton {
+    left: 1rem;
   }
 
   .image {
@@ -97,7 +106,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  
+
   padding: 0.7rem 1rem;
 }
 

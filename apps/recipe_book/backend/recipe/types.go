@@ -62,6 +62,7 @@ type Section struct {
 type Ingredient struct {
 	UUID      string `json:"uuid" bson:"_id"`
 	Name      string `json:"name" bson:"name"`
+	Prep      string `json:"prep" bson:"prep"`
 	AmountStr string `json:"amountStr" bson:"amountStr"`
 	// Amount is the decimal representation of the amount if it is parsable
 	Amount float64 `json:"amount" bson:"amount"`

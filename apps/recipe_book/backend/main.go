@@ -9,6 +9,7 @@ import (
 	jMongo "go-common/services/mongo"
 	"go-common/utils"
 	"net/http"
+	"recipe-book/handlers"
 	"recipe-book/recipe"
 	"recipe-book/types"
 
@@ -53,7 +54,7 @@ func main() {
 	recipeController := recipe.NewController(recipeRepo)
 
 	// HANDLERS //
-	recipeHandler := recipe.NewHandler(recipeController)
+	recipeHandler := handlers.NewRecipeHandler(recipeController)
 
 	// ROUTER //
 	mux := http.NewServeMux()
@@ -85,9 +86,43 @@ func main() {
 			nil,
 		),
 	)
+	mux.HandleFunc(
+		"DELETE /api/recipe",
+		jhttp.NewEndpoint(
+			recipeHandler.DeleteRecipe,
+			nil,
+			userMiddleware,
+		),
+	)
+
+	// User
+	mux.HandleFunc(
+		"GET /api/user/favorites",
+		jhttp.NewEndpoint(
+			recipeHandler.GetUserFavorites,
+			nil,
+			userMiddleware,
+		),
+	)
+	mux.HandleFunc(
+		"POST /api/user/favorite-recipe",
+		jhttp.NewEndpoint(
+			recipeHandler.FavoriteRecipe,
+			nil,
+			userMiddleware,
+		),
+	)
+	mux.HandleFunc(
+		"DELETE /api/user/unfavorite-recipe",
+		jhttp.NewEndpoint(
+			recipeHandler.UnFavoriteRecipe,
+			nil,
+			userMiddleware,
+		),
+	)
 
 	// Test
-	http.HandleFunc(
+	mux.HandleFunc(
 		"POST /api/ping",
 		jhttp.NewEndpoint(
 			HandlePing,
@@ -96,5 +131,5 @@ func main() {
 	)
 
 	fmt.Printf("Starting server on port %s\n", config.Port)
-	http.ListenAndServe(fmt.Sprintf(":%s", config.Port), nil)
+	http.ListenAndServe(fmt.Sprintf(":%s", config.Port), mux)
 }

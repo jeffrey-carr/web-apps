@@ -1,52 +1,71 @@
+.container {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'head head head'
+    'main main side';
+  gap: 3.35rem 1rem;
+
+  height: 100%;
+  width: 100%;
+
+  padding: 1rem;
+}
+
+.header {
+  grid-area: head;
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-template-areas: 'title title user';
+
+  .title {
+    grid-area: title;
+  }
+
+  .userContainer {
+    grid-area: user;
+    align-self: center;
+    justify-self: center;
+    margin-right: 1rem;
+
+    height: 4rem;
+  }
+}
+
+.sidebar {
+  grid-area: side;
+}
+
+.main {
+  grid-area: main;
+}
+
 .headerContainer {
   display: flex;
   justify-content: space-between;
   align-items: center;
 
   .buttonContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
     height: 3rem;
   }
 }
 
-.filterContainer {
-  margin-top: 2rem;
-
-  .search {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-
-    width: 100%;
-
-    .inputContainer {
-      flex: 4;
-    }
-
-    .buttonContainer {
-      flex: 1;
-    }
-  }
-
-  .filters {
-    display: flex;
-    gap: 0.5rem;
-
-    margin-top: 0.5rem;
-  }
-}
-
-.contentContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-
-  height: 100%;
-  width: 100%;
+.userLoadingSpinner {
+  --size: 2.2rem;
+  height: var(--size);
+  width: var(--size);
 }
 
 .pageLoading {
-  --size: 75px;
+  justify-self: center;
+
+  --size: 4rem;
   height: var(--size);
   width: var(--size);
 }

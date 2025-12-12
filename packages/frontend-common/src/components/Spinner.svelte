@@ -27,8 +27,8 @@
     justify-content: center;
     gap: 0.5rem;
 
-    height: 100%;
-    width: 100%;
+    // height: 100%;
+    // width: 100%;
   }
 
   .spinner {

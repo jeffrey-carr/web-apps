@@ -17,6 +17,7 @@
 
   font-family: var(--theme-readable-font);
   font-size: 0.8rem;
+  text-align: center;
 
   color: var(--theme-text-secondary);
   background-color: var(--theme-primary);
@@ -110,4 +111,9 @@
       box-shadow: none;
     }
   }
+}
+
+.anchor {
+  display: inline-block;
+  text-decoration: none;
 }

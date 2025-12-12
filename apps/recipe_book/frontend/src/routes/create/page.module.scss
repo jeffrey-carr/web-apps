@@ -1,5 +1,9 @@
 .container {
+  box-sizing: border-box;
+
   padding: 2.5rem;
+
+  height: 100%;
 }
 
 .form {
@@ -19,14 +23,21 @@
   margin-bottom: 1.25rem;
 }
 
-.cookTimeAndImportURL {
+.cookTimeAndCategoryAndImportURL {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 2rem;
+  gap: 0 2rem;
 
   .cookTime {
     flex: 1;
+  }
+  .category {
+    flex: 2;
+
+    min-width: 10rem;
+    max-width: 15rem;
   }
   .importURL {
     flex: 4;
