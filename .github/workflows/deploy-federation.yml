@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag (e.g. federation-v1.0.0)'
+        description: 'Tag to deploy (e.g. federation-v1.0.0)'
         required: true
         type: string
       deploy:
-        description: 'Deploy?'
+        description: 'Deploy to server? (Uncheck for build-only test)'
         type: boolean
         default: true
 
@@ -24,14 +24,14 @@ jobs:
     steps:
       - id: vars
         run: |
-          # 1. Logic to determine tag
+          # Determine Tag
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
 
-          # 2. Logic to determine deploy boolean
+          # Determine Deploy Boolean
           if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.deploy }}" == "false" ]; then
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
@@ -44,12 +44,25 @@ jobs:
     with:
       app_name: federation
       tag: ${{ needs.prep.outputs.tag }}
-      deploy: ${{ needs.prep.outputs.deploy == 'true' }} # pass as boolean
-      # OCI email private key
+      deploy: ${{ needs.prep.outputs.deploy == 'true' }} # Must be passed as boolean
+      # Path to inject the OCI key inside the build context
       inject_file_path: ./apps/federation/backend/.oci/prod_private.pem
     secrets:
       GHCR_PAT: ${{ secrets.GHCR_PAT }}
       SSH_KEY: ${{ secrets.SSH_KEY }}
-      MONGO_CONNECTION_URL: ${{ secrets.MONGO_CONNECTION_URL }}
-      # 👇 SPECIAL STEP: Pass the key content
+      # The content for the injected file
       INJECT_FILE_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
+      # The content for the .env file on the server
+      # (Adjust the JSON below if your .env format has changed to KEY=VALUE)
+      ENV_FILE_CONTENT: |
+        {
+          "environment": ${{ vars.ENVIRONMENT}},
+          "mongoConnectionURL": ${{ secrets.MONGO_CONNECTION_URL }},
+          "port": ${{ vars.PORT }},
+          "oracle_compartment_id": ${{ secrets.ORACLE_COMPARTMENT_ID }},
+          "oracle_user": ${{ secrets.ORACLE_USER }},
+          "oracle_fingerprint": ${{ secrets.ORACLE_FINGERPRINT }},
+          "oracle_key": ${{ vars.ORACLE_KEY_PATH}},
+          "oracle_tenancy": ${{ secrets.ORACLE_TENANCY }},
+          "oracle_region": ${{ vars.ORACLE_REGION }}
+        }

@@ -34,7 +34,7 @@ func HandlePing(ctx context.Context, r jhttp.RequestData[struct{}]) (*string, *J
 }
 
 func main() {
-	config, err := utils.OpenAndReadJSON[types.Config](".env.json")
+	config, err := utils.OpenAndReadJSON[types.Config](".env")
 	if err != nil {
 		panic(err)
 	}

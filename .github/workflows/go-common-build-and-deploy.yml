@@ -1,34 +1,35 @@
-name: Reusable Build & Deploy
+name: Go Common Deploy
 
 on:
   workflow_call:
     inputs:
       app_name:
+        description: 'Name of the app (e.g. federation)'
         required: true
         type: string
       tag:
+        description: 'Docker tag version (e.g. v1.2.3)'
         required: true
         type: string
       deploy:
+        description: 'Deploy to server?'
         required: false
         type: boolean
         default: true
-      # Generic way to handle "Special Steps" - verify where to put a secret file
       inject_file_path:
+        description: 'Path to inject a secret file during build (optional)'
         required: false
         type: string
-        description: 'Path to inject a secret file (e.g. ./apps/federation/backend/.oci/key.pem)'
     secrets:
-      # Standard Secrets
       GHCR_PAT:
         required: true
       SSH_KEY:
         required: true
-      MONGO_CONNECTION_URL:
-        required: true
-      # Optional Secret for the file injection
       INJECT_FILE_CONTENT:
         required: false
+      # Full content of .env file
+      ENV_FILE_CONTENT:
+        required: true
 
 env:
   REGISTRY: ghcr.io
@@ -40,9 +41,11 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Inject Secret File (Optional)
+      # --- OPTIONAL SECRET INJECTION ---
+      - name: Inject Secret File
         if: ${{ inputs.inject_file_path != '' }}
         run: |
           DIR=$(dirname "${{ inputs.inject_file_path }}")
@@ -50,18 +53,21 @@ jobs:
           echo "${{ secrets.INJECT_FILE_CONTENT }}" > "${{ inputs.inject_file_path }}"
           echo "✅ Injected secret file at ${{ inputs.inject_file_path }}"
 
-      - uses: docker/login-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./apps/${{ inputs.app_name }}/backend/Dockerfile
           push: true
-          build-args: APP=${{ inputs.app_name }}
+          build-args: |
+            APP=${{ inputs.app_name }}
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ inputs.app_name }}-backend:latest
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ inputs.app_name }}-backend:${{ inputs.tag }}
@@ -72,24 +78,28 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Generate .env
+      - name: Generate Frontend .env
         working-directory: ./apps/${{ inputs.app_name }}/frontend
         run: echo "PUBLIC_ENVIRONMENT=prod" > .env
 
-      - uses: docker/login-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: docker/build-push-action@v6
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./apps/${{ inputs.app_name }}/frontend/Dockerfile
           push: true
-          build-args: APP=${{ inputs.app_name }}
+          build-args: |
+            APP=${{ inputs.app_name }}
           tags: |
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ inputs.app_name }}-frontend:latest
             ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ inputs.app_name }}-frontend:${{ inputs.tag }}
@@ -101,30 +111,30 @@ jobs:
     steps:
       - name: SSH to server
         uses: appleboy/ssh-action@master
+        env:
+          APP_NAME: ${{ inputs.app_name }}
+          ENV_CONTENT: ${{ secrets.ENV_FILE_CONTENT }}
         with:
           host: ${{ vars.SERVER_IP }}
           username: ${{ vars.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
+          envs: APP_NAME,ENV_CONTENT
           script: |
-            # Use the input variable here
-            APP="${{ inputs.app_name }}"
+            set -e
 
-            # Standard deployment logic
-            sudo mkdir -p /opt/apps/$APP/frontend
-            sudo mkdir -p /opt/apps/$APP/backend
-            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} /opt/apps/$APP
+            # Ensure directories exist
+            sudo mkdir -p /opt/apps/$APP_NAME/frontend
+            sudo mkdir -p /opt/apps/$APP_NAME/backend
+            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} /opt/apps/$APP_NAME
 
-            cat > /opt/apps/$APP/backend/.env.json << 'EOF'
-            {
-              "environment": "prod",
-              "mongoConnectionURL": "${{ secrets.MONGO_CONNECTION_URL}}",
-              "port": "${{ vars.PORT }}"
-            }
-            EOF
+            # Write the .env file (Content provided by caller)
+            echo "$ENV_CONTENT" > /opt/apps/$APP_NAME/backend/.env
 
+            # Docker Login
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
 
-            cd /opt/apps/$APP
+            # Deploy
+            cd /opt/apps/$APP_NAME
             docker compose pull
             docker compose up -d
             docker image prune -f
