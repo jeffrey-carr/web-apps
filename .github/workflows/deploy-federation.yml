@@ -7,11 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to deploy (e.g. federation-v1.0.0)'
         required: true
         type: string
       deploy:
-        description: 'Deploy to server? (Uncheck for build-only test)'
         type: boolean
         default: true
 
@@ -28,21 +26,18 @@ jobs:
     steps:
       - id: vars
         run: |
-          # Determine Tag
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
-
-          # Determine Deploy Boolean
           if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.deploy }}" == "false" ]; then
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
             echo "deploy=true" >> "$GITHUB_OUTPUT"
           fi
 
-  build_and_deploy:
+  call-workflow:
     needs: prep
     uses: ./.github/workflows/go-common-build-and-deploy.yml
     with:
@@ -50,12 +45,11 @@ jobs:
       tag: ${{ needs.prep.outputs.tag }}
       deploy: ${{ needs.prep.outputs.deploy == 'true' }}
       inject_file_path: ./apps/federation/backend/.oci/prod_private.pem
-      ssh_username: ${{ vars.SSH_USERNAME }}
-      server_ip: ${{ vars.SERVER_IP }}
-      ghcr_username: ${{ vars.GHCR_USERNAME }}
+      environment_name: federation
     secrets:
       GHCR_PAT: ${{ secrets.GHCR_PAT }}
       SSH_KEY: ${{ secrets.SSH_KEY }}
+      # ⚠️ Ensure this is a REPOSITORY Secret, not an Environment Secret
       INJECT_FILE_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
       ENV_FILE_CONTENT: |
         {
