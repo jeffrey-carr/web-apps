@@ -1,0 +1,60 @@
+.container {
+  padding: 3rem;
+}
+
+.title {
+  margin-bottom: 3rem;
+}
+
+.characterPicker {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  height: 100%;
+}
+
+.preview {
+  .character {
+    --size: 13rem;
+    height: var(--size);
+    width: var(--size);
+  }
+}
+
+.selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+
+  .character {
+    --size: 5rem;
+    height: var(--size);
+    width: var(--size);
+  }
+
+  .characterButton {
+    padding: 0.3rem;
+
+    background-color: transparent;
+
+    border: 1px solid var(--app-theme-border-color, black);
+    border-radius: 100%;
+
+    transition: background-color 100ms linear;
+
+    &:hover {
+      cursor: pointer;
+      background-color: var(--app-theme-primary);
+    }
+  }
+}
+
+.buttons {
+  display: flex;
+  gap: 1rem;
+
+  margin: auto;
+  margin-top: 3rem;
+
+  max-width: 500px;
+}

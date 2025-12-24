@@ -1,0 +1,40 @@
+.container {
+  position: relative;
+
+  height: 100%;
+  width: 100%;
+
+  padding: 0.3rem;
+
+  border-radius: 100%;
+  border: 2px solid var(--app-theme-border-color, black);
+
+  overflow: hidden;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.editOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 100%;
+  width: 100%;
+
+  background-color: var(--bg-color-overlay);
+
+  opacity: 0;
+
+  transition: opacity 100ms linear;
+
+  &:hover {
+    opacity: 0.6;
+  }
+}

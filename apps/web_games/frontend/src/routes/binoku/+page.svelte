@@ -108,7 +108,6 @@
   // Modal
   let showInstructions = $state(false);
   const toggleModal = () => {
-    console.log('toggling modal');
     showInstructions = !showInstructions;
   };
 

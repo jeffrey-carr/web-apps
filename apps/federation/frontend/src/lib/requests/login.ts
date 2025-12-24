@@ -1,5 +1,5 @@
 import { isValidEmail, isValidPassword } from "$lib/utils";
-import { AUTH_COOKIE_NAME, makeRequest, METHODS, ServerError, type AuthRequest, type RouteInformation, type ServerMessage, type User } from "@jeffrey-carr/frontend-common";
+import { AUTH_COOKIE_NAME, makeRequest, METHODS, ServerError, type AuthRequest, type RouteInformation, type User } from "@jeffrey-carr/frontend-common";
 
 const authRoute: RouteInformation = {
   path: '/api/auth/login',
@@ -13,32 +13,18 @@ const authRoute: RouteInformation = {
  * @returns An error message
  */
 export const loginRequest = async (
-  dirtyRequest: AuthRequest
-): Promise<string> => {
-  const email = dirtyRequest.email.trim();
-  const emailErr = isValidEmail(email);
-  if (emailErr.length > 0) {
-    return "Email or password is incorrect";
-  }
-
-  const password = dirtyRequest.password.trim();
-  const passwordErr = isValidPassword(password);
-  if (passwordErr.length > 0) {
-    return "Email or password is incorrect";
-  }
-
-  const cleanRequest: AuthRequest = { email, password };
-
+  request: AuthRequest
+): Promise<User | ServerError> => {
+  let user: User;
   try {
-    await makeRequest(authRoute, {
-      body: cleanRequest,
+    user = await makeRequest(authRoute, {
+      body: request,
     });
   } catch (e) {
-    const err = e as ServerError;
-    return err.message;
+    return e as ServerError;
   }
 
-  return "";
+  return user;
 };
 
 const fullInfo: RouteInformation = {

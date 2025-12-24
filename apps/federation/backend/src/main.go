@@ -9,17 +9,20 @@ import (
 	localMiddleware "federation/middlewares"
 	"federation/services"
 	"federation/types"
+	"federation/user"
 	"fmt"
 	globalConstants "go-common/constants"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/jhttp/middlewares"
+	"go-common/services/jemail"
 	"go-common/services/jmongo"
 	globalTypes "go-common/types"
 	"go-common/utils"
 	"net/http"
 	"os"
 
+	"github.com/oracle/oci-go-sdk/v65/common"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -36,6 +39,11 @@ func main() {
 		panic(err)
 	}
 
+	oraclePrivateKey, err := utils.ReadFileIntoString(config.OracleKey)
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Printf("Loaded config: %+v\n", config)
 	os.Setenv(globalConstants.EnvEnvironmentVar, config.Environment)
 
@@ -48,13 +56,33 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	unverifiedUserMongoCollection, err := jmongo.NewMongo[types.UnverifiedUser](mongoClient, "federation", "unverified_users")
+	if err != nil {
+		panic(err)
+	}
 	apiKeyMongoCollection, err := jmongo.NewMongo[types.APIKey](mongoClient, "federation", "api_keys")
+	if err != nil {
+		panic(err)
+	}
 
 	// SERVIES //
 	apiService := services.NewAPI(apiKeyMongoCollection)
+	emailConfig := common.NewRawConfigurationProvider(
+		config.OracleTenancy,
+		config.OracleUser,
+		config.OracleRegion,
+		config.OracleFingerprint,
+		oraclePrivateKey,
+		nil,
+	)
+	emailService, err := jemail.NewEmail(emailConfig, "noreply@jeffreycarr.dev", "The Jeffiverse", config.OracleCompartmentID)
+	if err != nil {
+		panic(err)
+	}
 
 	// CONTROLLERS
-	authController := auth.NewController(userMongoCollection)
+	userController := user.NewController(userMongoCollection)
+	authController := auth.NewController(unverifiedUserMongoCollection, userController, emailService)
 	adminController := admin.NewController(apiService)
 
 	// MIDDLEWARES
@@ -66,6 +94,7 @@ func main() {
 	apiKeyMiddleware := localMiddleware.NewRequireAPIKey(apiService)
 
 	// HANDLERS //
+	userHandler := handlers.NewUserHandler(userController)
 	authHandler := handlers.NewAuthHandler(authController)
 	adminHandler := handlers.NewAdminHandler(adminController, authController)
 
@@ -82,7 +111,6 @@ func main() {
 			userMiddleware,
 		),
 	)
-
 	mux.HandleFunc(
 		"GET /api/auth/authed-user",
 		jhttp.NewEndpoint(
@@ -92,21 +120,35 @@ func main() {
 			userMiddleware,
 		),
 	)
-
 	mux.HandleFunc(
-		"GET /api/auth/user/{userUUID}",
+		"GET /api/user/{userUUID}",
 		jhttp.NewEndpoint(
-			authHandler.GetUserByUUID,
+			userHandler.GetUserByUUID,
 			[]string{constants.UserUUIDPathVariable},
 			corsMiddleware,
 			apiKeyMiddleware,
 		),
 	)
-
+	mux.HandleFunc(
+		"PUT /api/user/{userUUID}/update-password",
+		jhttp.NewEndpoint(
+			authHandler.UpdatePassword,
+			[]string{constants.UserUUIDPathVariable},
+			userMiddleware,
+		),
+	)
+	mux.HandleFunc(
+		"PUT /api/user/{userUUID}/update",
+		jhttp.NewEndpoint(
+			userHandler.UpdateUser,
+			[]string{constants.UserUUIDPathVariable},
+			userMiddleware,
+		),
+	)
 	mux.HandleFunc(
 		"POST /api/auth/users",
 		jhttp.NewEndpoint(
-			authHandler.BulkGetUsersByUUIDs,
+			userHandler.BulkGetUsersByUUIDs,
 			nil,
 			corsMiddleware,
 			apiKeyMiddleware,
@@ -151,7 +193,13 @@ func main() {
 			nil,
 		),
 	)
-
+	mux.HandleFunc(
+		"POST /api/auth/verify",
+		jhttp.NewEndpoint(
+			authHandler.VerifyEmail,
+			nil,
+		),
+	)
 	mux.HandleFunc(
 		"POST /api/auth/login",
 		jhttp.NewEndpoint(

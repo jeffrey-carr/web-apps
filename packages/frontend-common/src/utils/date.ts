@@ -30,9 +30,7 @@ export const friendlyPrintDate = (year: number, month: number, day: number, loca
 
 // TODO - timezones
 export const epochStringToFriendlyPrintDate = (epoch: number): string => {
-  console.log(`Getting epoch string from ${epoch}`);
   const date = new Date(epoch);
-  console.log(date);
   return date.toLocaleDateString(undefined, {
     year: "numeric",
     month: "long",

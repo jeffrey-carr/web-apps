@@ -25,9 +25,10 @@ type LogoutRequest struct {
 	LogoutEverywhere bool `json:"logoutEverywhere"`
 }
 
-// BulkGetUsersRequest is used to get users in bulk
-type BulkGetUsersRequest struct {
-	UUIDs []string `json:"uuids"`
+// UpdatePasswordRequest is used to update a user's password
+type UpdatePasswordRequest struct {
+	Password    string `json:"password"`
+	NewPassword string `json:"newPassword"`
 }
 
 // CookieOpts are the options you can pass a cookie

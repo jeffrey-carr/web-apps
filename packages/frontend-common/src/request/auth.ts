@@ -1,4 +1,4 @@
-import { App, Apps, Environment, METHODS, prodEnvironment, RouteInformation, User } from "../types"
+import { App, Apps, Environment, METHODS, prodEnvironment, RouteInformation, ServerError, User } from "../types"
 import { AUTH_COOKIE_NAME } from "../constants/auth";
 import { makeRequest } from "../utils";
 
@@ -42,9 +42,22 @@ export const backendGetUser = async (environment: Environment, app: App, authCoo
 /** getUser uses 'credentials: true' to send the cookie to the backend, which is only available
  to the browser, so this method should only be called from the frontend */
 export const getUser = async (environment: Environment, app: App, f?: typeof fetch): Promise<User | null> => {
-  return await makeRequest(
+  let response: User;
+  try {
+    response = await makeRequest(
     getAuthRouteInfo(environment),
     { query: { app } },
     f,
   );
+  } catch (e) {
+    const err = e as ServerError;
+    // a 400 is thrown if the cookie isn't present
+    if (err.status === 400) {
+      return null;
+    }
+
+    throw err;
+  }
+
+  return response;
 };

@@ -1,4 +1,5 @@
-import { prodEnvironment, type App, type AppInfo, type Environment } from "@jeffrey-carr/frontend-common";
+import { PUBLIC_ENVIRONMENT } from "$env/static/public";
+import { Apps, prodEnvironment, type App, type AppInfo, type Environment } from "@jeffrey-carr/frontend-common";
 
 export const isValidEmail = (email: string): string => {
   const regexp = new RegExp(/(^[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~]+[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~.]+[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~])@([a-zA-Z0-9\-]+).(com|org|net|edu|gov|mil)$/gm);
@@ -44,3 +45,14 @@ export const buildAppURL = (environment: Environment, app: AppInfo): string => {
   
   return `https://${app.subdomain}.jeffreycarr.dev`;
 };
+
+export const buildRerouteURL = (app: App, path?: string): string => {
+    if (!app) return '';
+
+    let route = buildAppURL(PUBLIC_ENVIRONMENT, Apps[app]);
+    if (path != null) {
+      route = `${route}/${path}`;
+    }
+
+    return route;
+  };

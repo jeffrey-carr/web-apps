@@ -3,6 +3,7 @@
 
   import styles from './Input.module.scss';
   import clsx from 'clsx';
+  import { generateUUID } from '../../utils';
 
   let {
     label,
@@ -19,6 +20,8 @@
     message?: string;
     value?: string;
   } & HTMLInputAttributes = $props();
+  // id is a random uuid to use for ids so they don't clash with other Input elements
+  const id = generateUUID();
   let errMessage = $state('');
   let hasError = $derived(errMessage.length > 0 || (message ?? '').length > 0);
   let validationDebounceTimer: number;
@@ -38,10 +41,10 @@
 
 <div class={clsx(styles.container, className)}>
   {#if label}
-    <label for="input" class={styles.label}>{label}</label>
+    <label for={id} class={styles.label}>{label}</label>
   {/if}
   <input
-    id="input"
+    {id}
     class={clsx(styles.input, { [styles.error]: hasError }, inputClass)}
     bind:value
     {...rest}
