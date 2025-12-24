@@ -136,7 +136,14 @@ func (m *Mongo[T]) InsertItem(ctx context.Context, item T) error {
 
 // UpdateItem updates an item with the matching UUID (or Mongo _id) in the collection
 func (m *Mongo[T]) UpdateItem(ctx context.Context, uuid string, updatedItem T) error {
-	_, err := m.collection.ReplaceOne(ctx, bson.M{"_id": uuid}, updatedItem)
+	return m.UpdateItemByKey(ctx, "_id", uuid, updatedItem)
+}
+
+// UpdateItemByKey allows updating an item by any key.
+//
+// WARNING: This will update ALL items that match that key. Be careful!
+func (m *Mongo[T]) UpdateItemByKey(ctx context.Context, key string, identifier string, updatedItem T) error {
+	_, err := m.collection.ReplaceOne(ctx, bson.M{key: identifier}, updatedItem)
 	return err
 }
 

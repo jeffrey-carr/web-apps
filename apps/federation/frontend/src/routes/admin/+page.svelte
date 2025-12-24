@@ -16,8 +16,8 @@
   import styles from './page.module.scss';
   import { logout } from '$lib/requests';
   import { goto } from '$app/navigation';
+  import { userState } from '$lib/globals/user.svelte';
 
-  let { data }: { data: { user: User } } = $props();
   let keys = $state<APIKey[]>([]);
 
   let hasLoadedKeys = false;
@@ -120,7 +120,7 @@
       return;
     }
 
-    goto('/choose-app');
+    goto('/?goto=/account');
   };
 
   const closeModal = () => {
@@ -204,7 +204,7 @@
 
 <main class={styles.container}>
   <h1>Admin panel</h1>
-  <p class={styles.greeting}>Hello, {data.user.fName}</p>
+  <p class={styles.greeting}>Hello, {userState.user?.fName}</p>
   <button class={styles.logoutButton} onclick={logoutUser}>Logout</button>
 
   {#if loadingKeys}

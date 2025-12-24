@@ -1,5 +1,5 @@
 import type { APIKey } from "$lib/types/apiKey";
-import { makeRequest, METHODS, ServerError, type RouteInformation, type ServerMessage } from "@jeffrey-carr/frontend-common";
+import { makeRequest, METHODS, ServerError, type RouteInformation } from "@jeffrey-carr/frontend-common";
 
 // TODO - notifications //
 
@@ -14,7 +14,6 @@ export const getAllAPIKeys = async (): Promise<APIKey[]> => {
     keys = await makeRequest(getAllKeysInfo);
   } catch (e) {
     const err = e as ServerError;
-    console.error(`Error fetching API keys: ${err.message}`);
     return [];
   }
 

@@ -1,26 +1,20 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { PUBLIC_ENVIRONMENT } from '$env/static/public';
   import { CreateAccountCard, LoginCard } from '$lib/components';
-  import { buildAppURL } from '$lib/utils';
-  import { Apps, Notification } from '@jeffrey-carr/frontend-common';
+  import { buildRerouteURL } from '$lib/utils';
+  import { Notification, ServerError } from '@jeffrey-carr/frontend-common';
   import type { RouteQuery, Character } from '@jeffrey-carr/frontend-common';
   import styles from './page.module.scss';
   import clsx from 'clsx';
   import { createAccount, loginRequest } from '$lib/requests';
+  import { goto } from '$app/navigation';
+  import { notificationQueue } from '$lib/globals/notifications.svelte';
+  import { userState } from '$lib/globals/user.svelte';
 
   let { data }: { data: RouteQuery } = $props();
 
   let errorNotif = $state<{ title?: string; message: string }>();
   let showCreate = $state(false);
   let pop = $state(false);
-
-  $effect(() => {
-    if (data.app == null) {
-      goto('/choose-app');
-      return;
-    }
-  });
 
   const toggleCreate = () => {
     showCreate = !showCreate;
@@ -35,13 +29,26 @@
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const err = await loginRequest({ email, password });
-    if (err.length !== 0) {
-      errorNotif = { title: 'Error logging in', message: err };
+    const response = await loginRequest({ email, password });
+    if (response instanceof ServerError) {
+      notificationQueue.push({
+        title: 'Error logging in',
+        message: response.message,
+        level: 'error',
+      });
       return false;
     }
 
-    window.location.assign(buildRerouteURL());
+    userState.user = response;
+
+    if (data.goto) {
+      await goto(data.goto);
+    }
+
+    if (data.app) {
+      window.location.assign(buildRerouteURL(data.app, data.path));
+    }
+
     return true;
   };
 
@@ -58,21 +65,8 @@
       return false;
     }
 
-    window.location.assign(buildRerouteURL());
+    await goto(`/awaiting-verification?email=${email}`);
     return true;
-  };
-
-  const buildRerouteURL = (): string => {
-    if (!data.app) return '';
-
-    let route = buildAppURL(PUBLIC_ENVIRONMENT, Apps[data.app]);
-
-    let path = `/${data.path ?? ''}`;
-    if (path.length > 1) {
-      route = `${route}${path}`;
-    }
-
-    return route;
   };
 </script>
 

@@ -21,6 +21,7 @@ export type makeRequestParams = {
 export type RouteQuery = {
   app?: App;
   path?: string;
+  goto?: string;
 };
 
 export const GlobalRoutes: Record<string, RouteInformation> = {

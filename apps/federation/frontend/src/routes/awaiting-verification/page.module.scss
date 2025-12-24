@@ -1,0 +1,32 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 100%;
+}
+
+.card {
+  --space: 1rem;
+
+  padding: 1rem;
+
+  text-align: center;
+
+  border: 1px solid var(--app-theme-border-color);
+  border-radius: 10px;
+
+  max-width: 650px;
+}
+
+.title {
+  margin-bottom: var(--space);
+}
+
+.content {
+  margin-bottom: var(--space);
+}
+
+.goButton {
+  max-width: 10rem;
+}

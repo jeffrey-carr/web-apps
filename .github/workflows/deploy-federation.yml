@@ -1,0 +1,55 @@
+name: Deploy Federation
+
+on:
+  push:
+    tags:
+      - 'federation-v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag (e.g. federation-v1.0.0)'
+        required: true
+        type: string
+      deploy:
+        description: 'Deploy?'
+        type: boolean
+        default: true
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+      deploy: ${{ steps.vars.outputs.deploy }}
+    steps:
+      - id: vars
+        run: |
+          # 1. Logic to determine tag
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+          # 2. Logic to determine deploy boolean
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.deploy }}" == "false" ]; then
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  call-workflow:
+    needs: prep
+    uses: ./.github/workflows/go-common-build-and-deploy.yml
+    with:
+      app_name: federation
+      tag: ${{ needs.prep.outputs.tag }}
+      deploy: ${{ needs.prep.outputs.deploy == 'true' }} # pass as boolean
+      # OCI email private key
+      inject_file_path: ./apps/federation/backend/.oci/prod_private.pem
+    secrets:
+      GHCR_PAT: ${{ secrets.GHCR_PAT }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      MONGO_CONNECTION_URL: ${{ secrets.MONGO_CONNECTION_URL }}
+      # 👇 SPECIAL STEP: Pass the key content
+      INJECT_FILE_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}

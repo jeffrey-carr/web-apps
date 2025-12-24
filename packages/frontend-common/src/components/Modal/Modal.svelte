@@ -6,9 +6,11 @@
 
   let {
     open = $bindable(),
+    class: className,
     children,
   }: {
     open: boolean;
+    class?: string;
     children?: () => any;
   } = $props();
 
@@ -33,8 +35,8 @@
 
 <div class={clsx(styles.container, { [styles.open]: open })}>
   <button class={styles.background} onclick={close} aria-label="Close modal"></button>
-  <div class={styles.contentContainer}>
-    <Button class={styles.closeButton} onclick={close}>&#x2715;</Button>
+  <div class={clsx(styles.contentContainer, className)}>
+    <Button class={styles.closeButton} onclick={close} variant="secondary">&#x2715;</Button>
     {@render children?.()}
   </div>
 </div>
