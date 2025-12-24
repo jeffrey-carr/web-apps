@@ -7,11 +7,17 @@ on:
   workflow_dispatch:
     inputs:
       tag:
+        description: 'Tag to deploy (e.g. federation-v1.0.0)'
         required: true
         type: string
       deploy:
+        description: 'Deploy to server? (Uncheck for build-only test)'
         type: boolean
         default: true
+
+env:
+  REGISTRY: ghcr.io
+  APP_NAME: federation
 
 permissions:
   contents: read
@@ -26,34 +32,126 @@ jobs:
     steps:
       - id: vars
         run: |
+          # 1. Determine Tag
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
+
+          # 2. Determine Deploy Boolean
           if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.deploy }}" == "false" ]; then
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
             echo "deploy=true" >> "$GITHUB_OUTPUT"
           fi
 
-  call-workflow:
-    needs: prep
-    uses: ./.github/workflows/go-common-build-and-deploy.yml
-    with:
-      app_name: federation
-      tag: ${{ needs.prep.outputs.tag }}
-      deploy: ${{ needs.prep.outputs.deploy == 'true' }}
-      inject_file_path: ./apps/federation/backend/.oci/prod_private.pem
-      environment_name: federation
-    secrets:
-      GHCR_PAT: ${{ secrets.GHCR_PAT }}
-      SSH_KEY: ${{ secrets.SSH_KEY }}
-      # ⚠️ Ensure this is a REPOSITORY Secret, not an Environment Secret
-      INJECT_FILE_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
-      ENV_FILE_CONTENT: |
-        {
-          "environment": "prod",
-          "mongoConnectionURL": "${{ secrets.MONGO_CONNECTION_URL}}",
-          "port": "${{ vars.PORT }}"
-        }
+  build-backend:
+    runs-on: ubuntu-latest
+    needs: [prep]
+    environment: federation
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inject OCI Private Key
+        run: |
+          mkdir -p ./apps/${{ env.APP_NAME }}/backend/.oci
+          echo "${{ secrets.OCI_PRIVATE_KEY }}" > ./apps/${{ env.APP_NAME }}/backend/.oci/prod_private.pem
+          echo "✅ Injected OCI key from Environment Secret"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/${{ env.APP_NAME }}/backend/Dockerfile
+          push: true
+          build-args: APP=${{ env.APP_NAME }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP_NAME }}-backend:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP_NAME }}-backend:${{ needs.prep.outputs.tag }}
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: [prep]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Frontend .env
+        working-directory: ./apps/${{ env.APP_NAME }}/frontend
+        run: echo "PUBLIC_ENVIRONMENT=prod" > .env
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/${{ env.APP_NAME }}/frontend/Dockerfile
+          push: true
+          build-args: APP=${{ env.APP_NAME }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP_NAME }}-frontend:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP_NAME }}-frontend:${{ needs.prep.outputs.tag }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [prep, build-backend, build-frontend]
+    if: needs.prep.outputs.deploy == 'true'
+    environment: federation
+    steps:
+      - name: SSH to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_IP }}
+          username: ${{ vars.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+
+            APP="federation"
+
+            # 1. Ensure directories exist
+            sudo mkdir -p /opt/apps/$APP/frontend
+            sudo mkdir -p /opt/apps/$APP/backend
+            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} /opt/apps/$APP
+
+            # 2. Generate Backend .env using Environment Secrets
+            # We can write directly here because the Runner resolves the secrets 
+            # before sending the script to the server.
+            cat > /opt/apps/$APP/backend/.env << 'EOF'
+            {
+              "environment": "${{ vars.ENVIRONMENT }}",
+              "mongoConnectionURL": "${{ secrets.MONGO_CONNECTION_URL }}",
+              "port": "${{ vars.PORT }}",
+              "emailPrivateKey": "${{ secrets.EMAIL_PRIVATE_KEY }}",
+              "oracle_compartment_id": "${{ secrets.ORACLE_COMPARTMENT_ID }}",
+              "oracle_user": "${{ secrets.ORACLE_USER }}",
+              "oracle_fingerprint": "${{ secrets.ORACLE_FINGERPRINT }}",
+              "oracle_key": "${{ vars.ORACLE_KEY_PATH }}",
+              "oracle_tenancy": "${{ secrets.ORACLE_TENANCY }}",
+              "oracle_region": "${{ vars.ORACLE_REGION }}"
+            }
+            EOF
+
+            # 3. Docker Login
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
+
+            # 4. Deploy
+            cd /opt/apps/$APP
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
