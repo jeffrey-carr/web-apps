@@ -4,20 +4,22 @@ FROM node:22-slim AS build
 ARG APP
 WORKDIR /app
 
-# Copy the whole monorepo
+# 1. Copy the entire monorepo
 COPY . .
 
-# Work inside this app's frontend
-WORKDIR /app/apps/${APP}/frontend
+# 2. NUCLEAR OPTION: Delete ALL lockfiles to force fresh Linux resolution
+# We delete the root lockfile AND any sub-project lockfiles.
+RUN find . -name "package-lock.json" -delete && \
+    find . -name "pnpm-lock.yaml" -delete && \
+    find . -name "bun.lockb" -delete
 
-# --- 🔴 THE FIX IS HERE ---
-# We DELETE the lockfiles to force npm to resolve dependencies for Linux.
-# This fixes the "Cannot find module @rollup/rollup-linux-x64-gnu" error.
-RUN rm -rf node_modules package-lock.json pnpm-lock.yaml bun.lockb && \
-    npm install --include=dev
+# 3. ROOT INSTALL: Install dependencies for the whole workspace
+# This ensures shared 'packages/' are linked and Linux binaries are downloaded.
+RUN npm install
 
-# Build SvelteKit
-RUN npm run build
+# 4. BUILD: Run the build command for the specific workspace
+# We use -w to tell npm which app to build from the root context.
+RUN npm run build -w apps/${APP}/frontend
 
 # Runtime stage
 FROM node:22-slim AS runtime
@@ -26,12 +28,12 @@ ARG APP
 ENV NODE_ENV=production
 WORKDIR /app
 
-# Copy built app from build stage
+# Copy the built output from the specific app location
 COPY --from=build /app/apps/${APP}/frontend/build ./build
 COPY --from=build /app/apps/${APP}/frontend/package.json ./
 
-# Install ONLY runtime deps
-# We can use 'npm install' safely here since we aren't building anymore
+# Install runtime dependencies
+# We treat the output as a standalone app now
 RUN npm install --omit=dev
 
 EXPOSE 3000
