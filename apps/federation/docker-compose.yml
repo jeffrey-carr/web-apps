@@ -14,15 +14,14 @@ services:
       - '3001:3000'
 
   federation_backend:
-    build:
-      context: ../..
-      dockerfile: ./apps/federation/backend/Dockerfile
-      args:
-        APP: federation
+    # ... build args ...
     image: ghcr.io/jeffrey-carr/federation-backend:latest
     container_name: federation_backend
     restart: unless-stopped
     volumes:
-      - ./backend/.env.json:/app/.env.json:ro
+      - ./backend/.env.json:/app/.env:ro
+
+      - ./backend/.oci:/app/.oci:ro
+
     ports:
       - '3101:9999'

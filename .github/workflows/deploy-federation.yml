@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to deploy (e.g. federation-v1.0.0)'
+        description: 'Tag to deploy'
         required: true
         type: string
       deploy:
-        description: 'Deploy to server? (Uncheck for build-only test)'
+        description: 'Deploy to server?'
         type: boolean
         default: true
 
@@ -32,14 +32,11 @@ jobs:
     steps:
       - id: vars
         run: |
-          # 1. Determine Tag
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
           fi
-
-          # 2. Determine Deploy Boolean
           if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.deploy }}" == "false" ]; then
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
@@ -49,16 +46,9 @@ jobs:
   build-backend:
     runs-on: ubuntu-latest
     needs: [prep]
-    environment: federation
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Inject OCI Private Key
-        run: |
-          mkdir -p ./apps/${{ env.APP_NAME }}/backend/.oci
-          echo "${{ secrets.OCI_PRIVATE_KEY }}" > ./apps/${{ env.APP_NAME }}/backend/.oci/prod_private.pem
-          echo "✅ Injected OCI key from Environment Secret"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -121,23 +111,23 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
-
             APP="federation"
 
-            # 1. Ensure directories exist
             sudo mkdir -p /opt/apps/$APP/frontend
-            sudo mkdir -p /opt/apps/$APP/backend
+            sudo mkdir -p /opt/apps/$APP/backend/.oci
             sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} /opt/apps/$APP
 
-            # 2. Generate Backend .env using Environment Secrets
-            # We can write directly here because the Runner resolves the secrets 
-            # before sending the script to the server.
+            # This creates the file directly on your VPS
+            echo "${{ secrets.OCI_PRIVATE_KEY }}" > /opt/apps/$APP/backend/.oci/prod_private.pem
+
+            # Make sure it is readable by the user/container
+            chmod 644 /opt/apps/$APP/backend/.oci/prod_private.pem
+
             cat > /opt/apps/$APP/backend/.env << 'EOF'
             {
               "environment": "${{ vars.ENVIRONMENT }}",
               "mongoConnectionURL": "${{ secrets.MONGO_CONNECTION_URL }}",
               "port": "${{ vars.PORT }}",
-              "emailPrivateKey": "${{ secrets.EMAIL_PRIVATE_KEY }}",
               "oracle_compartment_id": "${{ secrets.ORACLE_COMPARTMENT_ID }}",
               "oracle_user": "${{ secrets.ORACLE_USER }}",
               "oracle_fingerprint": "${{ secrets.ORACLE_FINGERPRINT }}",
@@ -147,10 +137,7 @@ jobs:
             }
             EOF
 
-            # 3. Docker Login
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
-
-            # 4. Deploy
             cd /opt/apps/$APP
             docker compose pull
             docker compose up -d
