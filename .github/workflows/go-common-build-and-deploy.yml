@@ -1,24 +1,29 @@
-name: Go Common Deploy
+name: Common Go-Sveltekit Build/Deploy
 
 on:
   workflow_call:
     inputs:
       app_name:
-        description: 'Name of the app (e.g. federation)'
         required: true
         type: string
       tag:
-        description: 'Docker tag version (e.g. v1.2.3)'
         required: true
         type: string
       deploy:
-        description: 'Deploy to server?'
         required: false
         type: boolean
         default: true
       inject_file_path:
-        description: 'Path to inject a secret file during build (optional)'
         required: false
+        type: string
+      ssh_username:
+        required: true
+        type: string
+      server_ip:
+        required: true
+        type: string
+      ghcr_username:
+        required: true
         type: string
     secrets:
       GHCR_PAT:
@@ -27,7 +32,6 @@ on:
         required: true
       INJECT_FILE_CONTENT:
         required: false
-      # Full content of .env file
       ENV_FILE_CONTENT:
         required: true
 
@@ -44,7 +48,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # --- OPTIONAL SECRET INJECTION ---
       - name: Inject Secret File
         if: ${{ inputs.inject_file_path != '' }}
         run: |
@@ -115,8 +118,8 @@ jobs:
           APP_NAME: ${{ inputs.app_name }}
           ENV_CONTENT: ${{ secrets.ENV_FILE_CONTENT }}
         with:
-          host: ${{ vars.SERVER_IP }}
-          username: ${{ vars.SSH_USERNAME }}
+          host: ${{ inputs.server_ip }}
+          username: ${{ inputs.ssh_username }}
           key: ${{ secrets.SSH_KEY }}
           envs: APP_NAME,ENV_CONTENT
           script: |
@@ -125,13 +128,14 @@ jobs:
             # Ensure directories exist
             sudo mkdir -p /opt/apps/$APP_NAME/frontend
             sudo mkdir -p /opt/apps/$APP_NAME/backend
-            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} /opt/apps/$APP_NAME
+            # Use the input username for permissions
+            sudo chown -R ${{ inputs.ssh_username }}:${{ inputs.ssh_username }} /opt/apps/$APP_NAME
 
-            # Write the .env file (Content provided by caller)
+            # Write the .env file
             echo "$ENV_CONTENT" > /opt/apps/$APP_NAME/backend/.env
 
-            # Docker Login
-            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
+            # Docker Login (Use input username)
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ inputs.ghcr_username }} --password-stdin
 
             # Deploy
             cd /opt/apps/$APP_NAME

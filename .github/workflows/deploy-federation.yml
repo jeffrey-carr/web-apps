@@ -42,31 +42,24 @@ jobs:
             echo "deploy=true" >> "$GITHUB_OUTPUT"
           fi
 
-  call-workflow:
+  build_and_deploy:
     needs: prep
     uses: ./.github/workflows/go-common-build-and-deploy.yml
     with:
       app_name: federation
       tag: ${{ needs.prep.outputs.tag }}
-      deploy: ${{ needs.prep.outputs.deploy == 'true' }} # Must be passed as boolean
-      # Path to inject the OCI key inside the build context
+      deploy: ${{ needs.prep.outputs.deploy == 'true' }}
       inject_file_path: ./apps/federation/backend/.oci/prod_private.pem
+      ssh_username: ${{ vars.SSH_USERNAME }}
+      server_ip: ${{ vars.SERVER_IP }}
+      ghcr_username: ${{ vars.GHCR_USERNAME }}
     secrets:
       GHCR_PAT: ${{ secrets.GHCR_PAT }}
       SSH_KEY: ${{ secrets.SSH_KEY }}
-      # The content for the injected file
       INJECT_FILE_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
-      # The content for the .env file on the server
-      # (Adjust the JSON below if your .env format has changed to KEY=VALUE)
       ENV_FILE_CONTENT: |
         {
-          "environment": ${{ vars.ENVIRONMENT}},
-          "mongoConnectionURL": ${{ secrets.MONGO_CONNECTION_URL }},
-          "port": ${{ vars.PORT }},
-          "oracle_compartment_id": ${{ secrets.ORACLE_COMPARTMENT_ID }},
-          "oracle_user": ${{ secrets.ORACLE_USER }},
-          "oracle_fingerprint": ${{ secrets.ORACLE_FINGERPRINT }},
-          "oracle_key": ${{ vars.ORACLE_KEY_PATH}},
-          "oracle_tenancy": ${{ secrets.ORACLE_TENANCY }},
-          "oracle_region": ${{ vars.ORACLE_REGION }}
+          "environment": "prod",
+          "mongoConnectionURL": "${{ secrets.MONGO_CONNECTION_URL}}",
+          "port": "${{ vars.PORT }}"
         }
