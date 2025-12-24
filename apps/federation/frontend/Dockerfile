@@ -1,5 +1,5 @@
 # Build stage
-FROM node:22-slim AS builder
+FROM node:22-slim AS build
 
 ARG APP
 WORKDIR /app
@@ -22,7 +22,7 @@ RUN \
 RUN npm run build
 
 # Runtime stage
-FROM node:22-alpine AS runtime
+FROM node:22-slim AS runtime
 
 ARG APP
 ENV NODE_ENV=production
