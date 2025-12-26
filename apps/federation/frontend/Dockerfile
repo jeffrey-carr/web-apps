@@ -1,44 +1,40 @@
 # Build stage
-FROM node:22-alpine AS build
+FROM node:22-slim AS build
 
 ARG APP
 WORKDIR /app
 
-# Copy the whole monorepo
+# 1. Copy the entire monorepo
 COPY . .
 
-# Work inside this app's frontend
-WORKDIR /app/apps/${APP}/frontend
+# 2. NUCLEAR OPTION: Delete ALL lockfiles to force fresh Linux resolution
+# We delete the root lockfile AND any sub-project lockfiles.
+RUN find . -name "package-lock.json" -delete && \
+    find . -name "pnpm-lock.yaml" -delete && \
+    find . -name "bun.lockb" -delete
 
-# Install deps INCLUDING devDeps (no NODE_ENV=production here)
-RUN \
-  if [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install; \
-  elif [ -f bun.lockb ]; then npm install -g bun && bun install; \
-  elif [ -f package-lock.json ]; then npm ci --include=dev; \
-  else npm install --include=dev; \
-  fi
+# 3. ROOT INSTALL: Install dependencies for the whole workspace
+# This ensures shared 'packages/' are linked and Linux binaries are downloaded.
+RUN npm install
 
-# Build SvelteKit (adapter-node)
-RUN npm run build
+# 4. BUILD: Run the build command for the specific workspace
+# We use -w to tell npm which app to build from the root context.
+RUN npm run build -w apps/${APP}/frontend
 
 # Runtime stage
-FROM node:22-alpine AS runtime
+FROM node:22-slim AS runtime
 
 ARG APP
 ENV NODE_ENV=production
 WORKDIR /app
 
-# Copy built app from build stage
+# Copy the built output from the specific app location
 COPY --from=build /app/apps/${APP}/frontend/build ./build
 COPY --from=build /app/apps/${APP}/frontend/package.json ./
-# If you have a lockfile for the app, copy it too:
-# COPY --from=build /app/apps/${APP}/frontend/package-lock.json ./ 
 
-# Install ONLY runtime deps
-RUN \
-  if [ -f package-lock.json ]; then npm ci --omit=dev; \
-  else npm install --omit=dev; \
-  fi
+# Install runtime dependencies
+# We treat the output as a standalone app now
+RUN npm install --omit=dev
 
 EXPOSE 3000
 

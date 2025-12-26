@@ -1,0 +1,144 @@
+name: Deploy Federation
+
+on:
+  push:
+    tags:
+      - 'federation-v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to deploy'
+        required: true
+        type: string
+      deploy:
+        description: 'Deploy to server?'
+        type: boolean
+        default: true
+
+env:
+  REGISTRY: ghcr.io
+  APP_NAME: federation
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+      deploy: ${{ steps.vars.outputs.deploy }}
+    steps:
+      - id: vars
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.deploy }}" == "false" ]; then
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-backend:
+    runs-on: ubuntu-latest
+    needs: [prep]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/${{ env.APP_NAME }}/backend/Dockerfile
+          push: true
+          build-args: APP=${{ env.APP_NAME }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP_NAME }}-backend:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP_NAME }}-backend:${{ needs.prep.outputs.tag }}
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    needs: [prep]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Frontend .env
+        working-directory: ./apps/${{ env.APP_NAME }}/frontend
+        run: echo "PUBLIC_ENVIRONMENT=prod" > .env
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/${{ env.APP_NAME }}/frontend/Dockerfile
+          push: true
+          build-args: APP=${{ env.APP_NAME }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP_NAME }}-frontend:latest
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.APP_NAME }}-frontend:${{ needs.prep.outputs.tag }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [prep, build-backend, build-frontend]
+    if: needs.prep.outputs.deploy == 'true'
+    environment: federation
+    steps:
+      - name: SSH to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_IP }}
+          username: ${{ vars.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            APP="federation"
+
+            sudo mkdir -p /opt/apps/$APP/frontend
+            sudo mkdir -p /opt/apps/$APP/backend/.oci
+            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} /opt/apps/$APP
+
+            # This creates the file directly on your VPS
+            echo "${{ secrets.OCI_PRIVATE_KEY }}" > /opt/apps/$APP/backend/.oci/prod_private.pem
+
+            # Make sure it is readable by the user/container
+            chmod 644 /opt/apps/$APP/backend/.oci/prod_private.pem
+
+            cat > /opt/apps/$APP/backend/.env << 'EOF'
+            {
+              "environment": "${{ vars.ENVIRONMENT }}",
+              "mongoConnectionURL": "${{ secrets.MONGO_CONNECTION_URL }}",
+              "port": "${{ vars.PORT }}",
+              "oracle_compartment_id": "${{ secrets.ORACLE_COMPARTMENT_ID }}",
+              "oracle_user": "${{ secrets.ORACLE_USER }}",
+              "oracle_fingerprint": "${{ secrets.ORACLE_FINGERPRINT }}",
+              "oracle_key": "${{ vars.ORACLE_KEY_PATH }}",
+              "oracle_tenancy": "${{ secrets.ORACLE_TENANCY }}",
+              "oracle_region": "${{ vars.ORACLE_REGION }}"
+            }
+            EOF
+
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
+            cd /opt/apps/$APP
+            docker compose pull
+            docker compose up -d
+            docker image prune -f

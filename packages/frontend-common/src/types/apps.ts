@@ -41,6 +41,7 @@ export const Apps: Record<App, AppInfo> = {
 };
 
 export const APP_QUERY_PARAM = 'app';
+export const GOTO_QUERY_PARAM = 'goto';
 export const PATH_QUERY_PARAM = 'path';
 
 export const isValidApp = (value: string): boolean => {

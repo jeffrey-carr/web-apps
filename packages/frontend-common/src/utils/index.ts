@@ -6,6 +6,7 @@ export * from './date';
 export * from './network';
 export * from './random';
 export * from './tuple';
+export * from './strings';
 
 export const ping = (): string => {
   return "pong!";

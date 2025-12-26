@@ -1,0 +1,17 @@
+.container {
+  padding: 3rem;
+}
+
+.title {
+  margin-bottom: 0.5rem;
+}
+
+.inputs {
+  display: flex;
+  flex-direction: column;
+}
+
+.buttons {
+  display: flex;
+  gap: 1rem;
+}

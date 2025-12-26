@@ -27,7 +27,7 @@ func NewAuthHandler(controller auth.Controller) Auth {
 }
 
 // CreateUser creates a new user
-func (h *Auth) CreateUser(ctx context.Context, r jhttp.RequestData[auth.CreateUserRequest]) (*globalTypes.CommonUser, *JHTTPErrors.JHTTPError) {
+func (h *Auth) CreateUser(ctx context.Context, r jhttp.RequestData[auth.CreateUserRequest]) (*string, *JHTTPErrors.JHTTPError) {
 	if r.Body == nil {
 		return nil, JHTTPErrors.NewBadRequestError("Bad request")
 	}
@@ -39,9 +39,31 @@ func (h *Auth) CreateUser(ctx context.Context, r jhttp.RequestData[auth.CreateUs
 		return nil, JHTTPErrors.NewBadRequestError(validationErr)
 	}
 
-	user, err := h.controller.CreateUser(ctx, request)
+	verificationToken, err := h.controller.CreateUser(ctx, request)
 	if err == auth.ErrEmailTaken {
 		return nil, JHTTPErrors.NewBadRequestError("An account with that email already exists")
+	}
+	if err != nil {
+		return nil, JHTTPErrors.NewInternalServerError(err)
+	}
+
+	return utils.Ptr(verificationToken), nil
+}
+
+// VerifyEmail verifies a user's email with their verification token
+func (h *Auth) VerifyEmail(ctx context.Context, r jhttp.RequestData[struct{}]) (*globalTypes.CommonUser, *JHTTPErrors.JHTTPError) {
+	if r.Query == nil {
+		return nil, JHTTPErrors.NewBadRequestError("Verification token is required")
+	}
+
+	verificationToken := r.Query.Get("token")
+	if verificationToken == "" {
+		return nil, JHTTPErrors.NewBadRequestError("Verification token is required")
+	}
+
+	user, err := h.controller.VerifyEmail(ctx, verificationToken)
+	if err == globalTypes.ErrNotFound || err == auth.ErrInvalidVerificationToken {
+		return nil, JHTTPErrors.NewBadRequestError("Invalid verification token")
 	}
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
@@ -50,52 +72,14 @@ func (h *Auth) CreateUser(ctx context.Context, r jhttp.RequestData[auth.CreateUs
 	cookie := auth.CreateAuthCookie(*user.Token, auth.CookieOpts{ExpiresAt: user.TokenValidTo})
 	http.SetCookie(*r.Writer, &cookie)
 
-	return utils.Ptr(auth.UserToCommonUser(user)), nil
-}
-
-// GetUserByUUID gets a user from the database. Should require an API key
-func (h *Auth) GetUserByUUID(ctx context.Context, r jhttp.RequestData[struct{}]) (*globalTypes.CommonUser, *JHTTPErrors.JHTTPError) {
-	userUUID, ok := r.PathValues[constants.UserUUIDPathVariable]
-	if !ok {
-		return nil, JHTTPErrors.NewBadRequestError("user UUID is required")
-	}
-
-	user, err := h.controller.GetUserByUUID(ctx, userUUID)
-	if err == globalTypes.ErrNotFound {
-		return nil, JHTTPErrors.NewNotFoundError(userUUID)
-	}
-
-	return utils.Ptr(auth.UserToCommonUser(user)), nil
-}
-
-// BulkGetUsersByUUIDs gets a buncha users. Should require an API key
-func (h *Auth) BulkGetUsersByUUIDs(ctx context.Context, r jhttp.RequestData[auth.BulkGetUsersRequest]) (*[]globalTypes.CommonUser, *JHTTPErrors.JHTTPError) {
-	if r.Body == nil {
-		return nil, JHTTPErrors.NewBadRequestError("Bad request")
-	}
-
-	uuids := r.Body.UUIDs
-	if len(uuids) == 0 {
-		return nil, nil
-	}
-	if len(uuids) > 10000 {
-		return nil, JHTTPErrors.NewBadRequestError("Cannot get more than 10000 users at a time")
-	}
-
-	users, err := h.controller.GetUsersByUUIDs(ctx, uuids)
-	if err != nil {
-		return nil, JHTTPErrors.NewInternalServerError(err)
-	}
-
-	commonUsers := utils.Map(users, func(user globalTypes.User) globalTypes.CommonUser { return auth.UserToCommonUser(user) })
-	return &commonUsers, nil
+	return utils.Ptr(utils.UserToCommonUser(user)), nil
 }
 
 // Login logs in a user and adds a Cookie to the response
-func (h *Auth) Login(ctx context.Context, r jhttp.RequestData[auth.LoginRequest]) (*struct{}, *JHTTPErrors.JHTTPError) {
+func (h *Auth) Login(ctx context.Context, r jhttp.RequestData[auth.LoginRequest]) (*globalTypes.CommonUser, *JHTTPErrors.JHTTPError) {
 	// If the user is in the context, they're already logged in
-	if _, ok := jcontext.GetUser(ctx); ok {
-		return nil, nil
+	if user, ok := jcontext.GetUser(ctx); ok {
+		return &user, nil
 	}
 
 	if r.Body == nil {
@@ -119,7 +103,7 @@ func (h *Auth) Login(ctx context.Context, r jhttp.RequestData[auth.LoginRequest]
 
 	cookie := auth.CreateAuthCookie(*user.Token, auth.CookieOpts{ExpiresAt: user.TokenValidTo})
 	http.SetCookie(*r.Writer, &cookie)
-	return nil, nil
+	return utils.Ptr(utils.UserToCommonUser(user)), nil
 }
 
 // Logout logs the user out
@@ -159,4 +143,39 @@ func (h *Auth) ValidateCookie(ctx context.Context, r jhttp.RequestData[struct{}]
 	}
 
 	return &user, nil
+}
+
+// UpdatePassword updates a user's password
+func (h *Auth) UpdatePassword(ctx context.Context, r jhttp.RequestData[auth.UpdatePasswordRequest]) (*struct{}, *JHTTPErrors.JHTTPError) {
+	userUUID, ok := r.PathValues[constants.UserUUIDPathVariable]
+	if !ok || userUUID == "" {
+		return nil, JHTTPErrors.NewBadRequestError("Invalid user")
+	}
+
+	authedUser, exists := jcontext.GetUser(ctx)
+	if !exists || (authedUser.UUID != userUUID && !authedUser.IsAdmin) {
+		return nil, JHTTPErrors.NewUnauthorizedError()
+	}
+
+	if r.Body == nil {
+		return nil, JHTTPErrors.NewBadRequestError("Invalid password")
+	}
+
+	passwordValidationErr := auth.ValidatePassword(r.Body.NewPassword)
+	if passwordValidationErr != "" {
+		return nil, JHTTPErrors.NewValidationError(passwordValidationErr)
+	}
+
+	err := h.controller.UpdatePassword(ctx, userUUID, *r.Body)
+	if err == globalTypes.ErrNotFound {
+		return nil, JHTTPErrors.NewBadRequestError("Unknown user")
+	}
+	if err == auth.ErrBadLogin {
+		return nil, JHTTPErrors.NewUnauthorizedError()
+	}
+	if err != nil {
+		return nil, JHTTPErrors.NewInternalServerError(err)
+	}
+
+	return nil, nil
 }

@@ -5,8 +5,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"federation/types"
 	"go-common/constants"
-	globalTypes "go-common/types"
 	"go-common/utils"
 	"net/http"
 	"os"
@@ -15,45 +15,23 @@ import (
 
 const loginTokenValidDuration = time.Hour * 24 * 30 // 30 days
 
-// UserToCommonUser converts a User into a global CommonUser
-func UserToCommonUser(user globalTypes.User) globalTypes.CommonUser {
-	return globalTypes.CommonUser{
-		UUID:       user.UUID,
-		Email:      user.Email,
-		FName:      user.FirstName,
-		LName:      user.LastName,
-		IsAdmin:    user.IsAdmin,
-		Character:  user.Character,
-		CreatedAt:  user.CreatedAt,
-		ModifiedAt: user.ModifiedAt,
-		LastSeenAt: user.LastSeenAt,
-	}
-}
-
-// CreateUserRequestToUser maps a user create request to a user object
-func CreateUserRequestToUser(
+// CreateRequestToUnverifiedUser takes a create request and
+// returns an unverified user entity
+func CreateRequestToUnverifiedUser(
 	request CreateUserRequest,
 	hashedPassword string,
 	salt []byte,
-) globalTypes.User {
-	now := time.Now()
-	userToken, userTokenValidTo := GenerateNewUserToken()
-	return globalTypes.User{
-		UUID:           utils.NewUUID(),
-		Email:          request.Email,
-		HashedPassword: hashedPassword,
-		Salt:           salt,
-		FirstName:      request.FName,
-		LastName:       request.LName,
-		Character:      request.Character,
-		CreatedAt:      now,
-		ModifiedAt:     now,
-		LastSeenAt:     now,
-
-		// We generate a token when creating the user so they can be logged in
-		// as soon as they create their account
-		Token:        &userToken,
-		TokenValidTo: &userTokenValidTo,
+) types.UnverifiedUser {
+	return types.UnverifiedUser{
+		VerificationToken: utils.NewUUID(),
+		Email:             request.Email,
+		HashedPassword:    hashedPassword,
+		Salt:              salt,
+		FirstName:         request.FName,
+		LastName:          request.LName,
+		Character:         request.Character,
+		CreatedAt:         time.Now(),
+		ExpiresAt:         time.Now().Add(time.Hour),
 	}
 }
 
