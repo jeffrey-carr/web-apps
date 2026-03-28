@@ -30,11 +30,10 @@ func ReadEnv(path string) (map[string]string, error) {
 
 // GetEnv gets the current environment
 func GetEnv() string {
-	liveEnv := os.Getenv(constants.EnvEnvironmentVar)
-	switch liveEnv {
-	case constants.EnvProd:
-		return constants.EnvProd
-	default:
-		return constants.EnvDev
-	}
+	return os.Getenv(constants.EnvEnvironmentVar)
+}
+
+// IsProd returns whether the current environment is prod or not
+func IsProd() bool {
+	return GetEnv() == constants.EnvProd
 }

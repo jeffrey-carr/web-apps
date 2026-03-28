@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createRecipe } from '$lib/requests/recipe';
+  import { createRecipe, getAllTags } from '$lib/requests/recipe';
   import {
     AutocompleteInput,
     Button,
@@ -12,10 +12,40 @@
   import { goto } from '$app/navigation';
   import styles from './page.module.scss';
   import { RecipeSection } from '$lib/components';
-  import type { Direction, Ingredient, RecipeCreateRequest, Section } from '$lib/types/recipe';
+  import type { Direction, Ingredient, RecipeCreateRequest, Section, Tag } from '$lib/types/recipe';
   import { recipeInputsToCreateRecipeRequest } from '$lib/mappers/recipe';
   import clsx from 'clsx';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
+  import { onMount } from 'svelte';
+
+  let loadingTags = $state(false);
+  let tags = $state<Tag[]>([]);
+  let tagNames = $derived(tags.map(tag => tag.name));
+
+  onMount(() => {
+    if (loadingTags) return;
+
+    const loadTags = async () => {
+      console.log('loading tags...');
+      const response = await getAllTags();
+      if (response instanceof ServerError) {
+        notificationQueue.push({
+          level: 'error',
+          title: 'Error getting categories',
+          message: response.message,
+        });
+
+        loadingTags = false;
+        return;
+      }
+
+      tags = response;
+      loadingTags = false;
+    };
+
+    loadingTags = true;
+    loadTags();
+  });
 
   const createEmptySection = (): Section => {
     return {
@@ -27,7 +57,7 @@
   };
 
   const createEmptyIngredient = (): Ingredient => {
-    return { uuid: generateUUID(), name: '', prep: '', amountStr: '', unit: '' };
+    return { uuid: generateUUID(), name: '', prep: '', amountStr: '', amount: 0, unit: '' };
   };
 
   const createEmptyDirection = (): Direction => {
@@ -37,11 +67,11 @@
   let recipeName = $state('');
   let recipeDescription = $state('');
   let recipeSections = $state<Section[]>([createEmptySection()]);
-  let cookTimeHoursStr = $state('0');
+  let cookTimeHoursStr = $state('');
   let cookTimeHours = $derived(Number(cookTimeHoursStr));
-  let cookTimeMinutesStr = $state('0');
+  let cookTimeMinutesStr = $state('');
   let cookTimeMinutes = $derived(Number(cookTimeMinutesStr));
-  let category = $state('');
+  let tag = $state('');
   let importURL = $state('');
   let publish = $state(true);
 
@@ -49,6 +79,7 @@
 
   // reset is called when the form is reset
   const reset = () => {
+    recipeDescription = '';
     recipeSections = [createEmptySection()];
     publish = true;
   };
@@ -57,6 +88,7 @@
     e.preventDefault();
     loadingCreate = true;
 
+    const cleanedTag = tag.trim();
     let createRequest: RecipeCreateRequest;
     try {
       createRequest = recipeInputsToCreateRecipeRequest(
@@ -64,8 +96,9 @@
         recipeDescription,
         cookTimeHours,
         cookTimeMinutes,
-        importURL,
+        [cleanedTag],
         recipeSections,
+        importURL,
         publish
       );
     } catch (e) {
@@ -128,7 +161,7 @@
       <Textarea rich={true} bind:value={recipeDescription} />
     </div>
 
-    <div class={styles.cookTimeAndCategoryAndImportURL}>
+    <div class={styles.cookTimeAndTagAndImportURL}>
       <!-- Cook time -->
       <div class={clsx(styles.formItem, styles.cookTime)}>
         <h3>Cook Time</h3>
@@ -142,10 +175,17 @@
         </div>
       </div>
 
-      <!-- Category -->
-      <div class={clsx(styles.formItem, styles.category)}>
+      <!-- Tag -->
+      <!-- TODO: support multiple tags -->
+      <div class={clsx(styles.formItem, styles.tag)}>
         <h3>Category</h3>
-        <AutocompleteInput bind:value={category} options={{ test: 'test' }} />
+        <AutocompleteInput
+          class={styles.tagInput}
+          bind:value={tag}
+          options={tagNames}
+          maxlength={20}
+          loading={loadingTags}
+        />
       </div>
 
       <!-- Import URL -->
@@ -177,8 +217,8 @@
 
     <div class={styles.buttons}>
       <Button type="submit" size="md" loading={loadingCreate}>Create</Button>
-      <Button type="reset" size="md" variant="secondary">Clear</Button>
-      <Button href="/" size="md" class={styles.cancelButton}>Cancel</Button>
+      <Button type="reset" size="md" variant="plain">Clear</Button>
+      <Button href="/" size="md" class={styles.cancelButton} variant="secondary">Cancel</Button>
     </div>
   </form>
 </div>

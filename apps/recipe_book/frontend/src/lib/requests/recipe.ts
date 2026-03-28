@@ -1,7 +1,21 @@
-import type { Recipe, RecipeCreateRequest, UserFavoriteRecipe } from "$lib/types/recipe";
-import { getErrorFromServer, makeRequest, METHODS, ServerError, type RouteInformation } from "@jeffrey-carr/frontend-common";
+import type {
+  Tag,
+  Recipe,
+  RecipeCreateRequest,
+  SearchOptions,
+  UserFavoriteRecipe,
+} from '$lib/types/recipe';
+import {
+  getErrorFromServer,
+  makeRequest,
+  METHODS,
+  ServerError,
+  type RouteInformation,
+} from '@jeffrey-carr/frontend-common';
 
-export const createRecipe = async (createRequest: RecipeCreateRequest): Promise<string | ServerError> => {
+export const createRecipe = async (
+  createRequest: RecipeCreateRequest
+): Promise<string | ServerError> => {
   const endpoint: RouteInformation = {
     path: '/api/recipe',
     method: METHODS.POST,
@@ -14,12 +28,12 @@ export const createRecipe = async (createRequest: RecipeCreateRequest): Promise<
   } catch (e) {
     return getErrorFromServer(e);
   }
-  
+
   // Response here is the new slug for the recipe
   return response;
 };
 
-export const getHomeRecipes = async (): Promise<Recipe[] | ServerError> => {
+export const getHomeRecipes = async (f?: typeof fetch): Promise<Recipe[] | ServerError> => {
   const endpoint: RouteInformation = {
     path: '/api/recipe',
     method: METHODS.GET,
@@ -27,7 +41,7 @@ export const getHomeRecipes = async (): Promise<Recipe[] | ServerError> => {
 
   let response: Recipe[];
   try {
-    response = await makeRequest(endpoint);
+    response = await makeRequest(endpoint, undefined, f);
   } catch (e) {
     return getErrorFromServer(e);
   }
@@ -35,11 +49,14 @@ export const getHomeRecipes = async (): Promise<Recipe[] | ServerError> => {
   return response;
 };
 
-export const getRecipe = async (recipeID: string, f?: typeof fetch): Promise<Recipe | ServerError> => {
+export const getRecipe = async (
+  recipeID: string,
+  f?: typeof fetch
+): Promise<Recipe | ServerError> => {
   const endpoint: RouteInformation = {
     path: `/api/recipe/${recipeID}`,
     method: METHODS.GET,
-  }
+  };
   let response: Recipe;
   try {
     response = await makeRequest(endpoint, undefined, f);
@@ -57,10 +74,7 @@ const deleteRecipeEndpoint: RouteInformation = {
 };
 export const deleteRecipe = async (recipeUUID: string): Promise<null | ServerError> => {
   try {
-    await makeRequest(
-      deleteRecipeEndpoint,
-      { query: { recipe: recipeUUID } },
-    );
+    await makeRequest(deleteRecipeEndpoint, { query: { recipe: recipeUUID } });
   } catch (e) {
     return getErrorFromServer(e);
   }
@@ -73,7 +87,9 @@ const getUserFavoritesEndpoint: RouteInformation = {
   method: METHODS.GET,
   credentials: 'required',
 };
-export const getUserFavorites = async (f?: typeof fetch): Promise<UserFavoriteRecipe[] | ServerError> => {
+export const getUserFavorites = async (
+  f?: typeof fetch
+): Promise<UserFavoriteRecipe[] | ServerError> => {
   let response: UserFavoriteRecipe[];
   try {
     response = await makeRequest(getUserFavoritesEndpoint, undefined, f);
@@ -95,13 +111,12 @@ const favoriteRecipeEndpoint: RouteInformation = {
   method: METHODS.POST,
   credentials: 'required',
 };
-export const favoriteRecipe = async (recipeUUID: string): Promise<UserFavoriteRecipe | ServerError> => {
+export const favoriteRecipe = async (
+  recipeUUID: string
+): Promise<UserFavoriteRecipe | ServerError> => {
   let result: UserFavoriteRecipe;
   try {
-    result = await makeRequest(
-      favoriteRecipeEndpoint,
-      { query: { recipe: recipeUUID } },
-    );
+    result = await makeRequest(favoriteRecipeEndpoint, { query: { recipe: recipeUUID } });
   } catch (e) {
     return getErrorFromServer(e);
   }
@@ -116,13 +131,59 @@ const unFavoriteRecipeEndpoint: RouteInformation = {
 };
 export const unFavoriteRecipe = async (recipeUUID: string): Promise<null | ServerError> => {
   try {
-    await makeRequest(
-      unFavoriteRecipeEndpoint,
-      { query: { recipe: recipeUUID } },
-    );
+    await makeRequest(unFavoriteRecipeEndpoint, { query: { recipe: recipeUUID } });
   } catch (e) {
     return getErrorFromServer(e);
   }
 
   return null;
+};
+
+const getAllTagsEndpoint: RouteInformation = {
+  path: '/api/recipe/all-tags',
+  method: METHODS.GET,
+  credentials: 'none',
+};
+export const getAllTags = async (f?: typeof fetch): Promise<Tag[] | ServerError> => {
+  try {
+    return await makeRequest<Tag[]>(getAllTagsEndpoint, undefined, f);
+  } catch (e) {
+    return getErrorFromServer(e);
+  }
+};
+
+const searchRecipesEndpoint: RouteInformation = {
+  path: '/api/recipe/search',
+  method: METHODS.GET,
+  credentials: 'optional',
+};
+export const searchRecipes = async (
+  opts: SearchOptions,
+  f?: typeof fetch
+): Promise<Recipe[] | ServerError> => {
+  let q: Record<string, string> = {};
+  if (opts.recipeName) {
+    q['name'] = opts.recipeName;
+  }
+  if (opts.favoritesOnly) {
+    q['favorites_only'] = `${opts.favoritesOnly ? 'true' : 'false'}`;
+  }
+  if (opts.authorUUID) {
+    q['author'] = opts.authorUUID;
+  }
+  if (opts.tagUUIDs && opts.tagUUIDs.length > 0) {
+    q['tags'] = opts.tagUUIDs.join(',');
+  }
+  if (opts.limit && opts.limit > 0) {
+    q['limit'] = `${opts.limit}`;
+    if (opts.page && opts.page > 1) {
+      q['page'] = `${opts.page}`;
+    }
+  }
+
+  try {
+    return await makeRequest<Recipe[]>(searchRecipesEndpoint, { query: q }, f);
+  } catch (e) {
+    return getErrorFromServer(e);
+  }
 };

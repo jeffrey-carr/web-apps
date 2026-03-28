@@ -23,24 +23,25 @@
   margin-bottom: 1.25rem;
 }
 
-.cookTimeAndCategoryAndImportURL {
+.cookTimeAndTagAndImportURL {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   gap: 0 2rem;
 
   .cookTime {
     flex: 1;
   }
-  .category {
-    flex: 2;
+
+  .tag {
+    flex: 3;
 
     min-width: 10rem;
-    max-width: 15rem;
   }
+
   .importURL {
-    flex: 4;
+    flex: 5;
   }
 }
 
@@ -60,4 +61,12 @@
 
 .publishSection {
   margin-top: 1rem;
+}
+
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  height: 100%;
 }

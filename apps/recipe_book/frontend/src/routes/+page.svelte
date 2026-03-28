@@ -5,9 +5,7 @@
     App,
     APP_QUERY_PARAM,
     Button,
-    CharacterIcon,
     getAppURL,
-    getUser,
     PATH_QUERY_PARAM,
     ServerError,
     Spinner,
@@ -15,50 +13,61 @@
   } from '@jeffrey-carr/frontend-common';
   import styles from './page.module.scss';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
-  import type { Recipe, UserFavoriteRecipe } from '$lib/types/recipe';
   import {
     deleteRecipe,
     favoriteRecipe,
+    getAllTags,
     getHomeRecipes,
+    searchRecipes,
     unFavoriteRecipe,
   } from '$lib/requests/recipe';
   import { MainSidebar, RecipeCard } from '$lib/components';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
-  import { userFavorites, userState } from '$lib/globals/user.svelte';
+  import { userState } from '$lib/globals/user.svelte';
   import { greetUser } from '$lib/mappers/greeting';
+  import type { Recipe, SearchOptions, Tag } from '$lib/types/recipe';
+  import UserProfileButton from '$lib/components/UserProfileButton/UserProfileButton.svelte';
 
   let recipes = $state<Recipe[]>([]);
-  let loading = $state(false);
-  let hasLoaded = $state(false);
+  let tags = $state<Tag[]>([]);
+  let loadingRecipes = $state(false);
+  let loadingTags = $state(false);
 
-  onMount(async () => {
-    if (hasLoaded) return;
+  onMount(() => {
+    if (loadingRecipes || loadingTags) return;
 
-    loading = true;
-    recipes = await getRecipes();
-    loading = false;
-    hasLoaded = true;
+    const loadData = async () => {
+      loadingRecipes = true;
+      loadingTags = true;
+
+      const [recipesResult, tagsResult] = await Promise.all([getHomeRecipes(), getAllTags()]);
+
+      loadingRecipes = false;
+      loadingTags = false;
+
+      if (recipesResult instanceof ServerError) {
+        notificationQueue.push({
+          level: 'error',
+          title: 'Error loading recipes',
+          message: recipesResult.message,
+        });
+      } else {
+        recipes = recipesResult;
+      }
+
+      if (tagsResult instanceof ServerError) {
+        notificationQueue.push({
+          level: 'error',
+          title: 'Error loading categories',
+          message: tagsResult.message,
+        });
+      } else {
+        tags = tagsResult;
+      }
+    };
+
+    loadData();
   });
-
-  let favoritedRecipes = $derived(
-    userFavorites.favorites?.map(favorite => favorite.recipeUUID) ?? []
-  );
-
-  // TODO - make this better (pull it out of page n stuff)
-  const getRecipes = async (): Promise<Recipe[]> => {
-    const results = await getHomeRecipes();
-    if (results instanceof ServerError) {
-      console.error(`error getting recipe: ${results.message}`);
-      notificationQueue.push({
-        level: 'error',
-        title: 'Error getting recipes',
-        message: results.message,
-      });
-      return [];
-    }
-
-    return results;
-  };
 
   const constructLoginURL = (environment: Environment, path?: string): string => {
     let route = getAppURL(environment, App.Federation);
@@ -72,32 +81,27 @@
 
   let loginURL = $derived(constructLoginURL(PUBLIC_ENVIRONMENT, page.url.pathname.slice(1)));
 
-  const applyFilters = () => {
-    loading = !loading;
-  };
-
-  const onFavoriteRecipe = async (recipeUUID: string): Promise<boolean> => {
+  const onFavoriteRecipe = async (recipeUUID: string): Promise<void> => {
     let result;
     let errTitle;
-    if (favoritedRecipes.includes(recipeUUID)) {
+
+    const recipeIndex = recipes.findIndex(rec => rec.uuid === recipeUUID);
+    if (recipeIndex < 0) {
+      notificationQueue.push({
+        level: 'error',
+        title: 'Unknown recipe',
+        message: "Hmmm, I don't know that recipe. Try refreshing the page and trying again",
+      });
+      return;
+    }
+    const recipe = recipes[recipeIndex];
+
+    if (recipe.isFavorited) {
       result = await unFavoriteRecipe(recipeUUID);
       errTitle = 'Error unfavoriting recipe';
-      if (result == null && userFavorites.favorites != null && userFavorites.favorites.length > 0) {
-        const idx = userFavorites.favorites.findIndex(fav => fav.recipeUUID === recipeUUID);
-        if (idx >= 0) {
-          userFavorites.favorites.splice(idx, 1);
-        }
-      }
     } else {
       result = await favoriteRecipe(recipeUUID);
       errTitle = 'Error favoriting recipe';
-      if (!(result instanceof ServerError)) {
-        if (userFavorites.favorites == null) {
-          userFavorites.favorites = [];
-        }
-
-        userFavorites.favorites.push(result);
-      }
     }
 
     if (result instanceof ServerError) {
@@ -106,10 +110,10 @@
         title: errTitle,
         message: result.message,
       });
-      return false;
+      return;
     }
 
-    return true;
+    recipes[recipeIndex].isFavorited = false;
   };
 
   const onDeleteRecipe = async (recipeUUID: string) => {
@@ -133,7 +137,21 @@
       return;
     }
 
-    recipes.splice(recipeIdx, 1);
+    recipes = recipes.filter(recipe => recipe.uuid !== recipeUUID);
+  };
+
+  const onUpdateFilters = async (opts: SearchOptions) => {
+    const response = await searchRecipes(opts);
+    if (response instanceof ServerError) {
+      notificationQueue.push({
+        level: 'error',
+        title: 'Error deleting recipe',
+        message: response.message,
+      });
+      return;
+    }
+
+    recipes = response;
   };
 </script>
 
@@ -148,34 +166,39 @@
       {#if userState.isLoading}
         <Spinner class={styles.userLoadingSpinner} />
       {:else if userState.user != null}
-        <CharacterIcon character={userState.user.character} />
+        <UserProfileButton user={userState.user} />
         <p>{greetUser(userState.user.fName)}</p>
       {:else}
-        <Button size="sm" variant="secondary" href={loginURL}>Log in</Button>
+        <Button size="sm" variant="secondary" shape="round" href={loginURL}>Log in</Button>
       {/if}
     </div>
   </div>
 
   <div class={styles.sidebar}>
-    <MainSidebar onApplyFilters={applyFilters} />
+    <MainSidebar user={userState.user} {tags} onApplyFilters={onUpdateFilters} {loadingTags} />
   </div>
 
   <div class={styles.main}>
-    {#if loading || userFavorites.isLoading}
+    {#if loadingRecipes}
       <Spinner class={styles.pageLoading} label="Loading recipes..." />
+    {:else if recipes.length === 0}
+      <div class={styles.noRecipesContainer}>
+        <p class={styles.sadLogo}>:(</p>
+        <p>No recipes found</p>
+      </div>
     {:else}
       <div class={styles.recipeContainer}>
         {#each recipes as recipe (recipe.uuid)}
           <div class={styles.recipeCardContainer}>
             <RecipeCard
               {recipe}
-              isFavorited={favoritedRecipes.includes(recipe.uuid)}
               onFavorite={() => onFavoriteRecipe(recipe.uuid)}
               onDelete={() => onDeleteRecipe(recipe.uuid)}
             />
           </div>
         {/each}
       </div>
+      <div class={styles.paginationContainer}></div>
     {/if}
   </div>
 </div>

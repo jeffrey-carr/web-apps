@@ -7,14 +7,38 @@
     ReactiveIcon,
     Select,
     Spinner,
+    type User,
   } from '@jeffrey-carr/frontend-common';
   import styles from './styles.module.scss';
   import clsx from 'clsx';
+  import type { Tag, SearchOptions } from '$lib/types/recipe';
 
-  let { onApplyFilters }: { onApplyFilters?: () => void } = $props();
+  let {
+    user,
+    onApplyFilters,
+    tags = [],
+    loadingTags = false,
+  }: {
+    user?: User | null;
+    onApplyFilters?: (opts: SearchOptions) => Promise<void>;
+    tags?: Tag[];
+    loadingTags?: boolean;
+  } = $props();
+  let tagOptions = $derived([
+    { label: 'All', value: '' },
+    ...tags.map(tag => ({
+      label: tag.name,
+      value: tag.uuid,
+    })),
+  ]);
 
   let selected = $state('filters');
   let loadingCreate = $state(false);
+
+  let nameValue = $state('');
+  let favoritesOnlyValue = $state(false);
+  let tagUUIDValue = $state('');
+  let loadingApply = $state(false);
 
   const openSection = (section: string) => {
     if (section === 'create') {
@@ -26,26 +50,46 @@
     selected = section;
   };
 
-  const applyFilters = () => {
-    console.log('Applying filters!');
-    onApplyFilters?.();
+  const applyFilters = async () => {
+    loadingApply = true;
+    let tags: string[] | undefined;
+    if (tagUUIDValue) {
+      tags = [tagUUIDValue];
+    }
+    const filters: SearchOptions = {
+      recipeName: nameValue,
+      favoritesOnly: favoritesOnlyValue,
+      tagUUIDs: tags,
+    };
+    if (nameValue || favoritesOnlyValue || tags) {
+      // TODO: don't hardcode this
+      filters.limit = 10;
+    }
+
+    await onApplyFilters?.(filters);
+    loadingApply = false;
   };
 
   const clearFilters = () => {
-    console.log('Clearing filters!');
+    nameValue = '';
+    favoritesOnlyValue = false;
+    tagUUIDValue = '';
+    applyFilters();
   };
 </script>
 
 <div class={styles.container}>
   <div class={styles.header}>
-    <button class={styles.item} onclick={() => openSection('create')}>
-      {#if loadingCreate}
-        <Spinner />
-      {:else}
-        <ReactiveIcon icon="plus" />
-        <span class={styles.itemLabel}>New Recipe</span>
-      {/if}
-    </button>
+    {#if user}
+      <button class={styles.item} onclick={() => openSection('create')}>
+        {#if loadingCreate}
+          <Spinner />
+        {:else}
+          <ReactiveIcon icon="plus" />
+          <span class={styles.itemLabel}>New Recipe</span>
+        {/if}
+      </button>
+    {/if}
     <button
       class={clsx(styles.item, { [styles.selected]: selected === 'filters' })}
       onclick={() => openSection('filters')}
@@ -56,28 +100,34 @@
     <!-- TODO - timers -->
   </div>
   <div class={styles.body}>
-    <Input class={styles.search} label="Search" placeholder="Search recipes or ingredients..." />
-    <Checkbox label="Favorites only" />
-    <Select
-      label="Category"
+    <Input
       class={styles.search}
-      options={[
-        { label: 'All', value: '' },
-        { label: 'Beef', value: 'beef' },
-        { label: 'Chicken', value: 'chicken' },
-      ]}
+      bind:value={nameValue}
+      label="Search"
+      placeholder="Search recipes..."
     />
+    {#if user}
+      <Checkbox label="Favorites only" bind:checked={favoritesOnlyValue} />
+    {/if}
     <Select
-      label="Author"
+      label="Tag"
       class={styles.search}
-      options={[
-        { label: 'All', value: '' },
-        { label: 'Jeff', value: 'jeff' },
-        { label: 'Sara', value: 'sara' },
-      ]}
+      options={tagOptions}
+      loadingOptions={loadingTags}
+      bind:value={tagUUIDValue}
     />
+    <!-- TODO: author search -->
+    <!-- <Select -->
+    <!--   label="Author" -->
+    <!--   class={styles.search} -->
+    <!--   options={[ -->
+    <!--     { label: 'All', value: '' }, -->
+    <!--     { label: 'Jeff', value: 'jeff' }, -->
+    <!--     { label: 'Sara', value: 'sara' }, -->
+    <!--   ]} -->
+    <!-- /> -->
 
-    <Button onclick={applyFilters}>Apply filters</Button>
+    <Button onclick={applyFilters} loading={loadingApply}>Apply filters</Button>
     <Button variant="secondary" onclick={clearFilters}>Clear filters</Button>
   </div>
 </div>

@@ -7,14 +7,21 @@
   margin-bottom: 0.5rem;
 }
 
-.select {
+.selectContainer {
   background-color: var(--theme-transparent);
 
   border: 1px solid var(--theme-border-color);
-  border-bottom: 3px solid var(--theme-border-color);
   border-radius: 5px;
 
   padding: 0.5rem;
+}
+
+.loading:hover {
+  cursor: not-allowed;
+}
+
+.select {
+  border-bottom: 3px solid var(--theme-border-color);
 
   --transition-ms: 100ms;
   transition: background-color var(--transition-ms) linear;

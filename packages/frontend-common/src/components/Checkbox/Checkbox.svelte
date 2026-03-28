@@ -21,5 +21,5 @@
   {#if label}
     <span class={styles.label}>{label}</span>
   {/if}
-  <input class={clsx(styles.checkbox, className)} type="checkbox" {...rest} />
+  <input class={clsx(styles.checkbox, className)} type="checkbox" bind:checked {...rest} />
 </div>

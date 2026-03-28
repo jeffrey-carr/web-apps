@@ -1,56 +1,72 @@
 <script lang="ts">
   import type { HTMLInputAttributes } from 'svelte/elements';
-  import { Input } from '../.';
+  import { Input, CustomDropdown } from '../.';
 
   import styles from './styles.module.scss';
   import clsx from 'clsx';
-
-  const filterOptions = (opts: Record<string, string>, v: string): string[] => {
-    const keys = Object.keys(opts);
-    return keys.filter(option => option.toLowerCase().startsWith(v.toLowerCase()));
-  };
+  import { Spinner } from '../.';
 
   let {
     class: className,
     label,
-    options = { '': '' },
+    options = [],
     value = $bindable(''),
+    maxlength,
+    loading = false,
     ...rest
   }: {
     class?: string;
     label?: string;
-    options?: Record<string, string>;
+    options?: string[];
+    maxlength?: number;
+    loading?: boolean;
     value: string;
   } & HTMLInputAttributes = $props();
   let showOptions = $state(false);
-  let validOptions = $derived(filterOptions(options, value));
-
+  let validOptions = $derived(
+    options?.filter(opt => opt.toLowerCase().startsWith(value.toLowerCase())) ?? []
+  );
+  let showDropdown = $derived((Object.keys(validOptions).length > 0 || loading) && showOptions);
   const fillOption = (opt: string) => {
-    const optValue = options[opt];
-    if (!optValue) return;
-    value = optValue;
+    value = opt;
     showOptions = false;
-  };
-
-  const handleModify = () => {
-    showOptions = true;
   };
 </script>
 
-<div class={clsx(styles.container, className)} onfocusin={handleModify}>
-  {#if label}
-    <label for="autocomplete-input" class={styles.label}>{label}</label>
-  {/if}
-  <Input id="autocomplete-input" bind:value {...rest} oninput={handleModify} />
-  {#if validOptions.length > 0 && showOptions}
+{#snippet renderOptions()}
+  {#if loading}
+    <div class={clsx(styles.spinnerContainer)}>
+      <Spinner size="1.5rem" />
+    </div>
+  {:else}
     <ul class={styles.options}>
       {#each validOptions as opt}
         <li class={styles.option}>
-          <button type="button" class={styles.optionButton} onclick={() => fillOption(opt)}>
+          <button type="button" class={styles.optionButton} onmousedown={() => fillOption(opt)}>
             {opt}
           </button>
         </li>
       {/each}
     </ul>
   {/if}
+{/snippet}
+{#snippet renderInput()}
+  <Input
+    id="autocomplete-input"
+    bind:value
+    {...rest}
+    {maxlength}
+    onblur={() => (showOptions = false)}
+    hideErrArea
+  />
+{/snippet}
+
+<div class={clsx(styles.container, className)} onfocusin={() => (showOptions = true)}>
+  {#if label}
+    <label for="autocomplete-input" class={styles.label}>{label}</label>
+  {/if}
+
+  <div class={styles.inputWrapper}>
+    <CustomDropdown show={showDropdown} trigger={renderInput} content={renderOptions} />
+  </div>
 </div>

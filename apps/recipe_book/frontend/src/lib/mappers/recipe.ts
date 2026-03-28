@@ -1,5 +1,5 @@
-import type { Direction, Ingredient, RecipeCreateRequest, Section } from "$lib/types/recipe";
-import { validateCookTime, validateRecipeName, validateSection } from "$lib/validators/recipe";
+import type { Direction, Ingredient, RecipeCreateRequest, Section } from '$lib/types/recipe';
+import { validateCookTime, validateRecipeName, validateSection } from '$lib/validators/recipe';
 import { TIME, Tuple } from '@jeffrey-carr/frontend-common';
 
 // Converts a recipe input to a create request, and validates as it goes
@@ -8,20 +8,21 @@ export const recipeInputsToCreateRecipeRequest = (
   description: string,
   cookTimeHours: number,
   cookTimeMinutes: number,
-  importURL: string,
+  tagNames: string[],
   sections: Section[],
-  publish: boolean,
+  importURL?: string,
+  publish?: boolean
 ): RecipeCreateRequest => {
   name = name.trim();
   const nameValidationErr = validateRecipeName(name);
-  if (nameValidationErr !== "") {
+  if (nameValidationErr !== '') {
     throw Error(nameValidationErr);
   }
 
   description = description.trim();
 
   const cookTimeValiationErr = validateCookTime(cookTimeHours, cookTimeMinutes);
-  if (cookTimeValiationErr !== "") {
+  if (cookTimeValiationErr !== '') {
     throw Error(cookTimeValiationErr);
   }
   const cookTimeHoursMs = cookTimeHours * 60 * 60 * 1000;
@@ -30,7 +31,7 @@ export const recipeInputsToCreateRecipeRequest = (
   sections = filterEmptySections(sections);
   for (const section of sections) {
     const sectionsValidationErr = validateSection(section);
-    if (sectionsValidationErr !== "") {
+    if (sectionsValidationErr !== '') {
       throw Error(sectionsValidationErr);
     }
   }
@@ -38,8 +39,9 @@ export const recipeInputsToCreateRecipeRequest = (
   return {
     name,
     description,
-    importURL,
-    cookTimeMs: cookTimeHoursMs+cookTimeMinutesMs,
+    originalURL: importURL,
+    cookTimeMs: cookTimeHoursMs + cookTimeMinutesMs,
+    tagNames,
     sections,
     publish,
   };
@@ -103,9 +105,9 @@ export const cookTimeToStr = (ms?: number): string => {
 
   if (minutes > 0) {
     if (hours > 0) {
-      str += ", "
+      str += ', ';
     }
-    
+
     const plural = minutes > 1;
     str += `${minutes} minute${plural ? 's' : ''}`;
   }

@@ -5,14 +5,19 @@
     theme = 'primary',
     label,
     class: className,
+    size,
   }: {
     theme?: 'primary' | 'secondary';
     label?: string;
     class?: string;
+    size?: string;
   } = $props();
 </script>
 
-<div class={clsx('container', className)}>
+<div
+  class={clsx('container', className)}
+  style={size ? `--jeffs-spinner-size: ${size};` : undefined}
+>
   <span class={`spinner ${theme}`}></span>
   {#if label}
     <span class="label">{label}</span>
@@ -26,9 +31,6 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-
-    // height: 100%;
-    // width: 100%;
   }
 
   .spinner {
@@ -38,7 +40,7 @@
     --spinner-color: var(--jeffs-spinner-color, var(--theme-secondary));
     --spinner-spin-color: var(--jeffs-spinner-spin-color, var(--spinner-color));
     min-height: 1rem;
-    height: 100%;
+    height: var(--jeffs-spinner-size, 100%);
     aspect-ratio: 1 / 1;
     border: 3px solid var(--spinner-color);
     border-radius: 50%;
@@ -48,7 +50,7 @@
     animation: rotation 1s linear infinite;
 
     &.secondary {
-      --spinner-color: var(--jeffs-spinner-color, --theme-primary);
+      --spinner-color: var(--jeffs-spinner-color, var(--theme-primary));
     }
   }
 

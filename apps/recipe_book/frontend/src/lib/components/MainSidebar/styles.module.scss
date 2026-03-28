@@ -1,4 +1,6 @@
 .container {
+  --border-radius: 10px;
+
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -7,7 +9,7 @@
   min-width: 320px;
 
   border: 1px solid var(--app-theme-border-color);
-  border-radius: 10px;
+  border-radius: var(--border-radius);
 }
 
 .header {
@@ -38,11 +40,18 @@
 
     &:hover {
       cursor: pointer;
-      background-color: var(--bg-color-surface);
+      background-color: rgb(from var(--app-theme-primary) r g b / 0.5);
+    }
+    &:first-child {
+      border-top-left-radius: var(--border-radius);
+    }
+    &:last-child {
+      border-top-right-radius: var(--border-radius);
     }
 
     &.selected {
-      background-color: var(--bg-color-surface);
+      color: var(--app-theme-text-secondary);
+      background-color: var(--app-theme-primary);
     }
 
     .itemLabel {

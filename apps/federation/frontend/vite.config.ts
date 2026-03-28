@@ -1,6 +1,9 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import path from 'path';
+import dns from 'node:dns';
+
+dns.setDefaultResultOrder('ipv4first');
 
 export default defineConfig({
 	plugins: [sveltekit()],
@@ -8,7 +11,7 @@ export default defineConfig({
 		port: 5175,
 		allowedHosts: ['login.jeffreycarr.local'],
 		proxy: {
-			'/api': 'http://localhost:9999'
+			'/api': 'http://127.0.0.1:9999'
 		},
 		fs: {
 			allow: [

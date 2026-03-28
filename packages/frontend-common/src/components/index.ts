@@ -5,6 +5,7 @@ export { default as Button } from './Button/Button.svelte';
 export { default as Confetti } from './Confetti.svelte';
 export { default as CharacterIcon } from './Character/CharacterIcon.svelte';
 export { default as Checkbox } from './Checkbox/Checkbox.svelte';
+export { default as CustomDropdown } from './CustomDropdown/CustomDropdown.svelte';
 export { default as ExpandButton } from './Button/ExpandButton.svelte';
 export { default as Input } from './Input/Input.svelte';
 export { default as Modal } from './Modal/Modal.svelte';
@@ -20,3 +21,4 @@ export { default as TabbedContent } from './TabbedContent.svelte';
 export { default as Textarea } from './Textarea/Textarea.svelte';
 
 export * from './Select/SelectTypes';
+

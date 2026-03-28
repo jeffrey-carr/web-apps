@@ -16,13 +16,11 @@
 
   let {
     recipe,
-    isFavorited = false,
     onFavorite,
     onDelete,
   }: {
     recipe: Recipe;
-    isFavorited?: boolean;
-    onFavorite?: () => Promise<boolean>;
+    onFavorite?: () => Promise<void>;
     onDelete?: () => Promise<void>;
   } = $props();
   let loadingFavoriting = $state(false);
@@ -36,6 +34,10 @@
     e.stopPropagation();
     e.preventDefault();
 
+    if (loadingFavoriting) {
+      return;
+    }
+
     loadingFavoriting = true;
     await onFavorite?.();
     loadingFavoriting = false;
@@ -45,8 +47,12 @@
     e.stopPropagation();
     e.preventDefault();
 
+    if (loadingDeleting) {
+      return;
+    }
+
     loadingDeleting = true;
-    onDelete?.();
+    await onDelete?.();
     loadingDeleting = false;
   };
 </script>
@@ -56,15 +62,23 @@
 <div class={styles.card} onclick={go} role="button" tabindex={0}>
   <div class={styles.header}>
     {#if userState.user}
-      <button class={clsx(styles.managementButton, styles.favoriteButton)} onclick={favorite}>
+      <button
+        class={clsx(styles.managementButton, styles.favoriteButton)}
+        onclick={favorite}
+        disabled={loadingFavoriting}
+      >
         {#if loadingFavoriting}
           <Spinner class={styles.icon} />
         {:else}
-          <ReactiveIcon class={styles.icon} icon={isFavorited ? 'heart-fill' : 'heart'} />
+          <ReactiveIcon class={styles.icon} icon={recipe.isFavorited ? 'heart-fill' : 'heart'} />
         {/if}
       </button>
       {#if userState.user.isAdmin || recipe.authorUUID === userState.user.uuid}
-        <button class={clsx(styles.managementButton, styles.trashButton)} onclick={deleteRecipe}>
+        <button
+          class={clsx(styles.managementButton, styles.trashButton)}
+          onclick={deleteRecipe}
+          disabled={loadingDeleting}
+        >
           {#if loadingDeleting}
             <Spinner class={styles.icon} />
           {:else}
@@ -84,9 +98,11 @@
   </div>
 
   <div class={styles.footer}>
-    <span class={styles.cookTime}>
-      <ReactiveIcon class={styles.cookTimeImg} icon="stopwatch" />
-      {cookTimeToStr(recipe.cookTimeMs)}
-    </span>
+    {#if recipe.cookTimeMs}
+      <span class={styles.cookTime}>
+        <ReactiveIcon class={styles.cookTimeImg} icon="stopwatch" />
+        {cookTimeToStr(recipe.cookTimeMs)}
+      </span>
+    {/if}
   </div>
 </div>

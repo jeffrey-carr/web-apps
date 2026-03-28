@@ -13,13 +13,19 @@
   margin-bottom: 5px;
 }
 
-.options {
-  display: none;
-  position: absolute;
-  top: 2.5rem;
-  z-index: 10;
-
+.inputWrapper {
   width: 100%;
+}
+
+.spinnerContainer {
+  padding: 0.5rem;
+}
+
+.options {
+  --max-height: 200px;
+  max-height: var(--max-height);
+  width: 100%;
+  overflow: auto;
 
   background-color: var(--bg-color-overlay);
   list-style: none;
@@ -28,6 +34,11 @@
   margin: 0;
 
   border-radius: 5px;
+
+  &.flipped {
+    top: auto;
+    bottom: 100%;
+  }
 }
 
 .option {
@@ -46,6 +57,7 @@
 
     &:hover {
       cursor: pointer;
+      background-color: var(--bg-color-light);
     }
   }
 }

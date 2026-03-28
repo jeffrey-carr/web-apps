@@ -36,16 +36,39 @@
   border: 1px solid black;
 }
 
-.orderInput {
-  width: 2rem;
+.numberControls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+}
 
-  padding: 0.5rem;
+.numberDisplay {
+  font-family: var(--theme-font, inherit);
+  font-weight: bold;
+  font-size: 0.9rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
 
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    display: none;
-    margin: 0;
-    -moz-appearance: textfield; /* Firefox */
+.arrowButton {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--theme-text-primary, black);
+  padding: 0.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    color: var(--theme-primary, gray);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
   }
 }
 
@@ -53,3 +76,4 @@
   height: 2rem;
   width: 2rem;
 }
+

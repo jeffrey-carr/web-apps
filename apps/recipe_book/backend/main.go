@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"federation/sdk"
 	"fmt"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/jhttp/middlewares"
-	jMongo "go-common/services/mongo"
+	"go-common/services/jmongo"
 	"go-common/utils"
 	"net/http"
-	"recipe-book/handlers"
+	recipeDomain "recipe-book/domains/recipe"
 	"recipe-book/recipe"
 	"recipe-book/types"
 
@@ -34,27 +35,32 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	recipeMongoCollection, err := jMongo.NewMongo[recipe.Recipe](mongoClient, "recipe_book", "recipes")
+	recipeMongoCollection, err := jmongo.NewMongo[recipeDomain.Recipe](mongoClient, "recipe_book", "recipes")
 	if err != nil {
 		panic(err)
 	}
-	userFavoritesMongoCollection, err := jMongo.NewMongo[recipe.UserFavorite](mongoClient, "recipe_book", "user_favorites")
+	userFavoritesMongoCollection, err := jmongo.NewMongo[recipeDomain.UserFavorite](mongoClient, "recipe_book", "user_favorites")
 	if err != nil {
 		panic(err)
 	}
+	tagMongoCollection, err := jmongo.NewMongo[recipeDomain.Tag](mongoClient, "recipe_book", "tags")
+	if err != nil {
+		panic(err)
+	}
+	federationSDK := sdk.NewSDK(config.FederationAPIKey)
 
 	// MIDDLEWARES //
 	userMiddleware := middlewares.NewGetUser(nil)
 	authMiddleware := middlewares.NewRequireAuth(false)
 
 	// REPOSITORIES //
-	recipeRepo := recipe.NewRepository(recipeMongoCollection, userFavoritesMongoCollection)
+	recipeRepo := recipe.NewRepository(recipeMongoCollection, userFavoritesMongoCollection, tagMongoCollection)
 
 	// CONTROLLERS //
-	recipeController := recipe.NewController(recipeRepo)
+	recipeController := recipe.NewController(federationSDK, recipeRepo)
 
 	// HANDLERS //
-	recipeHandler := handlers.NewRecipeHandler(recipeController)
+	recipeHandler := recipeDomain.NewRecipeHandler(recipeController)
 
 	// ROUTER //
 	mux := http.NewServeMux()
@@ -72,10 +78,25 @@ func main() {
 	)
 
 	mux.HandleFunc(
-		fmt.Sprintf("GET /api/recipe/{%s}", recipe.RecipeIDPathVar),
+		"GET /api/recipe/all-tags",
+		jhttp.NewEndpoint(
+			recipeHandler.GetAllTags,
+			nil,
+		),
+	)
+	mux.HandleFunc(
+		"GET /api/recipe/search",
+		jhttp.NewEndpoint(
+			recipeHandler.Search,
+			nil,
+			userMiddleware,
+		),
+	)
+	mux.HandleFunc(
+		fmt.Sprintf("GET /api/recipe/{%s}", recipeDomain.RecipeIDPathVar),
 		jhttp.NewEndpoint(
 			recipeHandler.Get,
-			[]string{recipe.RecipeIDPathVar},
+			[]string{recipeDomain.RecipeIDPathVar},
 			userMiddleware,
 		),
 	)
@@ -84,6 +105,7 @@ func main() {
 		jhttp.NewEndpoint(
 			recipeHandler.GetRecipes,
 			nil,
+			userMiddleware,
 		),
 	)
 	mux.HandleFunc(

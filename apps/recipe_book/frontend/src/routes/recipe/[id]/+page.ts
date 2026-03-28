@@ -4,11 +4,13 @@ import { ServerError } from "@jeffrey-carr/frontend-common";
 import type { PageLoad } from './$types';
 
 
-export const load: PageLoad = async ({ fetch, params }) => {
-  let recipeResponse = await getRecipe(params.id, fetch);
-  if (recipeResponse instanceof ServerError) {
-    error(recipeResponse.status, recipeResponse.message);
-  }
-
-  return { recipe: recipeResponse };
+export const load: PageLoad = ({ fetch, params }) => {
+  return {
+    recipePromise: getRecipe(params.id, fetch).then((response) => {
+      if (response instanceof ServerError) {
+        error(response.status, response.message);
+      }
+      return response;
+    }),
+  };
 };

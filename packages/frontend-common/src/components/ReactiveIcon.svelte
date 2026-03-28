@@ -107,7 +107,7 @@
     margin: var(--reactive-icon-margin, 0);
     padding: 0;
 
-    fill: var(--reactive-icon-fill, 'currentColor');
+    fill: var(--reactive-icon-fill, currentColor);
 
     height: var(--reactive-icon-height, 1.5rem);
     width: var(--reactive-icon-width, 1.5rem);
