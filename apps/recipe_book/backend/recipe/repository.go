@@ -20,7 +20,7 @@ const (
 	tagUUIDsKey           = "tags"
 	slugKey               = "slug"
 	categoryUUIDKey       = "category"
-	recipeNameSearchIndex = "recipe_name_fuzzy"
+	recipeNameSearchIndex = "name_search"
 )
 
 // Repository represents the recipe repository
@@ -70,6 +70,10 @@ func (r Repository) PutTag(ctx context.Context, tag recipe.Tag) error {
 	return r.tagClient.InsertItem(ctx, tag)
 }
 
+func (r Repository) UpdateTag(ctx context.Context, tag recipe.Tag) error {
+	return r.tagClient.UpdateItem(ctx, tag.UUID, tag)
+}
+
 func (r Repository) UpsertTag(ctx context.Context, name string) (recipe.Tag, error) {
 	filter := bson.M{"name": name}
 	update := bson.M{
@@ -81,11 +85,22 @@ func (r Repository) UpsertTag(ctx context.Context, name string) (recipe.Tag, err
 	return r.tagClient.Upsert(ctx, filter, update)
 }
 
-// Create saves a recipe in Mongo
-func (r Repository) Create(ctx context.Context, rec recipe.Recipe) error {
+// DeleteTag deletes a tag
+func (r Repository) DeleteTag(ctx context.Context, tagUUID string) error {
+	return r.tagClient.DeleteItem(ctx, tagUUID)
+}
+
+// Put saves a recipe in Mongo
+func (r Repository) Put(ctx context.Context, rec recipe.Recipe) error {
 	rec.CreatedAt = time.Now().UnixMilli()
 	rec.ModifiedAt = time.Now().UnixMilli()
 	return r.recipeClient.InsertItem(ctx, rec)
+}
+
+// Update updates a recipe in Mongo
+func (r Repository) Update(ctx context.Context, rec recipe.Recipe) error {
+	rec.ModifiedAt = time.Now().UnixMilli()
+	return r.recipeClient.UpdateItem(ctx, rec.UUID, rec)
 }
 
 // DeleteRecipe deletes a recipe
@@ -156,13 +171,8 @@ func (r Repository) GetRecipeBySlug(ctx context.Context, slug string) (recipe.Re
 	return recipes[0], nil
 }
 
-// GetHomeRecipes gets a ranom set of `limit` recipes
-func (r Repository) GetHomeRecipes(ctx context.Context, page, limit int64) ([]recipe.Recipe, error) {
-	return r.recipeClient.ListItems(ctx, page, limit)
-}
-
 // Search executes a search query for recipes in the database with optional text searching, filtering, and pagination
-func (r Repository) Search(ctx context.Context, opts recipe.SearchOpts, favoriteUUIDs []string) ([]recipe.Recipe, error) {
+func (r Repository) Search(ctx context.Context, opts recipe.SearchOpts, favoriteUUIDs []string) ([]recipe.Recipe, int64, error) {
 	filter := bson.M{}
 	if opts.FavoritesOnly {
 		filter["_id"] = bson.M{"$in": favoriteUUIDs}
@@ -177,9 +187,10 @@ func (r Repository) Search(ctx context.Context, opts recipe.SearchOpts, favorite
 	limit := max(int64(1), opts.Limit)
 	page := max(int64(1), opts.Page)
 	skip := (page - 1) * limit
+	fmt.Printf("skip is %d\n", skip)
 
 	if opts.Name != nil {
-		pipeline := mongo.Pipeline{
+		basePipeline := mongo.Pipeline{
 			bson.D{
 				{"$search", bson.D{
 					{"index", recipeNameSearchIndex},
@@ -196,17 +207,28 @@ func (r Repository) Search(ctx context.Context, opts recipe.SearchOpts, favorite
 		}
 
 		if len(filter) > 0 {
-			pipeline = append(pipeline, bson.D{{"$match", filter}})
+			basePipeline = append(basePipeline, bson.D{{"$match", filter}})
 		}
 
-		pipeline = append(pipeline, bson.D{{"$skip", skip}})
-		pipeline = append(pipeline, bson.D{{"$limit", limit}})
+		// Get total count for the search
+		total, err := r.recipeClient.AggregateCount(ctx, basePipeline)
+		if err != nil {
+			return nil, 0, err
+		}
 
-		return r.recipeClient.Aggregate(ctx, pipeline)
+		pipeline := append(basePipeline, bson.D{{"$skip", skip}}, bson.D{{"$limit", limit}})
+		recipes, err := r.recipeClient.Aggregate(ctx, pipeline)
+		return recipes, total, err
+	}
+
+	total, err := r.recipeClient.CountWithFilter(ctx, filter)
+	if err != nil {
+		return nil, 0, err
 	}
 
 	findOpts := options.Find().SetSkip(skip).SetLimit(limit)
-	return r.recipeClient.GetWithGenericFilter(ctx, filter, findOpts)
+	recipes, err := r.recipeClient.GetWithGenericFilter(ctx, filter, findOpts)
+	return recipes, total, err
 }
 
 // GetMatchingSlugPrefix gets a list of recipes that have a matching slug prefix

@@ -1,60 +1,59 @@
-import type { Direction, Ingredient, Section } from "$lib/types/recipe";
+import type { Direction, Ingredient, Section } from '$lib/types/recipe';
 
 export const validateRecipeName = (name: string): string => {
   if (name.length === 0) {
-    return "Name is required.";
+    return 'Name is required.';
   }
 
-  return "";
+  return '';
 };
 
 export const validateCookTime = (hours: number, minutes: number): string => {
   if (isNaN(hours) || isNaN(minutes)) {
-    return "Hours and minutes can only be numbers.";
+    return 'Hours and minutes can only be numbers.';
   }
 
   if (hours < 0 || minutes < 0) {
-    return "Hours and minutes must be positive or 0.";
+    return 'Hours and minutes must be positive or 0.';
   }
 
-  return "";
+  return '';
 };
 
 export const validateIngredient = (ingredient: Ingredient): string => {
   if (ingredient.name.trim().length === 0) {
-    return "Ingredient name is required";
+    return 'Ingredient name is required';
   }
 
-  return "";
+  return '';
 };
 
 export const validateDirection = (direction: Direction): string => {
   if (direction.step.trim().length === 0) {
-    return "Direction step is required.";
+    return 'Direction step is required.';
   }
 
-  return "";
+  return '';
 };
 
 export const validateSection = (section: Section): string => {
   for (const ingredient of section.ingredients) {
     const ingredentValidationErr = validateIngredient(ingredient);
-    if (ingredentValidationErr !== "") {
+    if (ingredentValidationErr !== '') {
       return ingredentValidationErr;
     }
   }
 
-for (const direction of section.directions) {
+  for (const direction of section.directions) {
     const directionValidationErr = validateDirection(direction);
-    if (directionValidationErr !== "") {
+    if (directionValidationErr !== '') {
       return directionValidationErr;
     }
   }
 
   if (section.ingredients.length === 0 && section.directions.length === 0) {
-    return "At least one ingredient or direction is required.";
+    return 'At least one ingredient or direction is required.';
   }
 
-  return "";
+  return '';
 };
-

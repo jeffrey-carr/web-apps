@@ -7,12 +7,18 @@
   flex-direction: column;
   gap: 1rem;
 
-  min-width: 29rem;
+  min-width: 35rem;
 
   border: 2px solid var(--bg-color-overlay);
   border-radius: 10px;
 
   padding: 1.5rem;
+
+  @media (max-width: 768px) {
+    min-width: unset;
+    width: 100%;
+    padding: 1rem;
+  }
 }
 
 .topBorder {
@@ -43,8 +49,6 @@
 .ingredientInput {
   display: flex;
   flex-direction: column;
-  gap: 5rem;
-
   margin-bottom: 1rem;
 }
 
@@ -54,33 +58,81 @@
   gap: 5px;
   align-items: center;
 
+  border-radius: 10px;
+  padding: 0.5rem;
+
+  @media (max-width: 768px) {
+    background-color: var(--gray-light);
+    flex-wrap: wrap;
+    align-items: flex-end;
+
+    .amountInput {
+      flex: 7;
+    }
+  }
+
+  .nameInput {
+    flex: 5;
+  }
+  .prepInput {
+    flex: 5;
+  }
+  .amountInput {
+    flex: 4;
+  }
+  .unitInput {
+    flex: 1;
+  }
+
   > * {
     grid-column: span 1;
     min-width: 0;
   }
 
+  // Ensure labels match vertical alignment
+  label,
+  span {
+    margin-bottom: 5px !important;
+  }
+
   .nameInput {
     flex: 3;
-    min-width: 7rem;
+    min-width: 10rem;
+    @media (max-width: 768px) {
+      flex: 1 1 100%;
+    }
   }
 
   .prepInput {
     flex: 5;
-    min-width: 10rem;
+    min-width: 12rem;
+    @media (max-width: 768px) {
+      flex: 1 1 100%;
+    }
   }
-
   .amountInput {
-    flex: 1;
-    min-width: 2rem;
+    flex: 2;
+    min-width: 4rem;
+    @media (max-width: 768px) {
+      flex: 1 1 40%;
+    }
   }
 
   .unitInput {
     flex: 1;
+    min-width: 6rem;
+    @media (max-width: 768px) {
+      flex: 1 1 40%;
+    }
   }
 
   .deleteButton {
     flex: 0.3;
     min-width: 2.5rem;
+    @media (max-width: 768px) {
+      flex: 1 1 10%;
+      margin-top: 1rem;
+    }
   }
 }
 
@@ -94,6 +146,10 @@
   width: 100%;
 
   margin-bottom: 0.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr auto;
+  }
 }
 
 .deleteButton {
@@ -122,12 +178,6 @@
 .addButton {
   align-self: center;
   max-width: 10rem;
-}
-
-.itemWithLabel {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
 }
 
 .itemWithLabel {

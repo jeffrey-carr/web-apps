@@ -12,6 +12,17 @@
   import type { Direction, Ingredient } from '$lib/types/recipe';
   import styles from './RecipeSection.module.scss';
   import clsx from 'clsx';
+  import { onMount } from 'svelte';
+
+  let isMobile = $state(false);
+  function checkMobile() {
+    isMobile = window.matchMedia('(max-width: 768px)').matches;
+  }
+  onMount(() => {
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  });
 
   const UNITS_OPTIONS = INGREDIENT_UNITS.toSorted((a, b) => {
     if (a === '') return -1;
@@ -46,7 +57,7 @@
   } = $props();
 
   const addIngredient = () => {
-    ingredients.push({ uuid: generateUUID(), name: '', prep: '', amountStr: '0', unit: '' });
+    ingredients.push({ uuid: generateUUID(), name: '', prep: '', amountStr: '', unit: '' });
   };
 
   const removeIngredient = (i: number) => {
@@ -104,32 +115,34 @@
   {/if}
 
   <div>
-    <h4 class={styles.title}>Ingredients</h4>
+    <h3 class={styles.title}>Ingredients</h3>
     <div class={styles.ingredientInput}>
       {#snippet ingredientTemplate(_: Ingredient, i: number)}
         <div class={styles.ingredient}>
           <Input
             class={styles.nameInput}
             bind:value={ingredients[i].name}
-            label={i === 0 ? 'Name' : ''}
+            label={isMobile || i === 0 ? 'Name' : ''}
+            hideErrArea={true}
           />
           <Input
             class={styles.prepInput}
             bind:value={ingredients[i].prep}
-            label={i === 0 ? 'Prep' : ''}
+            label={isMobile || i === 0 ? 'Prep' : ''}
+            hideErrArea={true}
           />
           <Input
             class={styles.amountInput}
             bind:value={ingredients[i].amountStr}
-            label={i === 0 ? 'Amount' : ''}
+            label={isMobile || i === 0 ? 'Amount' : ''}
+            hideErrArea={true}
           />
-          <div class={{ [styles.itemWithoutLabel]: i > 0 }}>
-            <Select
-              class={styles.unitInput}
-              bind:value={ingredients[i].unit}
-              options={UNITS_OPTIONS.map(unit => ({ label: unit, value: unit }))}
-            />
-          </div>
+          <Select
+            class={styles.unitInput}
+            bind:value={ingredients[i].unit}
+            options={UNITS_OPTIONS.map(unit => ({ label: unit, value: unit }))}
+            label={isMobile || i === 0 ? 'Unit' : ''}
+          />
           <button
             class={clsx(styles.deleteButton, { [styles.hidden]: i === 0 })}
             type="button"
@@ -141,6 +154,7 @@
       {/snippet}
       <RearrangeableList
         items={ingredients}
+        interaction="numbers"
         getKey={(item, _) => item.uuid}
         template={ingredientTemplate}
         onUpdateOrder={reorderIngredients}

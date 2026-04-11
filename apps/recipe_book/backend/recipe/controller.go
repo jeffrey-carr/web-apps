@@ -13,6 +13,7 @@ import (
 	"recipe-book/mappers"
 	"slices"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -29,29 +30,23 @@ var (
 
 // Controller controls the business logic for recipes
 type Controller struct {
-	Repository
-
+	repo          Repository
 	federationSDK sdk.SDK
 }
 
 // NewController creates a new recipe controller
 func NewController(federationSDK sdk.SDK, repo Repository) Controller {
 	return Controller{
-		Repository:    repo,
+		repo:          repo,
 		federationSDK: federationSDK,
 	}
 }
 
 // CreateRecipe creates a new recipe
 func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, createRequest recipe.CreateRecipeRequest) (recipe.Recipe, error) {
-	uniqueTags := utils.NewSet(createRequest.TagNames...)
-	tags := make([]recipe.Tag, 0, uniqueTags.Size())
-	for name := range uniqueTags.Iter {
-		tag, err := c.UpsertTag(ctx, name)
-		if err != nil {
-			return recipe.Recipe{}, err
-		}
-		tags = append(tags, tag)
+	tags, err := c.tagNamesToTags(ctx, createRequest.TagNames)
+	if err != nil {
+		return recipe.Recipe{}, err
 	}
 
 	slug, err := c.getAvailableSlug(ctx, createRequest.Name)
@@ -60,21 +55,75 @@ func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, cre
 	}
 	createRequest.Slug = slug
 
-	rec, err := recipeCreateRequestToRecipe(createRequest, tags, user)
+	rec, err := RecipeCreateRequestToRecipe(createRequest, tags, user)
 	if err != nil {
 		return recipe.Recipe{}, err
 	}
 
-	err = c.Create(ctx, rec)
+	err = c.repo.Put(ctx, rec)
 	if err != nil {
 		return recipe.Recipe{}, err
 	}
 	return recipe.Recipe{}, nil
 }
 
+func (c Controller) UpdateRecipe(ctx context.Context, existingRecipe recipe.Recipe, updateRequest recipe.RecipeUpdateRequest) (recipe.Recipe, error) {
+	if updateRequest.Name != nil {
+		existingRecipe.Name = *updateRequest.Name
+		slug, err := c.getAvailableSlug(ctx, existingRecipe.Name)
+		if err != nil {
+			return existingRecipe, err
+		}
+		existingRecipe.Slug = slug
+	}
+
+	if updateRequest.Description != nil {
+		existingRecipe.Description = *updateRequest.Description
+	}
+
+	if updateRequest.CookTimeMs != nil {
+		existingRecipe.CookTimeMs = *updateRequest.CookTimeMs
+	}
+
+	if updateRequest.TagNames != nil {
+		tags, err := c.tagNamesToTags(ctx, *updateRequest.TagNames)
+		if err != nil {
+			return existingRecipe, err
+		}
+		existingRecipe.TagUUIDs = utils.Map(tags, func(tag recipe.Tag) string { return tag.UUID })
+	}
+
+	if updateRequest.OriginalURL != nil {
+		existingRecipe.OriginalURL = *updateRequest.OriginalURL
+	}
+
+	if updateRequest.Status != nil {
+		existingRecipe.Status = *updateRequest.Status
+	}
+
+	if updateRequest.Sections != nil {
+		existingRecipe.Sections = *updateRequest.Sections
+	}
+
+	err := c.repo.Update(ctx, existingRecipe)
+	if err != nil {
+		return recipe.Recipe{}, err
+	}
+
+	return existingRecipe, nil
+}
+
+func (c Controller) DeleteRecipe(ctx context.Context, recipeUUID string) error {
+	return c.repo.DeleteRecipe(ctx, recipeUUID)
+}
+
+func (c Controller) GetAllUserFavorites(ctx context.Context, userUUID string) ([]recipe.UserFavorite, error) {
+	return c.repo.GetAllUserFavorites(ctx, userUUID)
+}
+
 // FavoriteRecipe saves a user's favorite recipe
 func (c Controller) FavoriteRecipe(ctx context.Context, user types.CommonUser, recipeID string) (recipe.UserFavorite, error) {
-	exists, err := c.GetAllUserFavorites(ctx, user.UUID)
+	exists, err := c.repo.GetAllUserFavorites(ctx, user.UUID)
 	if err != nil {
 		return recipe.UserFavorite{}, err
 	}
@@ -87,13 +136,13 @@ func (c Controller) FavoriteRecipe(ctx context.Context, user types.CommonUser, r
 		return recipe.UserFavorite{}, err
 	}
 
-	favObject := recipeFavoriteRequestToFavorite(user, rec)
-	return c.Repository.SaveUserFavorite(ctx, favObject)
+	favObject := RecipeFavoriteRequestToFavorite(user, rec)
+	return c.repo.SaveUserFavorite(ctx, favObject)
 }
 
 // UnFavoriteRecipe unfavorites a recipe
 func (c Controller) UnFavoriteRecipe(ctx context.Context, user types.CommonUser, recipeUUID string) error {
-	favorites, err := c.Repository.GetAllUserFavorites(ctx, user.UUID)
+	favorites, err := c.repo.GetAllUserFavorites(ctx, user.UUID)
 	if err != nil {
 		return err
 	}
@@ -103,7 +152,7 @@ func (c Controller) UnFavoriteRecipe(ctx context.Context, user types.CommonUser,
 		return ErrNotFavorited
 	}
 
-	return c.Repository.UnFavoriteRecipe(ctx, favorite.UUID)
+	return c.repo.UnFavoriteRecipe(ctx, favorite.UUID)
 }
 
 // GetRecipe gets a recipe by it's ID. It supports both UUID and slug identifiers
@@ -111,9 +160,9 @@ func (c Controller) GetRecipe(ctx context.Context, recipeID string) (recipe.Reci
 	var rec recipe.Recipe
 	var err error
 	if utils.IsUUID(recipeID) {
-		rec, err = c.Repository.GetRecipeByUUID(ctx, recipeID)
+		rec, err = c.repo.GetRecipeByUUID(ctx, recipeID)
 	} else {
-		rec, err = c.Repository.GetRecipeBySlug(ctx, recipeID)
+		rec, err = c.repo.GetRecipeBySlug(ctx, recipeID)
 	}
 	return rec, err
 }
@@ -138,59 +187,44 @@ func (c Controller) GetPublicRecipe(ctx context.Context, recipeID string) (recip
 
 // GetAllTags gets all tags
 func (c Controller) GetAllTags(ctx context.Context) ([]recipe.Tag, error) {
-	return c.Repository.GetAllTags(ctx)
+	return c.repo.GetAllTags(ctx)
 }
 
-// GetHomeRecipes gets the list of recipes for the home screen, curated for
-// the users
-func (c Controller) GetHomeRecipes(ctx context.Context, page, limit int64) ([]recipe.PublicRecipe, error) {
-	if limit <= 0 {
-		limit = 10
-	}
-	if page <= 0 {
-		page = 1
-	}
-	recipes, err := c.Repository.GetHomeRecipes(ctx, page, limit)
-	if err != nil {
-		return nil, err
-	}
-
-	return c.fillInRecipesToPublicRecipes(ctx, recipes)
+// DeleteTag deletes a tag
+func (c Controller) DeleteTag(ctx context.Context, tagUUID string) error {
+	return c.repo.DeleteTag(ctx, tagUUID)
 }
 
-func (c Controller) Search(ctx context.Context, opts recipe.SearchOpts) ([]recipe.PublicRecipe, error) {
-	fmt.Printf("searching with opts %+v\n", opts)
+func (c Controller) Search(ctx context.Context, opts recipe.SearchOpts) ([]recipe.PublicRecipe, int64, error) {
+	fmt.Printf("opts: %+v\n", opts)
 	var userFavoriteUUIDs []string
 	if opts.FavoritesOnly {
 		user, ok := jcontext.GetUser(ctx)
 		if !ok {
-			return nil, errors.New("not logged in")
+			return nil, 0, errors.New("not logged in")
 		}
-		userFavorites, err := c.GetAllUserFavorites(ctx, user.UUID)
+		userFavorites, err := c.repo.GetAllUserFavorites(ctx, user.UUID)
 		if err != nil && err != types.ErrNotFound {
-			return nil, err
+			return nil, 0, err
 		}
 		if len(userFavorites) == 0 {
-			return []recipe.PublicRecipe{}, nil
+			return []recipe.PublicRecipe{}, 0, nil
 		}
 		userFavoriteUUIDs = utils.Map(userFavorites, func(favorite recipe.UserFavorite) string {
 			return favorite.RecipeUUID
 		})
 	}
 
-	if opts.Name == nil && !opts.FavoritesOnly && opts.AuthorUUID == nil && (opts.TagUUIDs == nil || len(*opts.TagUUIDs) == 0) {
-		return c.GetHomeRecipes(ctx, opts.Page, opts.Limit)
-	}
-
-	recipes, err := c.Repository.Search(ctx, opts, userFavoriteUUIDs)
+	recipes, total, err := c.repo.Search(ctx, opts, userFavoriteUUIDs)
 	if err == types.ErrNotFound {
-		return nil, nil
+		return nil, 0, nil
 	}
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return c.fillInRecipesToPublicRecipes(ctx, recipes)
+	publicRecipes, err := c.fillInRecipesToPublicRecipes(ctx, recipes)
+	return publicRecipes, total, err
 }
 
 // FuzzySearchRecipeName searches for a recipe and returns the recipes ordered by match score
@@ -199,7 +233,7 @@ func (c Controller) FuzzySearchRecipeName(ctx context.Context, query string) ([]
 }
 
 func (c Controller) FuzzySearchRecipeNameOpts(ctx context.Context, query string, opts jmongo.FuzzySearchOpts) ([]recipe.Recipe, error) {
-	recipesWithScore, err := c.Repository.FuzzySearchRecipeNameOpts(ctx, query, opts)
+	recipesWithScore, err := c.repo.FuzzySearchRecipeNameOpts(ctx, query, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +252,7 @@ func (c Controller) FuzzySearchRecipeNameOpts(ctx context.Context, query string,
 func (c Controller) fillInRecipesToPublicRecipes(ctx context.Context, recipes []recipe.Recipe) ([]recipe.PublicRecipe, error) {
 	var favoriteUUIDs utils.Set[string]
 	if user, ok := jcontext.GetUser(ctx); ok {
-		favorites, err := c.GetAllUserFavorites(ctx, user.UUID)
+		favorites, err := c.repo.GetAllUserFavorites(ctx, user.UUID)
 		if err != nil && err != types.ErrNotFound {
 			return nil, err
 		}
@@ -242,7 +276,7 @@ func (c Controller) fillInRecipesToPublicRecipes(ctx context.Context, recipes []
 		authorsByUUID[author.UUID] = &author
 	}
 
-	tags, err := c.Repository.GetTagsByUUID(ctx, uniqueTagUUIDs.ToSlice())
+	tags, err := c.repo.GetTagsByUUID(ctx, uniqueTagUUIDs.ToSlice())
 	if err != nil {
 		return nil, err
 	}
@@ -265,7 +299,7 @@ func (c Controller) fillInRecipesToPublicRecipes(ctx context.Context, recipes []
 			}
 		}
 
-		publicRecipes[i] = recipeToPublicRecipe(
+		publicRecipes[i] = RecipeToPublicRecipe(
 			rec,
 			recipeTags,
 			authorsByUUID[rec.AuthorUUID],
@@ -283,9 +317,13 @@ func (c Controller) getAvailableSlug(ctx context.Context, recipeName string) (st
 		return "", err
 	}
 
-	sluggedRecipes, err := c.Repository.GetMatchingSlugPrefix(ctx, slugified)
+	sluggedRecipes, err := c.repo.GetMatchingSlugPrefix(ctx, slugified)
 	if err != nil {
 		return "", err
+	}
+	fmt.Printf("Found %d recipes with matching slugs:\n", len(sluggedRecipes))
+	for _, response := range sluggedRecipes {
+		fmt.Printf("\t%s - %s\n", response.Name, response.Slug)
 	}
 
 	// Find the next available number
@@ -309,4 +347,26 @@ func (c Controller) getAvailableSlug(ctx context.Context, recipeName string) (st
 	slugified = fmt.Sprintf("%s-%d", slugified, biggest+1)
 
 	return slugified, nil
+}
+
+func (c Controller) tagNamesToTags(ctx context.Context, tagNames []string) ([]recipe.Tag, error) {
+	uniqueTags := utils.NewSet(
+		utils.FilterAndMap(
+			tagNames,
+			func(tagName string) (string, bool) {
+				trimmed := strings.TrimSpace(tagName)
+				return trimmed, trimmed != ""
+			},
+		)...,
+	)
+	tags := make([]recipe.Tag, 0, uniqueTags.Size())
+	for name := range uniqueTags.Iter {
+		tag, err := c.repo.UpsertTag(ctx, name)
+		if err != nil {
+			return nil, err
+		}
+		tags = append(tags, tag)
+	}
+
+	return tags, nil
 }

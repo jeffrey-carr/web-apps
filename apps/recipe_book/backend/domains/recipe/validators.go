@@ -51,6 +51,55 @@ func ValidateRecipeCreateRequest(request CreateRecipeRequest) string {
 	return ""
 }
 
+func ValidateRecipeUpdateRequest(request RecipeUpdateRequest) string {
+	if request.Name != nil && len(strings.TrimSpace(*request.Name)) == 0 {
+		return "Recipe name is required."
+	}
+
+	if request.CookTimeMs != nil && *request.CookTimeMs < 0 {
+		return "Cook time cannot be negative"
+	}
+
+	if request.OriginalURL != nil && *request.OriginalURL != "" {
+		_, err := url.Parse(*request.OriginalURL)
+		if err != nil {
+			return "Invalid import URL"
+		}
+	}
+
+	if request.TagNames != nil {
+		for _, name := range *request.TagNames {
+			if validationErr := ValidateTagName(name); validationErr != "" {
+				return validationErr
+			}
+		}
+	}
+
+	if request.Sections != nil {
+		if len(*request.Sections) == 0 {
+			return "At least one section is required."
+		}
+		for _, section := range *request.Sections {
+			if validationErr := ValidateRecipeSection(section); validationErr != "" {
+				return validationErr
+			}
+		}
+	}
+
+	return ""
+}
+
+func ValidateTagName(name string) string {
+	if len(strings.TrimSpace(name)) > 0 && len(strings.TrimSpace(name)) < 3 {
+		return fmt.Sprintf("Tags must be at least %d characters", minTagLength)
+	}
+	if len(name) > maxTagLength {
+		return fmt.Sprintf("Tags cannot exceed %d characters", maxTagLength)
+	}
+
+	return ""
+}
+
 // ValidateRecipeSection validates a single section in a recipe
 func ValidateRecipeSection(section Section) string {
 	for _, ingredient := range section.Ingredients {

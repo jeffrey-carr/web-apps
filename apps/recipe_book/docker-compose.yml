@@ -1,0 +1,18 @@
+services:
+  recipe_book_frontend:
+    image: ghcr.io/jeffrey-carr/recipe_book-frontend:latest
+    container_name: recipe_book_frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    ports:
+      - '3002:3000'
+
+  recipe_book_backend:
+    image: ghcr.io/jeffrey-carr/recipe_book-backend:latest
+    container_name: recipe_book_backend
+    restart: unless-stopped
+    volumes:
+      - ./backend/.env:/app/.env:ro
+    ports:
+      - '3102:9999'

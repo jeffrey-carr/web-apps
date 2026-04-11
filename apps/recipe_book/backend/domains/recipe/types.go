@@ -122,12 +122,25 @@ type CreateRecipeRequest struct {
 	Slug        string    `json:"slug"`
 }
 
+// CreateRecipeResponse is the response to a successful create request
+type CreateRecipeResponse struct {
+	Slug string `json:"slug"`
+}
+
 // UserFavorite represents a UserFavorite object
 type UserFavorite struct {
 	UUID        string `json:"uuid" bson:"_id"`
 	RecipeUUID  string `json:"recipeUUID" bson:"recipeUUID"`
 	UserUUID    string `json:"userUUID" bson:"userUUID"`
 	FavoritedAt int64  `json:"favoritedAt" bson:"favoritedAt"`
+}
+
+// PaginatedResponse is a generic response for paginated data
+type PaginatedResponse[T any] struct {
+	Data  T     `json:"data"`
+	Total int64 `json:"total"`
+	Page  int64 `json:"page"`
+	Limit int64 `json:"limit"`
 }
 
 // SearchOpts are the options that can apply to a search
@@ -139,4 +152,15 @@ type SearchOpts struct {
 	AuthorUUID    *string   `json:"authorUUID"`
 	Limit         int64     `json:"limit"`
 	Page          int64     `json:"page"`
+}
+
+// RecipeUpdateRequest is the request to update a recipe
+type RecipeUpdateRequest struct {
+	Name        *string
+	Description *string
+	CookTimeMs  *int64
+	TagNames    *[]string
+	OriginalURL *string
+	Status      *Status
+	Sections    *[]Section
 }

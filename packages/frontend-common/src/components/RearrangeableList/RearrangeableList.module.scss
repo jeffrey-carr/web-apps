@@ -1,11 +1,15 @@
 .container {
   list-style: none;
+  gap: 1rem;
+  width: 100%;
 }
 
 .item {
   display: flex;
   align-items: center;
+  width: 100%;
   gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .grabHandle {
@@ -76,4 +80,3 @@
   height: 2rem;
   width: 2rem;
 }
-

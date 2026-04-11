@@ -12,17 +12,28 @@
   import styles from './styles.module.scss';
   import clsx from 'clsx';
   import type { Tag, SearchOptions } from '$lib/types/recipe';
+  import { userState } from '$lib/globals/user.svelte';
+  import UserProfileButton from '../UserProfileButton/UserProfileButton.svelte';
+  import { greetUser } from '$lib/mappers/greeting';
 
   let {
     user,
     onApplyFilters,
     tags = [],
     loadingTags = false,
+    nameValue = $bindable(''),
+    tagValue = $bindable(''),
+    favoritesOnlyValue = $bindable(false),
+    loginURL = '',
   }: {
     user?: User | null;
     onApplyFilters?: (opts: SearchOptions) => Promise<void>;
     tags?: Tag[];
     loadingTags?: boolean;
+    nameValue?: string;
+    tagValue?: string;
+    favoritesOnlyValue?: boolean;
+    loginURL?: string;
   } = $props();
   let tagOptions = $derived([
     { label: 'All', value: '' },
@@ -35,9 +46,6 @@
   let selected = $state('filters');
   let loadingCreate = $state(false);
 
-  let nameValue = $state('');
-  let favoritesOnlyValue = $state(false);
-  let tagUUIDValue = $state('');
   let loadingApply = $state(false);
 
   const openSection = (section: string) => {
@@ -53,18 +61,14 @@
   const applyFilters = async () => {
     loadingApply = true;
     let tags: string[] | undefined;
-    if (tagUUIDValue) {
-      tags = [tagUUIDValue];
+    if (tagValue) {
+      tags = [tagValue];
     }
     const filters: SearchOptions = {
       recipeName: nameValue,
       favoritesOnly: favoritesOnlyValue,
       tagUUIDs: tags,
     };
-    if (nameValue || favoritesOnlyValue || tags) {
-      // TODO: don't hardcode this
-      filters.limit = 10;
-    }
 
     await onApplyFilters?.(filters);
     loadingApply = false;
@@ -73,17 +77,34 @@
   const clearFilters = () => {
     nameValue = '';
     favoritesOnlyValue = false;
-    tagUUIDValue = '';
+    tagValue = '';
+    applyFilters();
+  };
+
+  const handleEnter = (e: KeyboardEvent) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
     applyFilters();
   };
 </script>
 
 <div class={styles.container}>
+  <div class={styles.mobileUserContainer}>
+    {#if userState.isLoading}
+      <Spinner class={styles.userLoadingSpinner} />
+    {:else if userState.user != null}
+      <UserProfileButton user={userState.user} />
+      <p>{greetUser(userState.user.fName)}</p>
+    {:else}
+      <Button size="sm" variant="secondary" shape="round" href={loginURL}>Log in</Button>
+    {/if}
+  </div>
+
   <div class={styles.header}>
     {#if user}
       <button class={styles.item} onclick={() => openSection('create')}>
         {#if loadingCreate}
-          <Spinner />
+          <Spinner size="1.5rem" />
         {:else}
           <ReactiveIcon icon="plus" />
           <span class={styles.itemLabel}>New Recipe</span>
@@ -105,16 +126,17 @@
       bind:value={nameValue}
       label="Search"
       placeholder="Search recipes..."
+      onkeydown={handleEnter}
     />
     {#if user}
       <Checkbox label="Favorites only" bind:checked={favoritesOnlyValue} />
     {/if}
     <Select
-      label="Tag"
+      label="Category"
       class={styles.search}
       options={tagOptions}
       loadingOptions={loadingTags}
-      bind:value={tagUUIDValue}
+      bind:value={tagValue}
     />
     <!-- TODO: author search -->
     <!-- <Select -->

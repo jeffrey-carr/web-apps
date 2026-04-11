@@ -30,7 +30,7 @@ func NewRecipeHandler(controller Controller) RecipeHandler {
 }
 
 // Create allows users to create new recipes
-func (h RecipeHandler) Create(ctx context.Context, r jhttp.RequestData[CreateRecipeRequest]) (*string, *JHTTPErrors.JHTTPError) {
+func (h RecipeHandler) Create(ctx context.Context, r jhttp.RequestData[CreateRecipeRequest]) (*CreateRecipeResponse, *JHTTPErrors.JHTTPError) {
 	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
@@ -50,7 +50,47 @@ func (h RecipeHandler) Create(ctx context.Context, r jhttp.RequestData[CreateRec
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
-	return &recipe.Slug, nil
+	return &CreateRecipeResponse{Slug: recipe.Slug}, nil
+}
+
+func (h RecipeHandler) Update(ctx context.Context, r jhttp.RequestData[RecipeUpdateRequest]) (*Recipe, *JHTTPErrors.JHTTPError) {
+	user, ok := jcontext.GetUser(ctx)
+	if !ok {
+		return nil, JHTTPErrors.NewUnauthorizedError()
+	}
+
+	recipeUUID := r.Query.Get("recipe")
+	if recipeUUID == "" {
+		return nil, JHTTPErrors.NewBadRequestError("Recipe UUID is required")
+	}
+
+	if r.Body == nil {
+		return nil, JHTTPErrors.NewBadRequestError("Bad request")
+	}
+
+	request := *r.Body
+	if validationErr := ValidateRecipeUpdateRequest(request); validationErr != "" {
+		return nil, JHTTPErrors.NewValidationError(validationErr)
+	}
+
+	existingRecipe, err := h.controller.GetRecipe(ctx, recipeUUID)
+	if err == types.ErrNotFound {
+		return nil, JHTTPErrors.NewNotFoundError(recipeUUID)
+	}
+	if err != nil {
+		return nil, JHTTPErrors.NewInternalServerError(err)
+	}
+
+	if !user.IsAdmin && existingRecipe.AuthorUUID != user.UUID {
+		return nil, JHTTPErrors.NewForbiddenError()
+	}
+
+	updatedRecipe, err := h.controller.UpdateRecipe(ctx, existingRecipe, request)
+	if err != nil {
+		return nil, JHTTPErrors.NewInternalServerError(err)
+	}
+
+	return &updatedRecipe, nil
 }
 
 // DeleteRecipe deletes a recipe
@@ -178,37 +218,6 @@ func (h RecipeHandler) Get(ctx context.Context, r jhttp.RequestData[struct{}]) (
 	return &recipe, nil
 }
 
-// GetRecipes isn't completed yet
-func (h RecipeHandler) GetRecipes(ctx context.Context, r jhttp.RequestData[struct{}]) (*[]PublicRecipe, *JHTTPErrors.JHTTPError) {
-	fmt.Println("Getting home page recipes")
-
-	limitStr := r.Query.Get("limit")
-	pageStr := r.Query.Get("page")
-
-	var limit int64 = 10
-	var page int64 = 1
-	var err error
-	if limitStr != "" {
-		limit, err = strconv.ParseInt(limitStr, 10, 64)
-		if err != nil || limit <= 0 {
-			limit = 10
-		}
-	}
-	if pageStr != "" {
-		page, err = strconv.ParseInt(pageStr, 10, 64)
-		if err != nil || page <= 0 {
-			page = 1
-		}
-	}
-
-	recipes, err := h.controller.GetHomeRecipes(ctx, page, limit)
-	if err != nil {
-		return nil, JHTTPErrors.NewInternalServerError(err)
-	}
-
-	return &recipes, nil
-}
-
 // GetAllTags gets all existing tags
 // TODO: make the tag fetch iterative on the front as user types
 func (h RecipeHandler) GetAllTags(ctx context.Context, r jhttp.RequestData[struct{}]) (*[]Tag, *JHTTPErrors.JHTTPError) {
@@ -221,7 +230,7 @@ func (h RecipeHandler) GetAllTags(ctx context.Context, r jhttp.RequestData[struc
 }
 
 // Search searches for a specified recipe. If no search parameters are passed, gets 10 random recipes
-func (h RecipeHandler) Search(ctx context.Context, r jhttp.RequestData[struct{}]) (*[]PublicRecipe, *JHTTPErrors.JHTTPError) {
+func (h RecipeHandler) Search(ctx context.Context, r jhttp.RequestData[struct{}]) (*PaginatedResponse[[]PublicRecipe], *JHTTPErrors.JHTTPError) {
 	recipeName := r.Query.Get("name")
 	favoritesOnly := r.Query.Get("favorites_only")
 	tagUUIDsString := r.Query.Get("tags")
@@ -230,6 +239,7 @@ func (h RecipeHandler) Search(ctx context.Context, r jhttp.RequestData[struct{}]
 	authorUUID := r.Query.Get("author")
 	limitStr := r.Query.Get("limit")
 	pageStr := r.Query.Get("page")
+	fmt.Printf("page str is %s\n", pageStr)
 
 	if favoritesOnly == "true" {
 		_, ok := jcontext.GetUser(ctx)
@@ -263,18 +273,20 @@ func (h RecipeHandler) Search(ctx context.Context, r jhttp.RequestData[struct{}]
 		if limit <= 0 {
 			return nil, JHTTPErrors.NewBadRequestError("limit must be >= 0")
 		}
-
-		if pageStr != "" {
-			page, err = strconv.ParseInt(pageStr, 10, 64)
-			if err != nil {
-				return nil, JHTTPErrors.NewBadRequestError("page must be an integer")
-			}
+	}
+	if pageStr != "" {
+		page, err = strconv.ParseInt(pageStr, 10, 64)
+		if err != nil {
+			return nil, JHTTPErrors.NewBadRequestError("page must be an integer")
 		}
+	}
+	if limit <= 0 {
+		limit = 10
 	}
 	opts.Limit = min(limit, 200)
 	opts.Page = max(1, page)
 
-	recipes, err := h.controller.Search(ctx, opts)
+	recipes, total, err := h.controller.Search(ctx, opts)
 	if err == types.ErrNotFound {
 		return nil, JHTTPErrors.NewNotFoundError(opts)
 	}
@@ -282,5 +294,10 @@ func (h RecipeHandler) Search(ctx context.Context, r jhttp.RequestData[struct{}]
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
-	return &recipes, nil
+	return &PaginatedResponse[[]PublicRecipe]{
+		Data:  recipes,
+		Total: total,
+		Page:  opts.Page,
+		Limit: opts.Limit,
+	}, nil
 }

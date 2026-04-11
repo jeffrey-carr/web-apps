@@ -204,6 +204,47 @@ func (m *Mongo[T]) Aggregate(ctx context.Context, pipeline mongo.Pipeline) ([]T,
 	return readAllCursorResults[T](ctx, cursor)
 }
 
+// AggregateCount performs an aggregation pipeline and returns the count from a $count stage
+func (m *Mongo[T]) AggregateCount(ctx context.Context, pipeline mongo.Pipeline) (int64, error) {
+	pipeline = append(pipeline, bson.D{{"$count", "count"}})
+	cursor, err := m.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []struct {
+		Count int64 `bson:"count"`
+	}
+	for cursor.Next(ctx) {
+		var result struct {
+			Count int64 `bson:"count"`
+		}
+		if err := cursor.Decode(&result); err != nil {
+			return 0, err
+		}
+		results = append(results, result)
+	}
+
+	if len(results) == 0 {
+		return 0, nil
+	}
+	return results[0].Count, nil
+}
+
+// Count returns the total number of documents in the collection
+func (m *Mongo[T]) Count(ctx context.Context) (int64, error) {
+	return m.CountWithFilter(ctx, bson.M{})
+}
+
+// CountWithFilter returns the number of documents matching the filter
+func (m *Mongo[T]) CountWithFilter(ctx context.Context, filter bson.M) (int64, error) {
+	if m.collection == nil {
+		return 0, ErrNotConnected
+	}
+	return m.collection.CountDocuments(ctx, filter)
+}
+
 // Upsert updates or inserts the item
 func (m *Mongo[T]) Upsert(ctx context.Context, filter, update bson.M) (T, error) {
 	var ret T

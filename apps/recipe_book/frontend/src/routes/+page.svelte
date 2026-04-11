@@ -1,12 +1,16 @@
 <script lang="ts">
   import { page } from '$app/state';
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import {
     App,
     APP_QUERY_PARAM,
     Button,
+    debounce,
     getAppURL,
+    Input,
     PATH_QUERY_PARAM,
+    ReactiveIcon,
     ServerError,
     Spinner,
     type Environment,
@@ -17,7 +21,6 @@
     deleteRecipe,
     favoriteRecipe,
     getAllTags,
-    getHomeRecipes,
     searchRecipes,
     unFavoriteRecipe,
   } from '$lib/requests/recipe';
@@ -27,11 +30,46 @@
   import { greetUser } from '$lib/mappers/greeting';
   import type { Recipe, SearchOptions, Tag } from '$lib/types/recipe';
   import UserProfileButton from '$lib/components/UserProfileButton/UserProfileButton.svelte';
+  import clsx from 'clsx';
+  import { makeSearchQueryString } from '$lib/mappers/recipe';
+
+  let { data } = $props();
 
   let recipes = $state<Recipe[]>([]);
+  let totalRecipes = $state<number>();
+  let lastLimit = $state<number>();
+  let currentPageStr = $state(`${data.searchOpts.page ?? '1'}`);
+  let currentPage = $state(data.searchOpts.page ?? 1);
+  let totalPages = $derived(
+    totalRecipes && lastLimit && lastLimit > 0 ? Math.ceil(totalRecipes / lastLimit) : 0
+  );
+
+  const updatePageNum = debounce((newPageStr: string) => {
+    if (!newPageStr) {
+      return;
+    }
+
+    const newPageNum = Number(currentPageStr);
+    if (isNaN(newPageNum) || newPageNum < 1 || newPageNum > totalPages) {
+      return;
+    }
+
+    changePage(newPageNum);
+  }, 1500);
+
+  $effect(() => {
+    updatePageNum(currentPageStr);
+  });
+
+  let currentFilters = $state<SearchOptions>({});
   let tags = $state<Tag[]>([]);
   let loadingRecipes = $state(false);
   let loadingTags = $state(false);
+  let drawerOpen = $state(false);
+
+  let nameSearchValue = $derived(data.searchOpts.recipeName ?? '');
+  let tagUUIDsSearchValue = $state('');
+  let favoritesOnlySearchValue = $derived(!!data.searchOpts.favoritesOnly);
 
   onMount(() => {
     if (loadingRecipes || loadingTags) return;
@@ -40,7 +78,10 @@
       loadingRecipes = true;
       loadingTags = true;
 
-      const [recipesResult, tagsResult] = await Promise.all([getHomeRecipes(), getAllTags()]);
+      const [recipesResult, tagsResult] = await Promise.all([
+        searchRecipes(data.searchOpts),
+        getAllTags(),
+      ]);
 
       loadingRecipes = false;
       loadingTags = false;
@@ -52,7 +93,9 @@
           message: recipesResult.message,
         });
       } else {
-        recipes = recipesResult;
+        recipes = recipesResult.data;
+        totalRecipes = recipesResult.total;
+        lastLimit = recipesResult.limit;
       }
 
       if (tagsResult instanceof ServerError) {
@@ -63,6 +106,12 @@
         });
       } else {
         tags = tagsResult;
+        if (!!data.searchOpts.tagUUIDs && data.searchOpts.tagUUIDs.length > 0) {
+          const searchUUID = data.searchOpts.tagUUIDs[0];
+          const searchedTag = tags.find(tag => tag.uuid === searchUUID);
+          if (!searchedTag) return;
+          tagUUIDsSearchValue = searchUUID;
+        }
       }
     };
 
@@ -96,12 +145,15 @@
     }
     const recipe = recipes[recipeIndex];
 
+    let isFavorited: boolean;
     if (recipe.isFavorited) {
       result = await unFavoriteRecipe(recipeUUID);
       errTitle = 'Error unfavoriting recipe';
+      isFavorited = false;
     } else {
       result = await favoriteRecipe(recipeUUID);
       errTitle = 'Error favoriting recipe';
+      isFavorited = true;
     }
 
     if (result instanceof ServerError) {
@@ -113,7 +165,7 @@
       return;
     }
 
-    recipes[recipeIndex].isFavorited = false;
+    recipes[recipeIndex].isFavorited = isFavorited;
   };
 
   const onDeleteRecipe = async (recipeUUID: string) => {
@@ -141,7 +193,18 @@
   };
 
   const onUpdateFilters = async (opts: SearchOptions) => {
+    loadingRecipes = true;
+    currentPage = 1;
+    currentFilters = opts;
+    drawerOpen = false;
+
+    const url = new URL(window.location.href);
+    const searchParams = new URLSearchParams(makeSearchQueryString(opts));
+    url.search = searchParams.toString();
+    goto(url.toString(), { replaceState: true });
+
     const response = await searchRecipes(opts);
+    loadingRecipes = false;
     if (response instanceof ServerError) {
       notificationQueue.push({
         level: 'error',
@@ -151,11 +214,46 @@
       return;
     }
 
-    recipes = response;
+    recipes = response.data;
+    totalRecipes = response.total;
+    lastLimit = response.limit;
+  };
+
+  const changePage = async (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) {
+      return;
+    }
+
+    currentPageStr = `${page}`;
+    const url = new URL(window.location.href);
+    if (page === 1) {
+      url.searchParams.delete('page');
+    } else {
+      url.searchParams.set('page', page.toString());
+    }
+    goto(url.toString(), { replaceState: true });
+
+    loadingRecipes = true;
+    const response = await searchRecipes({ ...currentFilters, page, limit: lastLimit });
+    loadingRecipes = false;
+
+    if (response instanceof ServerError) {
+      notificationQueue.push({
+        level: 'error',
+        title: 'Error changing page',
+        message: response.message,
+      });
+      return;
+    }
+
+    recipes = response.data;
+    totalRecipes = response.total;
+    lastLimit = response.limit;
+    currentPage = page;
   };
 </script>
 
-<div class={styles.container}>
+<main class={styles.container}>
   <div class={styles.header}>
     <div class={styles.title}>
       <h1>Jean's Recipe Book</h1>
@@ -174,14 +272,40 @@
     </div>
   </div>
 
-  <div class={styles.sidebar}>
-    <MainSidebar user={userState.user} {tags} onApplyFilters={onUpdateFilters} {loadingTags} />
+  <div class={clsx(styles.sidebar, { [styles.drawerOpen]: drawerOpen })}>
+    <MainSidebar
+      user={userState.user}
+      {tags}
+      onApplyFilters={onUpdateFilters}
+      {loadingTags}
+      nameValue={nameSearchValue}
+      tagValue={tagUUIDsSearchValue}
+      favoritesOnlyValue={favoritesOnlySearchValue}
+      {loginURL}
+    />
+  </div>
+
+  {#if drawerOpen}
+    <div
+      class={styles.drawerBackdrop}
+      onclick={() => (drawerOpen = false)}
+      onkeydown={e => e.key === 'Escape' && (drawerOpen = false)}
+      role="button"
+      tabindex="0"
+      aria-label="Close drawer"
+    ></div>
+  {/if}
+
+  <div class={styles.mobileDrawerToggleButton}>
+    <Button onclick={() => (drawerOpen = !drawerOpen)} size="md" shape="round">
+      <ReactiveIcon icon="funnel" /> Filters & Actions
+    </Button>
   </div>
 
   <div class={styles.main}>
     {#if loadingRecipes}
       <Spinner class={styles.pageLoading} label="Loading recipes..." />
-    {:else if recipes.length === 0}
+    {:else if !recipes || recipes.length === 0}
       <div class={styles.noRecipesContainer}>
         <p class={styles.sadLogo}>:(</p>
         <p>No recipes found</p>
@@ -198,7 +322,39 @@
           </div>
         {/each}
       </div>
-      <div class={styles.paginationContainer}></div>
+      <div class={styles.paginationContainer}>
+        {#if !loadingRecipes && totalPages > 1}
+          <Button
+            class={styles.paginationButton}
+            variant="plain"
+            size="sm"
+            disabled={currentPage === 1}
+            onclick={() => changePage(currentPage - 1)}
+          >
+            <ReactiveIcon icon="left-arrow" />
+          </Button>
+
+          <Input
+            class={styles.paginationInput}
+            type="number"
+            min={1}
+            max={totalPages}
+            bind:value={currentPageStr}
+            hideErrArea
+          />
+          <span class={styles.paginationTotal}>of {totalPages}</span>
+
+          <Button
+            class={styles.paginationButton}
+            variant="plain"
+            size="sm"
+            disabled={currentPage === totalPages}
+            onclick={() => changePage(currentPage + 1)}
+          >
+            <ReactiveIcon icon="right-arrow" />
+          </Button>
+        {/if}
+      </div>
     {/if}
   </div>
-</div>
+</main>

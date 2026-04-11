@@ -1,10 +1,14 @@
+import { makeSearchQueryString } from '$lib/mappers/recipe';
 import type {
   Tag,
   Recipe,
   RecipeCreateRequest,
   SearchOptions,
   UserFavoriteRecipe,
+  RecipeCreateResponse,
+  RecipeUpdateRequest,
 } from '$lib/types/recipe';
+import type { PaginatedResult } from '$lib/types/requests';
 import {
   getErrorFromServer,
   makeRequest,
@@ -15,14 +19,14 @@ import {
 
 export const createRecipe = async (
   createRequest: RecipeCreateRequest
-): Promise<string | ServerError> => {
+): Promise<RecipeCreateResponse | ServerError> => {
   const endpoint: RouteInformation = {
     path: '/api/recipe',
     method: METHODS.POST,
     credentials: 'required',
   };
 
-  let response: string;
+  let response: RecipeCreateResponse;
   try {
     response = await makeRequest(endpoint, { body: createRequest });
   } catch (e) {
@@ -33,20 +37,27 @@ export const createRecipe = async (
   return response;
 };
 
-export const getHomeRecipes = async (f?: typeof fetch): Promise<Recipe[] | ServerError> => {
-  const endpoint: RouteInformation = {
-    path: '/api/recipe',
-    method: METHODS.GET,
-  };
+const updateRecipeEndpoint: RouteInformation = {
+  path: '/api/recipe',
+  method: METHODS.PATCH,
+  credentials: 'required',
+};
 
-  let response: Recipe[];
+export const updateRecipe = async (
+  recipeUUID: string,
+  updateRequest: RecipeUpdateRequest
+): Promise<Recipe | ServerError> => {
+  let updatedRecipe: Recipe;
   try {
-    response = await makeRequest(endpoint, undefined, f);
+    updatedRecipe = await makeRequest<Recipe>(updateRecipeEndpoint, {
+      query: { recipe: recipeUUID },
+      body: updateRequest,
+    });
   } catch (e) {
     return getErrorFromServer(e);
   }
 
-  return response;
+  return updatedRecipe;
 };
 
 export const getRecipe = async (
@@ -160,29 +171,13 @@ const searchRecipesEndpoint: RouteInformation = {
 export const searchRecipes = async (
   opts: SearchOptions,
   f?: typeof fetch
-): Promise<Recipe[] | ServerError> => {
-  let q: Record<string, string> = {};
-  if (opts.recipeName) {
-    q['name'] = opts.recipeName;
-  }
-  if (opts.favoritesOnly) {
-    q['favorites_only'] = `${opts.favoritesOnly ? 'true' : 'false'}`;
-  }
-  if (opts.authorUUID) {
-    q['author'] = opts.authorUUID;
-  }
-  if (opts.tagUUIDs && opts.tagUUIDs.length > 0) {
-    q['tags'] = opts.tagUUIDs.join(',');
-  }
-  if (opts.limit && opts.limit > 0) {
-    q['limit'] = `${opts.limit}`;
-    if (opts.page && opts.page > 1) {
-      q['page'] = `${opts.page}`;
-    }
-  }
-
+): Promise<PaginatedResult<Recipe> | ServerError> => {
   try {
-    return await makeRequest<Recipe[]>(searchRecipesEndpoint, { query: q }, f);
+    return await makeRequest<PaginatedResult<Recipe>>(
+      searchRecipesEndpoint,
+      { query: makeSearchQueryString(opts) },
+      f
+    );
   } catch (e) {
     return getErrorFromServer(e);
   }

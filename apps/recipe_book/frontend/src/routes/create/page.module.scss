@@ -1,72 +1,9 @@
 .container {
   box-sizing: border-box;
-
+  height: 100%;
   padding: 2.5rem;
 
-  height: 100%;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-
-  .buttons {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-
-    margin: 1.5rem 0;
+  @media (max-width: 768px) {
+    padding: 1rem;
   }
-}
-
-.formItem {
-  margin-bottom: 1.25rem;
-}
-
-.cookTimeAndTagAndImportURL {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 0 2rem;
-
-  .cookTime {
-    flex: 1;
-  }
-
-  .tag {
-    flex: 3;
-
-    min-width: 10rem;
-  }
-
-  .importURL {
-    flex: 5;
-  }
-}
-
-.cookTimeInputs {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  .cookTimeItem {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-
-    min-width: 8rem;
-  }
-}
-
-.publishSection {
-  margin-top: 1rem;
-}
-
-.loadingContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  height: 100%;
 }

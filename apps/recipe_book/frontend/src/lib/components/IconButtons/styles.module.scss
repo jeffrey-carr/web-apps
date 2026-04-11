@@ -1,0 +1,25 @@
+.iconButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: none;
+  border: none;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  .icon {
+    height: 1.5rem;
+    width: 1.5rem;
+  }
+}
+
+.favoriteButton {
+  color: var(--red);
+}
+
+.editButton {
+  color: var(--app-theme-primary);
+}

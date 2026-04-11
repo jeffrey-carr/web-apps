@@ -48,6 +48,20 @@ export type RecipeCreateRequest = {
   publish?: boolean;
 };
 
+export type RecipeCreateResponse = {
+  slug: string;
+};
+
+export type RecipeUpdateRequest = {
+  name?: string;
+  description?: string;
+  cookTimeMs?: number;
+  tagNames?: string[];
+  originalURL?: string;
+  status?: 'public' | 'private' | 'draft';
+  sections?: Section[];
+};
+
 export type Recipe = {
   uuid: string;
   name: string;

@@ -16,11 +16,16 @@
     {#each ingredients as ingredient (ingredient.uuid)}
       <tr class={styles.ingredientRow}>
         <td class={styles.name}>
-          {ingredient.name}
+          <div>{ingredient.name}</div>
+          {#if ingredient.prep}
+            <div class={styles.prep}><em>{ingredient.prep}</em></div>
+          {/if}
         </td>
-        <td class={styles.amount}
-          >{`${ingredient.amountStr ?? ''} ${ingredient.unit}${(ingredient.amount ?? 0 > 1) ? 's' : ''}`.trim()}</td
-        >
+        <td class={styles.amount}>
+          {#if ingredient.amountStr !== '0'}
+            {`${ingredient.amountStr ?? ''} ${ingredient.unit}${(ingredient.amount ?? 0) > 1 ? 's' : ''}`.trim()}
+          {/if}
+        </td>
       </tr>
     {/each}
   </tbody>

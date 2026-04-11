@@ -3,9 +3,9 @@
 
   /* Backgrounds */
   --bg-color: #f7f6f3; /* Canvas background */
-  --bg-color-light: #f2eee9; /* Side panels */
-  --bg-color-surface: #ffffff; /* Card surfaces */
-  --bg-color-overlay: #efeae4; /* Search / input background */
+  --bg-color-light: #e3e6e6; /* Side panels */
+  --bg-color-surface: #e0eec6; /* Card surfaces */
+  --bg-color-overlay: #7ca982; /* Search / input background */
 
   /* Core tones */
   --white: #ffffff;
@@ -28,12 +28,12 @@
 
   /* Main theme colors */
 
-  --app-theme-primary: var(--yellow); /* Main UI accent */
-  --app-theme-secondary: var(--blue); /* Secondary accent */
-  --app-theme-tertiary: var(--rust); /* Utility accent (timers, etc) */
+  --app-theme-secondary: #b2d39c; /* Main UI accent */
+  --app-theme-primary: #243e36; /* Secondary accent */
+  --app-theme-tertiary: #7ca982; /* Utility accent (timers, etc) */
 
-  --app-theme-text-primary: var(--black);
-  --app-theme-text-secondary: var(--white);
+  --app-theme-text-primary: var(--app-theme-primary);
+  --app-theme-text-secondary: var(--app-theme-secondary);
 
   /* Basic colors */
 
@@ -58,7 +58,7 @@
   --app-theme-link: var(--blue);
 
   --app-theme-overlay: var(--bg-color-overlay);
-  --app-theme-overlay-light: var(--bg-color-overlay);
+  --app-theme-overlay-light: var(--app-theme-gray-light);
 
   /* Component colors */
 
@@ -105,6 +105,11 @@ h6 {
 }
 h1 {
   font-size: 4rem;
+  overflow-wrap: break-word;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
 }
 h2 {
   font-size: 2rem;

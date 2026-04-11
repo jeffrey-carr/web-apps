@@ -76,7 +76,15 @@ func main() {
 			authMiddleware,
 		),
 	)
-
+	mux.HandleFunc(
+		"PATCH /api/recipe",
+		jhttp.NewEndpoint(
+			recipeHandler.Update,
+			nil,
+			userMiddleware,
+			authMiddleware,
+		),
+	)
 	mux.HandleFunc(
 		"GET /api/recipe/all-tags",
 		jhttp.NewEndpoint(
@@ -97,14 +105,6 @@ func main() {
 		jhttp.NewEndpoint(
 			recipeHandler.Get,
 			[]string{recipeDomain.RecipeIDPathVar},
-			userMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"GET /api/recipe",
-		jhttp.NewEndpoint(
-			recipeHandler.GetRecipes,
-			nil,
 			userMiddleware,
 		),
 	)

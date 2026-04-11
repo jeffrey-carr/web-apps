@@ -19,7 +19,7 @@ services:
     container_name: federation_backend
     restart: unless-stopped
     volumes:
-      - ./backend/.env.json:/app/.env:ro
+      - ./backend/.env:/app/.env:ro
 
       - ./backend/.oci:/app/.oci:ro
 

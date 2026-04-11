@@ -11,6 +11,14 @@
   width: 100%;
 
   padding: 1rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'head'
+      'main';
+    gap: 1rem;
+  }
 }
 
 .header {
@@ -19,8 +27,15 @@
   grid-template-columns: subgrid;
   grid-template-areas: 'title title user';
 
+  @media (max-width: 768px) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'title user';
+  }
+
   .title {
     grid-area: title;
+    min-width: 0;
+    overflow-wrap: break-word;
   }
 
   .userContainer {
@@ -31,15 +46,70 @@
 
     height: 4rem;
     text-align: center;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
   }
 }
 
 .sidebar {
   grid-area: side;
+
+  @media (max-width: 768px) {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    background-color: var(--bg-color);
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+    padding: 1rem;
+
+    &.drawerOpen {
+      transform: translateY(0);
+    }
+  }
+}
+
+.drawerBackdrop {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99;
+  }
+}
+
+.mobileDrawerToggleButton {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 98;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    border-radius: 2rem;
+  }
 }
 
 .main {
   grid-area: main;
+  width: 100%;
+  min-width: 0;
 }
 
 .headerContainer {
@@ -93,9 +163,53 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
+  width: 100%;
 }
 
 .recipeCardContainer {
   height: 500px;
-  width: 300px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.paginationContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+
+  .paginationInput {
+    width: 3.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+
+    // Remove number arrows
+    :global(input::-webkit-outer-spin-button),
+    :global(input::-webkit-inner-spin-button) {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    :global(input[type=number]) {
+      -moz-appearance: textfield;
+      text-align: center;
+      padding: 0.25rem;
+    }
+  }
+
+  .paginationButton {
+    padding: 0 0.5rem;
+  }
+
+  .paginationTotal {
+    color: var(--app-theme-gray-dark);
+    font-size: 0.9rem;
+  }
+
+  @media (max-width: 768px) {
+    gap: 0.25rem;
+    margin-bottom: 6rem;
+  }
 }

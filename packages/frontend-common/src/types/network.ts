@@ -5,6 +5,7 @@ export enum METHODS {
   POST = 'POST',
   PUT = 'PUT',
   DELETE = 'DELETE',
+  PATCH = 'PATCH',
 }
 
 export type RouteInformation = {

@@ -10,6 +10,32 @@
 
   border: 1px solid var(--app-theme-border-color);
   border-radius: var(--border-radius);
+
+  @media (max-width: 768px) {
+    min-width: unset;
+    width: 100%;
+  }
+}
+
+.mobileUserContainer {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    
+    padding: 1rem;
+    border-bottom: 1px solid var(--app-theme-border-color);
+
+    .userLoadingSpinner {
+      --size: 2.2rem;
+      height: var(--size);
+      width: var(--size);
+    }
+  }
 }
 
 .header {

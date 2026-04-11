@@ -1,6 +1,10 @@
 .container {
   position: relative;
   padding: 2rem 3rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 }
 
 .header {
@@ -13,12 +17,19 @@
 
   border-radius: 10px;
 
+  text-align: center;
   color: var(--app-theme-secondary);
-  background-color: var(--bg-color-overlay);
+}
+
+.authorAndCookTime {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .author {
   font-style: italic;
+  text-align: center;
 }
 
 .description {
@@ -26,6 +37,43 @@
   border: 2px solid var(--app-theme-border-color);
   border-radius: 10px;
   background-color: var(--bg-color-light);
+  max-width: 700px;
+  text-align: center;
+  line-height: 1.25rem;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}
+
+.userActions {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+
+  padding: 1rem 2rem;
+
+  border-radius: 10px;
+  background-color: var(--app-theme-gray-light);
+
+  .editButton {
+    color: var(--app-theme-primary);
+  }
+}
+
+.wakeLockVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: 10px;
+  height: 10px;
+
+  opacity: 0.01;
+
+  pointer-events: none;
+  user-select: none;
+  z-index: -1;
 }
 
 .cookTime {
@@ -36,22 +84,45 @@
   padding: 1rem 0;
 }
 
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+
+  margin: 0 0 0.5rem;
+}
+
 .ingredientsAndWakeLock {
   display: flex;
   justify-content: center;
   gap: 1rem;
+  flex-wrap: wrap;
 
   margin-top: 1rem;
 }
 
-.sections {
-  margin-bottom: 3rem;
+.divider {
+  border: none;
+  height: 1px;
+  margin: 2rem auto;
+  width: 85%;
+
+  @media (min-width: 768px) {
+    width: 80%;
+  }
+
+  background-color: var(--app-theme-primary);
+
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 20%,
+    black 80%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
 }
 
-.loadingContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  height: 100%;
+.sections {
+  margin-bottom: 3rem;
 }

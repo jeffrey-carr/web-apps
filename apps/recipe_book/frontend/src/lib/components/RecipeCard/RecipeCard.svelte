@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { cookTimeToStr } from '$lib/mappers/recipe';
   import type { Recipe } from '$lib/types/recipe';
+  import { FavoriteButton } from '$lib/components';
   import { getRandomElement, ReactiveIcon, Spinner } from '@jeffrey-carr/frontend-common';
   import styles from './styles.module.scss';
   import placeholderImg1 from '$lib/images/missing_img_1.png';
@@ -10,6 +11,7 @@
   import placeholderImg4 from '$lib/images/missing_img_4.png';
   import { userState } from '$lib/globals/user.svelte';
   import clsx from 'clsx';
+  import Tag from '../Tag/Tag.svelte';
 
   const imgs = [placeholderImg1, placeholderImg2, placeholderImg3, placeholderImg4];
   const img = getRandomElement(imgs);
@@ -23,24 +25,10 @@
     onFavorite?: () => Promise<void>;
     onDelete?: () => Promise<void>;
   } = $props();
-  let loadingFavoriting = $state(false);
   let loadingDeleting = $state(false);
 
   let go = () => {
     goto(`/recipe/${recipe.slug}`);
-  };
-
-  const favorite = async (e: Event) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    if (loadingFavoriting) {
-      return;
-    }
-
-    loadingFavoriting = true;
-    await onFavorite?.();
-    loadingFavoriting = false;
   };
 
   const deleteRecipe = async (e: Event) => {
@@ -62,17 +50,9 @@
 <div class={styles.card} onclick={go} role="button" tabindex={0}>
   <div class={styles.header}>
     {#if userState.user}
-      <button
-        class={clsx(styles.managementButton, styles.favoriteButton)}
-        onclick={favorite}
-        disabled={loadingFavoriting}
-      >
-        {#if loadingFavoriting}
-          <Spinner class={styles.icon} />
-        {:else}
-          <ReactiveIcon class={styles.icon} icon={recipe.isFavorited ? 'heart-fill' : 'heart'} />
-        {/if}
-      </button>
+      <div class={clsx(styles.managementButton, styles.favoriteButton)}>
+        <FavoriteButton isFavorited={recipe.isFavorited} {onFavorite} />
+      </div>
       {#if userState.user.isAdmin || recipe.authorUUID === userState.user.uuid}
         <button
           class={clsx(styles.managementButton, styles.trashButton)}
@@ -98,6 +78,9 @@
   </div>
 
   <div class={styles.footer}>
+    {#if recipe.tags && recipe.tags.length > 0}
+      <Tag data={recipe.tags[0]} />
+    {/if}
     {#if recipe.cookTimeMs}
       <span class={styles.cookTime}>
         <ReactiveIcon class={styles.cookTimeImg} icon="stopwatch" />

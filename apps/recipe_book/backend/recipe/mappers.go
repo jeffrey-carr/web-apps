@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func recipeCreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []recipe.Tag, user types.CommonUser) (recipe.Recipe, error) {
+func RecipeCreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []recipe.Tag, user types.CommonUser) (recipe.Recipe, error) {
 	name := strings.TrimSpace(request.Name)
 	// TODO: clean for XSS
 	description := strings.TrimSpace(request.Description)
@@ -32,7 +32,7 @@ func recipeCreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []reci
 
 	for i, section := range request.Sections {
 		for j, ingredient := range section.Ingredients {
-			amt, ok := attemptToParseAmountStr(ingredient.AmountStr)
+			amt, ok := AttemptToParseAmountStr(ingredient.AmountStr)
 			if ok {
 				ingredient.Amount = amt
 				section.Ingredients[j] = ingredient
@@ -61,7 +61,7 @@ func recipeCreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []reci
 	}, nil
 }
 
-func attemptToParseAmountStr(amountStr string) (float32, bool) {
+func AttemptToParseAmountStr(amountStr string) (float32, bool) {
 	parts := strings.Split(amountStr, " ")
 	var total float32
 	for _, part := range parts {
@@ -88,7 +88,7 @@ func attemptToParseAmountStr(amountStr string) (float32, bool) {
 	return total, false
 }
 
-func recipeFavoriteRequestToFavorite(
+func RecipeFavoriteRequestToFavorite(
 	user types.CommonUser,
 	rec recipe.Recipe,
 ) recipe.UserFavorite {
@@ -100,7 +100,7 @@ func recipeFavoriteRequestToFavorite(
 	}
 }
 
-func recipeToPublicRecipe(
+func RecipeToPublicRecipe(
 	rec recipe.Recipe,
 	tags []recipe.Tag,
 	author *types.CommonUser,

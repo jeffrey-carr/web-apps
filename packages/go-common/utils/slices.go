@@ -60,3 +60,15 @@ func Filter[T any](s []T, f func(item T) bool) []T {
 
 	return items
 }
+
+// FilterAndMap is like Filter and Map smushed into one
+func FilterAndMap[T any, K any](s []T, f func(item T) (K, bool)) []K {
+	var results []K
+	for _, item := range s {
+		if r, ok := f(item); ok {
+			results = append(results, r)
+		}
+	}
+
+	return results
+}

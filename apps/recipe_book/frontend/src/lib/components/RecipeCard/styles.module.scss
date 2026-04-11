@@ -33,7 +33,7 @@
   }
 
   &:hover::before {
-    border-color: black;
+    border-color: var(--app-theme-secondary);
     /* Expand to full border */
     clip-path: inset(0 0 0 0 round 10px);
   }
@@ -104,8 +104,10 @@
 .footer {
   flex: 0.5;
   display: flex;
-  justify-content: center;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
 
   padding: 0.7rem 1rem;
 }
