@@ -1,10 +1,11 @@
-name: Deploy Go App
+name: Deploy App
 
 on:
   push:
     tags:
       - 'federation-v*'
       - 'recipe_book-v*'
+      - 'web_games-v*'
   workflow_dispatch:
     inputs:
       app:
@@ -14,6 +15,7 @@ on:
         options:
           - federation
           - recipe_book
+          - web_games
       tag:
         description: 'Tag to deploy'
         required: true
@@ -45,11 +47,13 @@ jobs:
             echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
           else
             TAG_NAME=${GITHUB_REF_NAME}
-            APP_NAME=$(echo $TAG_NAME | cut -d'-' -f1)
+            # Handle both federation-v1.0.0 and web_games-v1.0.0 styles
+            # Extract everything before the first '-v'
+            APP_NAME=$(echo $TAG_NAME | sed 's/-v[0-9].*//')
             echo "app_name=${APP_NAME}" >> "$GITHUB_OUTPUT"
             echo "tag=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           fi
-
+          
           if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.deploy }}" == "false" ]; then
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
@@ -137,7 +141,7 @@ jobs:
             {
               "environment": "${{ vars.ENVIRONMENT }}",
               "mongoConnectionURL": "${{ secrets.MONGO_CONNECTION_URL }}",
-              "port": "${{ vars.PORT }}",
+              "port": "9999",
               "oracle_compartment_id": "${{ secrets.ORACLE_COMPARTMENT_ID }}",
               "oracle_user": "${{ secrets.ORACLE_USER }}",
               "oracle_fingerprint": "${{ secrets.ORACLE_FINGERPRINT }}",
@@ -197,8 +201,8 @@ jobs:
 
             cat > /opt/apps/$APP/backend/.env << 'EOF'
             {
-              "environment": "${{ vars.ENVIRONMENT }}",
-              "port": "${{ vars.PORT }}",
+              "environment": "prod",
+              "port": "9999",
               "mongo_connection_url": "${{ secrets.MONGO_CONNECTION_URL }}",
               "federation_api_key": "${{ secrets.FEDERATION_API_KEY }}"
             }
@@ -223,6 +227,61 @@ jobs:
                   - ./backend/.env:/app/.env:ro
                 ports:
                   - '3102:9999'
+            EOF
+
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
+            cd /opt/apps/$APP
+            docker compose pull
+            docker compose up -d
+            docker image prune -f
+
+  deploy-web-games:
+    runs-on: ubuntu-latest
+    needs: [prep, build-backend, build-frontend]
+    if: needs.prep.outputs.deploy == 'true' && needs.prep.outputs.app_name == 'web_games'
+    environment: web_games
+    steps:
+      - name: SSH to server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_IP }}
+          username: ${{ vars.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            set -e
+            APP="web_games"
+
+            sudo mkdir -p /opt/apps/$APP/frontend
+            sudo mkdir -p /opt/apps/$APP/backend
+            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} /opt/apps/$APP
+
+            # Web Games is a Java app and expects key=value format
+            cat > /opt/apps/$APP/backend/.env << 'EOF'
+            ENVIRONMENT=prod
+            SPRING_PROFILES_ACTIVE=prod
+            MONGO_CONNECTION_URL=${{ secrets.MONGO_CONNECTION_URL }}
+            FEDERATION_API_KEY=${{ secrets.FEDERATION_API_KEY }}
+            EOF
+
+            cat > /opt/apps/$APP/docker-compose.yml << 'EOF'
+            services:
+              web_games_frontend:
+                image: ghcr.io/${{ github.repository_owner }}/web_games-frontend:latest
+                container_name: web_games_frontend
+                restart: unless-stopped
+                environment:
+                  NODE_ENV: production
+                ports:
+                  - '3003:3000'
+
+              web_games_backend:
+                image: ghcr.io/${{ github.repository_owner }}/web_games-backend:latest
+                container_name: web_games_backend
+                restart: unless-stopped
+                volumes:
+                  - ./backend/.env:/app/.env:ro
+                ports:
+                  - '3103:8081'
             EOF
 
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
