@@ -10,6 +10,8 @@ import (
 	"go-common/services/jmongo"
 	"go-common/utils"
 	"net/http"
+	"os"
+	globalConstants "go-common/constants"
 	recipeDomain "recipe-book/domains/recipe"
 	"recipe-book/recipe"
 	"recipe-book/types"
@@ -29,6 +31,8 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("could not load config %w", err))
 	}
+
+	os.Setenv(globalConstants.EnvEnvironmentVar, config.Environment)
 
 	// SERVICES //
 	mongoClient, err := mongo.Connect(options.Client().ApplyURI(config.MongoURL))

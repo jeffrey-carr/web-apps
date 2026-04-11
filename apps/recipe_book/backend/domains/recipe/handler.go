@@ -2,7 +2,6 @@ package recipe
 
 import (
 	"context"
-	"fmt"
 	"go-common/jcontext"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
@@ -239,7 +238,6 @@ func (h RecipeHandler) Search(ctx context.Context, r jhttp.RequestData[struct{}]
 	authorUUID := r.Query.Get("author")
 	limitStr := r.Query.Get("limit")
 	pageStr := r.Query.Get("page")
-	fmt.Printf("page str is %s\n", pageStr)
 
 	if favoritesOnly == "true" {
 		_, ok := jcontext.GetUser(ctx)
