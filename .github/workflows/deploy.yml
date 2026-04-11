@@ -147,6 +147,28 @@ jobs:
             }
             EOF
 
+            cat > /opt/apps/$APP/docker-compose.yml << 'EOF'
+            services:
+              federation_frontend:
+                image: ghcr.io/${{ github.repository_owner }}/federation-frontend:latest
+                container_name: federation_frontend
+                restart: unless-stopped
+                environment:
+                  NODE_ENV: production
+                ports:
+                  - '3001:3000'
+
+              federation_backend:
+                image: ghcr.io/${{ github.repository_owner }}/federation-backend:latest
+                container_name: federation_backend
+                restart: unless-stopped
+                volumes:
+                  - ./backend/.env:/app/.env:ro
+                  - ./backend/.oci:/app/.oci:ro
+                ports:
+                  - '3101:9999'
+            EOF
+
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
             cd /opt/apps/$APP
             docker compose pull
@@ -180,6 +202,27 @@ jobs:
               "mongo_connection_url": "${{ secrets.MONGO_CONNECTION_URL }}",
               "federation_api_key": "${{ secrets.FEDERATION_API_KEY }}"
             }
+            EOF
+
+            cat > /opt/apps/$APP/docker-compose.yml << 'EOF'
+            services:
+              recipe_book_frontend:
+                image: ghcr.io/${{ github.repository_owner }}/recipe_book-frontend:latest
+                container_name: recipe_book_frontend
+                restart: unless-stopped
+                environment:
+                  NODE_ENV: production
+                ports:
+                  - '3002:3000'
+
+              recipe_book_backend:
+                image: ghcr.io/${{ github.repository_owner }}/recipe_book-backend:latest
+                container_name: recipe_book_backend
+                restart: unless-stopped
+                volumes:
+                  - ./backend/.env:/app/.env:ro
+                ports:
+                  - '3102:9999'
             EOF
 
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
