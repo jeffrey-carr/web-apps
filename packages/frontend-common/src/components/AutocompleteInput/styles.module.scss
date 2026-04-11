@@ -1,0 +1,64 @@
+.container {
+  position: relative;
+  width: 100%;
+
+  &:focus-within {
+    .options {
+      display: block;
+    }
+  }
+}
+
+.label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.inputWrapper {
+  width: 100%;
+}
+
+.spinnerContainer {
+  padding: 0.5rem;
+}
+
+.options {
+  --max-height: 200px;
+  max-height: var(--max-height);
+  width: 100%;
+  overflow: auto;
+
+  background-color: var(--bg-color-overlay);
+  list-style: none;
+
+  padding: 0;
+  margin: 0;
+
+  border-radius: 5px;
+
+  &.flipped {
+    top: auto;
+    bottom: 100%;
+  }
+}
+
+.option {
+  padding: 0;
+  .optionButton {
+    height: 100%;
+    width: 100%;
+
+    border: none;
+    background-color: transparent;
+
+    padding: 0.5rem;
+
+    --transition-ms: 100ms;
+    transition: background-color var(--transition-ms) linear;
+
+    &:hover {
+      cursor: pointer;
+      background-color: var(--bg-color-light);
+    }
+  }
+}

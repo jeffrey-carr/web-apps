@@ -10,10 +10,10 @@
     CharacterIcon,
     generateGreeting,
     getAppURL,
+    logout as doLogout,
     PATH_QUERY_PARAM,
   } from '@jeffrey-carr/frontend-common';
   import type { ServerResponse, User } from '@jeffrey-carr/frontend-common';
-  import { logout as doLogout } from '$lib/requests/user';
 
   import styles from './sidebar.module.scss';
   import clsx from 'clsx';
@@ -60,7 +60,7 @@
     loadingLogout = true;
 
     try {
-      await doLogout();
+      await doLogout(PUBLIC_ENVIRONMENT);
     } catch (e) {
       const err = e as ServerResponse;
       console.error(`Error logging in: ${err.data}`);

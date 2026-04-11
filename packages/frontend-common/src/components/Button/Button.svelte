@@ -10,7 +10,7 @@
     class: className,
     animated = true,
     variant = 'primary',
-    size,
+    size = 'md',
     shape = 'rectangular',
     disabled,
     loading,
@@ -27,13 +27,13 @@
   } & HTMLAnchorAttributes &
     HTMLButtonAttributes = $props();
   let spinnerTheme = $derived<'primary' | 'secondary'>(
-    `${variant === 'primary' ? 'secondary' : 'primary'}`
+    variant === 'secondary' || variant === 'plain' ? 'secondary' : 'primary'
   );
 
   const steez = clsx(
     styles.button,
     styles[variant],
-    styles[size ?? ''],
+    styles[size],
     styles[shape],
     {
       [styles.loading]: loading,
@@ -46,19 +46,25 @@
 </script>
 
 {#if isAnchor}
-  <a class={steez} {...rest}>
-    {#if loading}
-      <Spinner theme={spinnerTheme} />
-    {:else}
+  <a class={clsx(styles.anchor, steez)} {...rest}>
+    <span class={clsx(styles.content, { [styles.hidden]: loading })}>
       {@render children?.()}
+    </span>
+    {#if loading}
+      <div class={styles.spinnerWrapper}>
+        <Spinner theme={spinnerTheme} size="1.25rem" />
+      </div>
     {/if}
   </a>
 {:else}
   <button class={steez} disabled={disabled || loading} {...rest}>
-    {#if loading}
-      <Spinner theme={spinnerTheme} />
-    {:else}
+    <span class={clsx(styles.content, { [styles.hidden]: loading })}>
       {@render children?.()}
+    </span>
+    {#if loading}
+      <div class={styles.spinnerWrapper}>
+        <Spinner theme={spinnerTheme} size="1.25rem" />
+      </div>
     {/if}
   </button>
 {/if}

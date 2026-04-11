@@ -1,71 +1,49 @@
 <script lang="ts">
-  import { createRecipe } from '$lib/requests/recipe';
-  import {
-    Button,
-    generateUUID,
-    Input,
-    ServerError,
-    Textarea,
-  } from '@jeffrey-carr/frontend-common';
+  import { createRecipe, getAllTags } from '$lib/requests/recipe';
+  import { ExpandButton, ServerError } from '@jeffrey-carr/frontend-common';
   import { goto } from '$app/navigation';
   import styles from './page.module.scss';
-  import { RecipeSection } from '$lib/components';
-  import type { Direction, Ingredient, RecipeCreateRequest, Section } from '$lib/types/recipe';
+  import type { RecipeCreateRequest, RecipeCreateResponse, Section, Tag } from '$lib/types/recipe';
   import { recipeInputsToCreateRecipeRequest } from '$lib/mappers/recipe';
-  import clsx from 'clsx';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
+  import RecipeForm from '$lib/components/RecipeForm/RecipeForm.svelte';
+  import type { RecipeFormData } from '$lib/types/recipe_form';
 
-  const createEmptySection = (): Section => {
-    return {
-      uuid: generateUUID(),
-      title: '',
-      ingredients: [createEmptyIngredient()],
-      directions: [createEmptyDirection()],
+  const goHome = () => {
+    goto('/');
+  };
+
+  const create = async (formData: RecipeFormData) => {
+    const notifyValidationErr = (field: string, err: string) => {
+      notificationQueue.push({
+        level: 'error',
+        title: 'Error creating recipe',
+        message: `Error on ${field}: ${err}`,
+      });
     };
-  };
-
-  const createEmptyIngredient = (): Ingredient => {
-    return { uuid: generateUUID(), name: '', amountStr: '', unit: '' };
-  };
-
-  const createEmptyDirection = (): Direction => {
-    return { uuid: generateUUID(), step: '' };
-  };
-
-  let recipeName = $state('');
-  let recipeDescription = $state('');
-  let recipeSections = $state<Section[]>([createEmptySection()]);
-  let cookTimeHoursStr = $state('0');
-  let cookTimeHours = $derived(Number(cookTimeHoursStr));
-  let cookTimeMinutesStr = $state('0');
-  let cookTimeMinutes = $derived(Number(cookTimeMinutesStr));
-  let importURL = $state('');
-  let publish = $state(true);
-
-  let loadingCreate = $state(false);
-
-  // reset is called when the form is reset
-  const reset = () => {
-    recipeSections = [createEmptySection()];
-  };
-
-  const create = async (e: SubmitEvent) => {
-    e.preventDefault();
-    loadingCreate = true;
+    // Validate all required fields are there
+    if (!formData.recipeName) return notifyValidationErr('Name', 'Name is required');
+    if (!formData.recipeDescription)
+      return notifyValidationErr('Description', 'Description is required');
+    if (!formData.cookTimeHours) formData.cookTimeHours = 0;
+    if (!formData.cookTimeMinutes) formData.cookTimeMinutes = 0;
+    if (!formData.selectedTags) formData.selectedTags = [];
+    if (!formData.recipeSections || formData.recipeSections.length < 1)
+      return notifyValidationErr('Sections', 'At least one section is required');
 
     let createRequest: RecipeCreateRequest;
     try {
       createRequest = recipeInputsToCreateRecipeRequest(
-        recipeName,
-        recipeDescription,
-        cookTimeHours,
-        cookTimeMinutes,
-        importURL,
-        recipeSections,
-        publish
+        formData.recipeName,
+        formData.recipeDescription,
+        formData.cookTimeHours,
+        formData.cookTimeMinutes,
+        formData.selectedTags,
+        formData.recipeSections,
+        formData.importURL,
+        formData.publish
       );
     } catch (e) {
-      loadingCreate = false;
       notificationQueue.push({
         level: 'error',
         title: 'Invalid recipe',
@@ -74,99 +52,33 @@
       return;
     }
 
-    let response: string | ServerError = await createRecipe(createRequest);
+    let response: RecipeCreateResponse | ServerError = await createRecipe(createRequest);
     if (response instanceof ServerError) {
       notificationQueue.push({
         level: 'error',
         title: 'Error creating recipe',
         message: response.message,
       });
-      loadingCreate = false;
       return;
     }
 
-    if (response == null) {
+    notificationQueue.push({
+      level: 'success',
+      message: 'Recipe created',
+    });
+
+    if (!response) {
       goto('/');
       return;
     }
 
-    goto(`/recipe/${response}`);
-    loadingCreate = false;
-  };
-
-  const addSection = () => {
-    recipeSections.push(createEmptySection());
-  };
-
-  const deleteSection = (index: number) => {
-    if (index < 0 || index > recipeSections.length) return;
-    recipeSections.splice(index, 1);
+    goto(`/recipe/${response.slug}`);
   };
 </script>
 
 <div class={styles.container}>
+  <ExpandButton onclick={goHome}>Back to home</ExpandButton>
+
   <h1>Create New Recipe</h1>
-
-  <form class={styles.form} onsubmit={create} onreset={reset}>
-    <div class={styles.formItem}>
-      <h3>Name:</h3>
-      <Input
-        type="text"
-        id="name"
-        bind:value={recipeName}
-        placeholder="Chicken, Broccoli, Ziti"
-        required
-      />
-    </div>
-
-    <div class={styles.formItem}>
-      <h3>Description:</h3>
-      <Textarea rich={true} bind:value={recipeDescription} />
-    </div>
-
-    <div class={styles.cookTimeAndImportURL}>
-      <!-- Cook time -->
-      <div class={clsx(styles.formItem, styles.cookTime)}>
-        <h3>Cook Time</h3>
-        <div class={styles.cookTimeInputs}>
-          <div class={styles.cookTimeItem}>
-            <Input type="number" bind:value={cookTimeHoursStr} /> Hours
-          </div>
-          <div class={styles.cookTimeItem}>
-            <Input type="number" bind:value={cookTimeMinutesStr} /> Minutes
-          </div>
-        </div>
-      </div>
-
-      <div class={clsx(styles.formItem, styles.importURL)}>
-        <h3>Import URL</h3>
-        <Input bind:value={importURL} />
-      </div>
-    </div>
-
-    {#each recipeSections as section, i (section.uuid)}
-      <RecipeSection
-        class={styles.formItem}
-        bind:title={recipeSections[i].title}
-        bind:ingredients={recipeSections[i].ingredients}
-        bind:directions={recipeSections[i].directions}
-        showTitle={recipeSections.length > 1}
-        showDelete={i > 0}
-        onDelete={() => deleteSection(i)}
-        editing
-      />
-    {/each}
-    <Button class={styles.addSectionButton} onclick={addSection}>Add a section</Button>
-
-    <div class={clsx(styles.formItem, styles.publishSection)}>
-      <label for="publishInput">Publish</label>
-      <input id="publishInput" type="checkbox" bind:checked={publish} />
-    </div>
-
-    <div class={styles.buttons}>
-      <Button type="submit" size="md" loading={loadingCreate}>Create</Button>
-      <Button type="reset" size="md" variant="outline">Clear</Button>
-      <Button href="/" size="md" class={styles.cancelButton}>Cancel</Button>
-    </div>
-  </form>
+  <RecipeForm onSubmit={create} />
 </div>

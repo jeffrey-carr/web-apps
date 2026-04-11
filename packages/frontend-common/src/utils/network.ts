@@ -68,7 +68,7 @@ export const getAppURL = (environment: Environment, app: App): string => {
   return `http://${info.subdomain}.jeffreycarr.local:${info.devPort}`;
 };
 
-export const getErrorFromServer = <T>(e: unknown): ServerError<T> => {
+export const getErrorFromServer = <T = undefined>(e: unknown): ServerError<T> => {
   if (e instanceof ServerError) {
       return e;
     } else {

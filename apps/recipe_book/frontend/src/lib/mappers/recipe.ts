@@ -1,5 +1,11 @@
-import type { Direction, Ingredient, RecipeCreateRequest, Section } from "$lib/types/recipe";
-import { validateCookTime, validateRecipeName, validateSection } from "$lib/validators/recipe";
+import type {
+  Direction,
+  Ingredient,
+  RecipeCreateRequest,
+  SearchOptions,
+  Section,
+} from '$lib/types/recipe';
+import { validateCookTime, validateRecipeName, validateSection } from '$lib/validators/recipe';
 import { TIME, Tuple } from '@jeffrey-carr/frontend-common';
 
 // Converts a recipe input to a create request, and validates as it goes
@@ -8,20 +14,21 @@ export const recipeInputsToCreateRecipeRequest = (
   description: string,
   cookTimeHours: number,
   cookTimeMinutes: number,
-  importURL: string,
+  tagNames: string[],
   sections: Section[],
-  publish: boolean,
+  importURL?: string,
+  publish?: boolean
 ): RecipeCreateRequest => {
   name = name.trim();
   const nameValidationErr = validateRecipeName(name);
-  if (nameValidationErr !== "") {
+  if (nameValidationErr !== '') {
     throw Error(nameValidationErr);
   }
 
   description = description.trim();
 
   const cookTimeValiationErr = validateCookTime(cookTimeHours, cookTimeMinutes);
-  if (cookTimeValiationErr !== "") {
+  if (cookTimeValiationErr !== '') {
     throw Error(cookTimeValiationErr);
   }
   const cookTimeHoursMs = cookTimeHours * 60 * 60 * 1000;
@@ -30,7 +37,7 @@ export const recipeInputsToCreateRecipeRequest = (
   sections = filterEmptySections(sections);
   for (const section of sections) {
     const sectionsValidationErr = validateSection(section);
-    if (sectionsValidationErr !== "") {
+    if (sectionsValidationErr !== '') {
       throw Error(sectionsValidationErr);
     }
   }
@@ -38,8 +45,9 @@ export const recipeInputsToCreateRecipeRequest = (
   return {
     name,
     description,
-    importURL,
-    cookTimeMs: cookTimeHoursMs+cookTimeMinutesMs,
+    originalURL: importURL,
+    cookTimeMs: cookTimeHoursMs + cookTimeMinutesMs,
+    tagNames,
     sections,
     publish,
   };
@@ -103,12 +111,58 @@ export const cookTimeToStr = (ms?: number): string => {
 
   if (minutes > 0) {
     if (hours > 0) {
-      str += ", "
+      str += ', ';
     }
-    
+
     const plural = minutes > 1;
     str += `${minutes} minute${plural ? 's' : ''}`;
   }
 
   return str;
+};
+
+export const makeSearchQueryString = (opts: SearchOptions): Record<string, string> => {
+  let q: Record<string, string> = {};
+
+  if (opts.recipeName) {
+    q['name'] = opts.recipeName;
+  }
+  if (opts.favoritesOnly) {
+    q['favorites_only'] = `${opts.favoritesOnly ? 'true' : 'false'}`;
+  }
+  if (opts.authorUUID) {
+    q['author'] = opts.authorUUID;
+  }
+  if (opts.tagUUIDs && opts.tagUUIDs.length > 0) {
+    q['tags'] = opts.tagUUIDs.join(',');
+  }
+  if (opts.limit && opts.limit > 0) {
+    q['limit'] = `${opts.limit}`;
+  }
+  if (opts.page && opts.page > 1) {
+    q['page'] = `${opts.page}`;
+  }
+
+  return q;
+};
+
+export const parseSearchQueryString = (params: URLSearchParams): SearchOptions => {
+  const getParam = (key: string): string | undefined => {
+    return params.get(key) ?? undefined;
+  };
+  const getNumberParam = (key: string): number | undefined => {
+    const str = getParam(key);
+    if (str) {
+      return parseInt(str);
+    }
+  };
+
+  return {
+    recipeName: getParam('name'),
+    favoritesOnly: getParam('favorites_only') === 'true',
+    authorUUID: getParam('author'),
+    tagUUIDs: getParam('tags')?.split(','),
+    limit: getNumberParam('limit'),
+    page: getNumberParam('page'),
+  };
 };

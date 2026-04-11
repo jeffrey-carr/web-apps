@@ -12,6 +12,7 @@
     value = $bindable(),
     class: className = '',
     inputClass = '',
+    hideErrArea = false,
     ...rest
   }: {
     inputClass?: string;
@@ -19,6 +20,7 @@
     validator?: (input: string) => string;
     message?: string;
     value?: string;
+    hideErrArea?: boolean;
   } & HTMLInputAttributes = $props();
   // id is a random uuid to use for ids so they don't clash with other Input elements
   const id = generateUUID();
@@ -50,13 +52,15 @@
     {...rest}
     oninput={handleInputChanged}
   />
-  <div class={styles.errorArea}>
-    <p class={clsx(styles.errorMessage, { [styles.active]: hasError })}>
-      {#if message && message.length > 0}
-        {message}
-      {:else}
-        {errMessage}
-      {/if}
-    </p>
-  </div>
+  {#if !hideErrArea}
+    <div class={styles.errorArea}>
+      <p class={clsx(styles.errorMessage, { [styles.active]: hasError })}>
+        {#if message && message.length > 0}
+          {message}
+        {:else}
+          {errMessage}
+        {/if}
+      </p>
+    </div>
+  {/if}
 </div>

@@ -51,6 +51,7 @@
     &.active {
       background-color: var(--app-theme-primary);
       outline: 1px solid var(--app-theme-secondary);
+      color: var(--app-theme-text-secondary);
     }
   }
 }

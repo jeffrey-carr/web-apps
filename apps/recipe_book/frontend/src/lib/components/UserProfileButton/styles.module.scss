@@ -1,0 +1,42 @@
+.characterContainer {
+  --size: 4rem;
+  height: var(--size);
+  width: var(--size);
+
+  padding: 0.5rem;
+
+  border: 1px solid var(--app-theme-secondary);
+  border-radius: 100%;
+
+  background-color: transparent;
+
+  transition: background-color var(--default-transition-ms) ease-in-out;
+
+  &:hover {
+    cursor: pointer;
+
+    background-color: var(--app-theme-secondary);
+
+    .loginText {
+      color: var(--app-theme-text-secondary);
+    }
+  }
+}
+
+.loginText {
+  color: var(--app-theme-text-primary);
+}
+
+.logoutButton {
+  padding: 0.5rem;
+
+  background-color: transparent;
+  border: none;
+
+  transition: background-color var(--default-transition-ms) ease-in-out;
+
+  &:hover {
+    cursor: pointer;
+    background-color: var(--bg-color-light);
+  }
+}

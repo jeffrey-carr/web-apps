@@ -1,64 +1,68 @@
 :root {
   /* App colors */
+
   /* Backgrounds */
-  --bg-color: var(--white); /* Canvas background (warm cream) */
-  --bg-color-light: #f9e7d8; /* Lighter beige panels (Favorites, Timers) */
-  --bg-color-surface: #fcdfc9; /* Card surface (recipe cards) */
-  /* --bg-color-overlay: #F5ECE3;      Input/search bar background */
-  /* --bg-color-overlay: #f7ddc3; */
-  --bg-color-overlay: #8ecae6;
+  --bg-color: #f7f6f3; /* Canvas background */
+  --bg-color-light: #e3e6e6; /* Side panels */
+  --bg-color-surface: #e0eec6; /* Card surfaces */
+  --bg-color-overlay: #7ca982; /* Search / input background */
 
   /* Core tones */
-  --white: #f0f0f0;
-  --black: #3e2c24; /* Primary text (Dark cocoa) */
-  --rust: #bb4430; /* Brand accent (Persian Red) */
-  --red: #bb4430; /* Red accents, same as rust */
-  --green: #7ebdc2; /* Verdigris (teal-green tone) */
-  --yellow: #f3dfa2; /* Vanilla warm yellow */
-  --blue: #7ebdc2; /* Verdigris reused for blue-green accent */
-  --mauve: #efe6dd; /* Linen soft neutral */
-  --rosewater: #fcede3; /* Highlight / hover background */
-  --sky: #b9dde0; /* Lighter Verdigris tint */
-  --periwinkle: #f2d9c8; /* Timer panel highlight (soft coral-cream) */
-  --ebony-clay: #231f20; /* Deep neutral / shadow */
-  --gray: #e1d2c5; /* Border / divider */
-  --gray-light: #f9e7d8; /* Lighter neutral beige */
-  --gray-dark: #6b5546; /* Secondary text (muted brown) */
+  --white: #ffffff;
+  --black: #2d2d2d; /* Primary text */
+  --rust: #e76f51; /* Accent (favorite / highlight) */
+  --red: #e76f51;
+  --green: #6ba368; /* Primary accent (fresh herb green) */
+  --yellow: #f4a261; /* Warm accent */
+  --blue: #457b9d; /* Timer / utility color */
+  --mauve: #f0efe9; /* Subtle neutral surface */
+  --rosewater: #fdf1ec; /* Hover highlight */
+  --sky: #e7f1f6; /* Soft panel highlight */
+  --periwinkle: #eef4f7; /* Timer background */
+  --ebony-clay: #1f1f1f;
+  --gray: #e6e6e6; /* Borders */
+  --gray-light: #ebebe4;
+  --gray-dark: #767676; /* Secondary text */
 
-  --default-transition-ms: 100ms;
+  --default-transition-ms: 120ms;
 
   /* Main theme colors */
-  /*--app-theme-primary: #fcdfc9; /* Primary text tone */
-  /*--app-theme-secondary: var(--rust); /* Persian Red accent */
-  /*--app-theme-tertiary: var(--green); /* Verdigris highlight */
-  /*--app-theme-text-primary: var(--black); /* Cocoa text */
-  /*--app-theme-text-secondary: var(--app-theme-primary); /* Muted brown for subtext */
-  --app-theme-primary: #ffb705;
-  --app-theme-secondary: #fb8500;
-  --app-theme-tertiary: #023047;
-  --app-theme-text-primary: var(--black);
-  --app-theme-text-secondary: var(--white);
+
+  --app-theme-secondary: #b2d39c; /* Main UI accent */
+  --app-theme-primary: #243e36; /* Secondary accent */
+  --app-theme-tertiary: #7ca982; /* Utility accent (timers, etc) */
+
+  --app-theme-text-primary: var(--app-theme-primary);
+  --app-theme-text-secondary: var(--app-theme-secondary);
 
   /* Basic colors */
+
   --app-theme-gray: var(--gray);
   --app-theme-gray-light: var(--gray-light);
   --app-theme-gray-dark: var(--gray-dark);
 
   /* Special colors */
-  --app-theme-success: var(--green); /* Verdigris success tone */
-  --app-theme-success-light: var(--sky); /* Soft teal success background */
-  --app-theme-warning: var(--yellow); /* Vanilla warm warning */
-  --app-theme-warning-light: #f8ebc7; /* Light Vanilla tint */
-  --app-theme-danger: var(--red); /* Persian Red for errors */
-  --app-theme-danger-light: #d87662; /* Light Persian Red tint */
-  --app-theme-subtle: var(--mauve); /* Linen neutral tone */
+
+  --app-theme-success: var(--green);
+  --app-theme-success-light: #e8f3e7;
+
+  --app-theme-warning: var(--yellow);
+  --app-theme-warning-light: #fdebdc;
+
+  --app-theme-danger: var(--red);
+  --app-theme-danger-light: #f7d7cf;
+
+  --app-theme-subtle: var(--mauve);
   --app-theme-subtle-dark: var(--bg-color);
-  --app-theme-link: var(--green); /* Verdigris link color */
+
+  --app-theme-link: var(--blue);
+
   --app-theme-overlay: var(--bg-color-overlay);
-  --app-theme-overlay-light: var(--bg-color-overlay);
+  --app-theme-overlay-light: var(--app-theme-gray-light);
 
   /* Component colors */
-  --app-theme-border-color: #e1d2c5;
+
+  --app-theme-border-color: var(--gray);
 
   /* This is the font used for special headers like custom banners, h1, etc. */
   --app-theme-header-font: 'Atma';
@@ -101,6 +105,11 @@ h6 {
 }
 h1 {
   font-size: 4rem;
+  overflow-wrap: break-word;
+
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
 }
 h2 {
   font-size: 2rem;

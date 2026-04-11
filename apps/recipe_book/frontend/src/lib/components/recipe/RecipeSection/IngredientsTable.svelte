@@ -1,0 +1,32 @@
+<script lang="ts">
+  import styles from './styles.module.scss';
+  import type { Ingredient } from '$lib/types/recipe';
+
+  let { ingredients }: { ingredients: Ingredient[] } = $props();
+</script>
+
+<table class={styles.ingredientTable}>
+  <thead class={styles.tableHeader}>
+    <tr>
+      <td>Ingredient</td>
+      <td>Amount</td>
+    </tr>
+  </thead>
+  <tbody>
+    {#each ingredients as ingredient (ingredient.uuid)}
+      <tr class={styles.ingredientRow}>
+        <td class={styles.name}>
+          <div>{ingredient.name}</div>
+          {#if ingredient.prep}
+            <div class={styles.prep}><em>{ingredient.prep}</em></div>
+          {/if}
+        </td>
+        <td class={styles.amount}>
+          {#if ingredient.amountStr !== '0'}
+            {`${ingredient.amountStr ?? ''} ${ingredient.unit}${(ingredient.amount ?? 0) > 1 ? 's' : ''}`.trim()}
+          {/if}
+        </td>
+      </tr>
+    {/each}
+  </tbody>
+</table>

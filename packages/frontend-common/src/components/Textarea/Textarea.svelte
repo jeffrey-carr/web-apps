@@ -197,6 +197,7 @@
       <div class={styles.toolbar}>
         {#snippet toolbarButton(nodeName: EnabledNode, info: RichTextNodeInfo)}
           <button
+            type="button"
             class={clsx(styles.button, { [styles.active]: activeNodes[nodeName] })}
             onclick={() => run(info.cmd)}
           >

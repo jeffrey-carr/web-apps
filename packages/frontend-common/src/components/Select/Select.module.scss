@@ -1,11 +1,27 @@
 .container {
+  width: 100%;
+}
+
+.label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.selectContainer {
   background-color: var(--theme-transparent);
 
   border: 1px solid var(--theme-border-color);
-  border-bottom: 3px solid var(--theme-border-color);
   border-radius: 5px;
 
   padding: 0.5rem;
+}
+
+.loading:hover {
+  cursor: not-allowed;
+}
+
+.select {
+  border-bottom: 3px solid var(--theme-border-color);
 
   --transition-ms: 100ms;
   transition: background-color var(--transition-ms) linear;
@@ -15,7 +31,8 @@
     background-color: color-mix(in oklab, white, transparent 85%);
   }
 
-  &:focus,&:active {
+  &:focus,
+  &:active {
     outline: 2px solid var(--theme-primary);
   }
 }

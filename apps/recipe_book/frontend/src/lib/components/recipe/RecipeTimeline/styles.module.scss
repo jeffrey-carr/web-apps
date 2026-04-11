@@ -1,0 +1,20 @@
+:root {
+  --size: 5rem;
+}
+
+.spacer {
+  height: 100%;
+  width: var(--size);
+}
+
+.container {
+  position: sticky;
+
+  display: flex;
+  flex-direction: column;
+
+  height: 100%;
+  width: var(--size);
+
+  background-color: var(--red);
+}

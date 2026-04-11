@@ -4,27 +4,25 @@ import (
 	"go-common/types"
 	"go-common/utils"
 	"net/url"
+	"recipe-book/domains/recipe"
+	"strconv"
 	"strings"
 	"time"
 )
 
-func recipeCreateRequestToRecipe(request CreateRecipeRequest, user types.CommonUser) (Recipe, error) {
-	// TODO - generate slug
-	// TODO - update created at
-	// TODO - update status
-	// TODO - update author uuid
+func RecipeCreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []recipe.Tag, user types.CommonUser) (recipe.Recipe, error) {
 	name := strings.TrimSpace(request.Name)
-	// TODO - clean for XSS
+	// TODO: clean for XSS
 	description := strings.TrimSpace(request.Description)
 
-	// TODO - slug
+	tagUUIDs := utils.Map(tags, func(tag recipe.Tag) string { return tag.UUID })
 
-	importedURL := strings.TrimSpace(request.ImportedURL)
+	importedURL := strings.TrimSpace(request.OriginalURL)
 	if importedURL != "" {
 		// The URL is validated in the validator, so this error shouldn't happen
 		url, err := url.Parse(importedURL)
 		if err != nil {
-			return Recipe{}, err
+			return recipe.Recipe{}, err
 		}
 
 		url.RawQuery = ""
@@ -32,30 +30,69 @@ func recipeCreateRequestToRecipe(request CreateRecipeRequest, user types.CommonU
 		importedURL = url.String()
 	}
 
-	status := StatusPublic
-	if !request.Publish {
-		status = StatusPrivate
+	for i, section := range request.Sections {
+		for j, ingredient := range section.Ingredients {
+			amt, ok := AttemptToParseAmountStr(ingredient.AmountStr)
+			if ok {
+				ingredient.Amount = amt
+				section.Ingredients[j] = ingredient
+			}
+		}
+		request.Sections[i] = section
 	}
 
-	return Recipe{
+	status := recipe.StatusPublic
+	if !request.Publish {
+		status = recipe.StatusPrivate
+	}
+
+	return recipe.Recipe{
 		UUID:        utils.NewUUID(),
 		Name:        name,
 		Description: description,
 		CookTimeMs:  request.CookTimeMs,
-		Slug:        request.Slug,
-		ImportedURL: importedURL,
+		OriginalURL: request.OriginalURL,
+		TagUUIDs:    tagUUIDs,
 		AuthorUUID:  user.UUID,
+		Slug:        request.Slug,
 		Status:      status,
 		Sections:    request.Sections,
 		CreatedAt:   time.Now().UnixMilli(),
 	}, nil
 }
 
-func recipeFavoriteRequestToFavorite(
+func AttemptToParseAmountStr(amountStr string) (float32, bool) {
+	parts := strings.Split(amountStr, " ")
+	var total float32
+	for _, part := range parts {
+		fractional := strings.Split(part, "/")
+		if len(fractional) > 1 {
+			numerator, err := strconv.ParseInt(fractional[0], 10, 32)
+			if err != nil {
+				return 0, false
+			}
+			denominator, err := strconv.ParseInt(fractional[1], 10, 32)
+			if err != nil {
+				return 0, false
+			}
+			total += float32(numerator) / float32(denominator)
+		} else {
+			amt, err := strconv.ParseFloat(fractional[0], 32)
+			if err != nil {
+				return 0, false
+			}
+			total += float32(amt)
+		}
+	}
+
+	return total, false
+}
+
+func RecipeFavoriteRequestToFavorite(
 	user types.CommonUser,
-	rec Recipe,
-) UserFavorite {
-	return UserFavorite{
+	rec recipe.Recipe,
+) recipe.UserFavorite {
+	return recipe.UserFavorite{
 		UUID:        utils.NewUUID(),
 		RecipeUUID:  rec.UUID,
 		UserUUID:    user.UUID,
@@ -63,22 +100,32 @@ func recipeFavoriteRequestToFavorite(
 	}
 }
 
-func recipeToPublicRecipe(
-	rec Recipe,
-	author types.CommonUser,
+func RecipeToPublicRecipe(
+	rec recipe.Recipe,
+	tags []recipe.Tag,
+	author *types.CommonUser,
 	isFavorited bool,
-) PublicRecipe {
-	return PublicRecipe{
+) recipe.PublicRecipe {
+	var authorUUID, authorLName string
+	authorFName := "Unknown"
+	if author != nil {
+		authorUUID = author.UUID
+		authorFName = author.FName
+		authorLName = author.LName
+	}
+
+	return recipe.PublicRecipe{
 		UUID:        rec.UUID,
 		Name:        rec.Name,
 		Description: rec.Description,
 		CookTimeMs:  rec.CookTimeMs,
-		ImportedURL: rec.ImportedURL,
+		OriginalURL: rec.OriginalURL,
+		Tags:        tags,
 		Sections:    rec.Sections,
 		Slug:        rec.Slug,
-		AuthorUUID:  author.UUID,
-		AuthorFName: author.FName,
-		AuthorLName: author.LName,
+		AuthorUUID:  authorUUID,
+		AuthorFName: authorFName,
+		AuthorLName: authorLName,
 		ImageURL:    "",
 		Status:      rec.Status,
 		IsFavorited: isFavorited,

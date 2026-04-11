@@ -58,7 +58,7 @@
   .container {
     --pop-ms: 100ms;
 
-    position: absolute;
+    position: fixed;
     bottom: 1rem;
     right: 2rem;
     z-index: 9999;

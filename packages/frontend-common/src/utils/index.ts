@@ -2,6 +2,7 @@ import { getRandomElement } from './random';
 
 export { resizeObserver } from './page';
 export * from './browser';
+export * from './debounce';
 export * from './date';
 export * from './network';
 export * from './random';

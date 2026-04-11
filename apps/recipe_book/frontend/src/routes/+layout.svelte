@@ -2,58 +2,46 @@
   import './reset.css';
   import './globals.css';
 
-  import { onMount, setContext } from 'svelte';
-  import { navigating } from '$app/state';
+  import { onMount } from 'svelte';
   import {
     getUser,
-    type User,
     App,
     type NotificationInfo,
     Notification,
     Spinner,
   } from '@jeffrey-carr/frontend-common';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
-  import { USER_CONTEXT_KEY } from '$lib/constants';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
-
-  // TODO - make these more fun
-  const routeToLoadingMessage = (nav: typeof navigating): string | null => {
-    if (nav.to == null) return null;
-
-    if (loadingUser) {
-      return 'Loading your info...';
-    }
-
-    if (nav.to.route.id === '/create') {
-      return 'Loading create form...';
-    }
-
-    if (nav.to.route.id?.startsWith('/recipe/')) {
-      return 'Loading recipe...';
-    }
-
-    return 'Loading...';
-  };
+  import { userState } from '$lib/globals/user.svelte';
 
   let { children }: { children?: () => any } = $props();
-
-  let loadingUser = $state(true);
-  let user = $state<User | null>(null);
-
-  let loadingMessage = $derived(routeToLoadingMessage(navigating));
 
   let notification = $state<NotificationInfo>();
 
   onMount(() => {
     const loadUser = async () => {
-      user = await getUser(PUBLIC_ENVIRONMENT, App.RecipeBook);
-      loadingUser = false;
-      updateUserContext(user);
+      const promises: Promise<any>[] = [];
+      // TODO: only check if cookie is present
+      if (!userState.user) {
+        promises.push(getUser(PUBLIC_ENVIRONMENT, App.RecipeBook));
+      }
+
+      let resolved = [];
+      try {
+        resolved = await Promise.all(promises);
+      } catch (e) {
+        // Any errors here we can just swallow, it's probably an expired cookie
+        userState.isLoading = false;
+        return;
+      }
+
+      userState.user = resolved[0];
+      userState.isLoading = false;
     };
 
-    if (user != null) return;
+    if (userState.user != null) return;
 
-    loadingUser = true;
+    userState.isLoading = true;
     loadUser();
   });
 
@@ -62,10 +50,6 @@
       notification = notificationQueue.shift();
     }
   });
-
-  const updateUserContext = (u: User | null) => {
-    setContext(USER_CONTEXT_KEY, u);
-  };
 
   const closeNotification = () => {
     notification = notificationQueue.shift();
@@ -83,13 +67,7 @@
 
 <main class="container">
   <div class="child-container">
-    {#if loadingMessage}
-      <div class="loading-container">
-        <Spinner label={loadingMessage} />
-      </div>
-    {:else}
-      {@render children?.()}
-    {/if}
+    {@render children?.()}
   </div>
 
   {#if notification}
@@ -110,23 +88,14 @@
 
     position: relative;
     height: 100vh;
-    width: 100vw;
 
     margin: 0;
 
     background-color: var(--app-theme-background);
   }
 
-  .loading-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
+  .child-container {
     height: 100%;
     width: 100%;
-  }
-
-  .child-container {
-    padding: 1rem;
   }
 </style>

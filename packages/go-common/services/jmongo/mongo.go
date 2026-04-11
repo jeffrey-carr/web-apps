@@ -7,6 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 // Mongo handles communication with MongoDB
@@ -40,6 +41,7 @@ func (m *Mongo[T]) GetAll(ctx context.Context) ([]T, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer results.Close(ctx)
 
 	return readAllCursorResults[T](ctx, results)
 }
@@ -54,6 +56,7 @@ func (m *Mongo[T]) GetByKey(ctx context.Context, key, value string) ([]T, error)
 	if err != nil {
 		return nil, err
 	}
+	defer results.Close(ctx)
 
 	parsedResults, err := readAllCursorResults[T](ctx, results)
 	if len(parsedResults) == 0 {
@@ -76,20 +79,20 @@ func (m *Mongo[T]) GetMultipleByKey(ctx context.Context, key string, values []st
 	offset := 0
 	step := 1000
 	var results []T
-	for offset < len(dedupedValues)-1 {
+	for offset < len(dedupedValues) {
 		end := min(len(dedupedValues), offset+step)
-
-		pageResults, err := m.collection.Find(ctx, bson.M{key: dedupedValues[offset:end]})
+		filter := bson.M{key: bson.M{"$in": dedupedValues[offset:end]}}
+		pageResults, err := m.collection.Find(ctx, filter)
 		if err != nil {
 			return nil, err
 		}
+		defer pageResults.Close(ctx)
 		parsedPageResults, err := readAllCursorResults[T](ctx, pageResults)
 		if err != nil {
 			continue
 		}
-
 		results = append(results, parsedPageResults...)
-		offset += end
+		offset = end
 	}
 
 	return results, nil
@@ -145,6 +148,122 @@ func (m *Mongo[T]) UpdateItem(ctx context.Context, uuid string, updatedItem T) e
 func (m *Mongo[T]) UpdateItemByKey(ctx context.Context, key string, identifier string, updatedItem T) error {
 	_, err := m.collection.ReplaceOne(ctx, bson.M{key: identifier}, updatedItem)
 	return err
+}
+
+// FuzzySearch fuzzy searches over a particular field, returning the struct
+// along with a score attached for sorting
+func (m *Mongo[T]) FuzzySearch(
+	ctx context.Context,
+	index string,
+	query string,
+	field string,
+	opts FuzzySearchOpts,
+) ([]FuzzySearchResult[T], error) {
+
+	//nolint:govet
+	pipeline := mongo.Pipeline{
+		bson.D{
+			{"$search", bson.D{
+				{"index", index},
+				{"text", bson.D{
+					{"query", query},
+					{"path", field},
+					{"fuzzy", bson.D{
+						{"maxEdits", 2},
+						{"prefixLength", 1},
+					}},
+				}},
+			}},
+		},
+		bson.D{{"$skip", max(0, opts.PageIndex*opts.Limit)}},
+	}
+	if opts.Limit > 0 {
+		pipeline = append(pipeline, bson.D{{"$limit", opts.Limit}})
+	}
+	pipeline = append(pipeline, bson.D{{"$set", bson.D{
+		{"score", bson.D{{"$meta", "searchScore"}}},
+	}}})
+
+	cursor, err := m.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	return readAllCursorResults[FuzzySearchResult[T]](ctx, cursor)
+}
+
+// Aggregate performs an aggregation pipeline on the collection
+func (m *Mongo[T]) Aggregate(ctx context.Context, pipeline mongo.Pipeline) ([]T, error) {
+	cursor, err := m.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	return readAllCursorResults[T](ctx, cursor)
+}
+
+// AggregateCount performs an aggregation pipeline and returns the count from a $count stage
+func (m *Mongo[T]) AggregateCount(ctx context.Context, pipeline mongo.Pipeline) (int64, error) {
+	pipeline = append(pipeline, bson.D{{"$count", "count"}})
+	cursor, err := m.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []struct {
+		Count int64 `bson:"count"`
+	}
+	for cursor.Next(ctx) {
+		var result struct {
+			Count int64 `bson:"count"`
+		}
+		if err := cursor.Decode(&result); err != nil {
+			return 0, err
+		}
+		results = append(results, result)
+	}
+
+	if len(results) == 0 {
+		return 0, nil
+	}
+	return results[0].Count, nil
+}
+
+// Count returns the total number of documents in the collection
+func (m *Mongo[T]) Count(ctx context.Context) (int64, error) {
+	return m.CountWithFilter(ctx, bson.M{})
+}
+
+// CountWithFilter returns the number of documents matching the filter
+func (m *Mongo[T]) CountWithFilter(ctx context.Context, filter bson.M) (int64, error) {
+	if m.collection == nil {
+		return 0, ErrNotConnected
+	}
+	return m.collection.CountDocuments(ctx, filter)
+}
+
+// Upsert updates or inserts the item
+func (m *Mongo[T]) Upsert(ctx context.Context, filter, update bson.M) (T, error) {
+	var ret T
+	opts := options.FindOneAndUpdate().
+		SetUpsert(true).
+		SetReturnDocument(options.After)
+
+	err := m.collection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&ret)
+	return ret, err
+}
+
+func (m *Mongo[T]) GetWithGenericFilter(ctx context.Context, filter bson.M, opts ...options.Lister[options.FindOptions]) ([]T, error) {
+	cursor, err := m.collection.Find(ctx, filter, opts...)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	return readAllCursorResults[T](ctx, cursor)
 }
 
 func readAllCursorResults[T any](ctx context.Context, c *mongo.Cursor) ([]T, error) {

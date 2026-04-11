@@ -59,15 +59,6 @@
 
     onUpdateOrder?.(draggedIndex, droppedIndex);
   };
-
-  const onBlur = (
-    currentIndex: number,
-    e: FocusEvent & { currentTarget: EventTarget & HTMLInputElement }
-  ) => {
-    const value = Number(e.currentTarget.value);
-    if (isNaN(value) || value < 1) return;
-    onUpdateOrder?.(currentIndex, Math.min(value - 1, items.length));
-  };
 </script>
 
 <ul class={clsx(styles.container, className)} ondragover={preventEvent} ondragleave={clearEvent}>
@@ -88,14 +79,27 @@
         </button>
         {@render template?.(item, index)}
       {:else}
-        <input
-          class={styles.orderInput}
-          type="number"
-          onblur={e => onBlur(index, e)}
-          value={index + 1}
-          min={1}
-          max={items.length}
-        />
+        <div class={styles.numberControls}>
+          <button
+            type="button"
+            class={styles.arrowButton}
+            onclick={() => onUpdateOrder?.(index, index - 1)}
+            disabled={index === 0}
+            aria-label="Move up"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          </button>
+          <span class={styles.numberDisplay}>{index + 1}</span>
+          <button
+            type="button"
+            class={styles.arrowButton}
+            onclick={() => onUpdateOrder?.(index, index + 1)}
+            disabled={index === items.length - 1}
+            aria-label="Move down"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+        </div>
         {@render template?.(item, index)}
       {/if}
     </li>

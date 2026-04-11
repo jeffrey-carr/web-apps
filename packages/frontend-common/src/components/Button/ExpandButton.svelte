@@ -45,6 +45,7 @@
     display: flex;
     align-items: center;
 
+    font-family: var(--theme-readable-font);
     height: 3rem;
     padding: 0.5rem;
     min-width: 3rem;

@@ -16,7 +16,7 @@
   }
 
   &::before {
-    content: "";
+    content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
@@ -33,7 +33,7 @@
   }
 
   &:hover::before {
-    border-color: black;
+    border-color: var(--app-theme-secondary);
     /* Expand to full border */
     clip-path: inset(0 0 0 0 round 10px);
   }
@@ -47,10 +47,9 @@
 
   background-color: var(--bg-color-light);
 
-  .favoriteButton {
+  .managementButton {
     position: absolute;
     top: 1rem;
-    right: 1rem;
     z-index: 2;
 
     display: flex;
@@ -64,10 +63,20 @@
       cursor: pointer;
     }
 
-    .favoriteIcon {
+    .icon {
       height: 1.5rem;
       width: 1.5rem;
+
+      fill: var(--red);
     }
+  }
+
+  .favoriteButton {
+    right: 1rem;
+  }
+
+  .trashButton {
+    left: 1rem;
   }
 
   .image {
@@ -95,9 +104,11 @@
 .footer {
   flex: 0.5;
   display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+
   padding: 0.7rem 1rem;
 }
 
