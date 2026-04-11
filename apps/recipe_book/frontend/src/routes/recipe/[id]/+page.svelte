@@ -19,8 +19,6 @@
   let fullAuthorName = $derived(`${recipe.authorFName} ${recipe.authorLName}`.trim());
   let allIngredients = $derived(recipe.sections.flatMap(section => section.ingredients));
 
-  let loadingGoHome = $state(false);
-  let loadingGoEdit = $state(false);
   let showAllIngredients = $state(false);
 
   let videoElement = $state<HTMLVideoElement>();
@@ -48,16 +46,12 @@
   });
 
   const goHome = async () => {
-    loadingGoHome = true;
     await goto('/');
-    loadingGoHome = false;
   };
 
   const goToEditRecipe = async () => {
     if (!recipe) return;
-    loadingGoEdit = true;
     await goto(`/recipe/${recipe.slug}/edit`);
-    loadingGoEdit = false;
   };
 
   const onFavorite = async () => {
@@ -155,14 +149,14 @@
   <ExpandButton onclick={goHome}>Back to home</ExpandButton>
   <div class={styles.header}>
     <h1>{recipe.name}</h1>
-    <div class={styles.userActions}>
-      {#if userState.user}
+    {#if userState.user}
+      <div class={styles.userActions}>
         <FavoriteButton isFavorited={recipe.isFavorited} {onFavorite} />
-        {#if userState.user.uuid === recipe.authorUUID}
+        {#if userState.user.isAdmin || userState.user.uuid === recipe.authorUUID}
           <EditButton edit={goToEditRecipe} />
         {/if}
-      {/if}
-    </div>
+      </div>
+    {/if}
     <div class={styles.authorAndCookTime}>
       <div class={styles.author}>
         {#if !recipe.importURL}
