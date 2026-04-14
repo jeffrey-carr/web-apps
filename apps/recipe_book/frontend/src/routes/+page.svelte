@@ -55,7 +55,7 @@
     }
 
     changePage(newPageNum);
-  }, 1500);
+  }, 800);
 
   $effect(() => {
     updatePageNum(currentPageStr);
