@@ -5,7 +5,7 @@
   --bg-color: #f7f6f3; /* Canvas background */
   --bg-color-light: #e3e6e6; /* Side panels */
   --bg-color-surface: #e0eec6; /* Card surfaces */
-  --bg-color-overlay: #7ca982; /* Search / input background */
+  --bg-color-overlay: #e8edf2; /* Search / input background */
 
   /* Core tones */
   --white: #ffffff;
@@ -57,7 +57,7 @@
 
   --app-theme-link: var(--blue);
 
-  --app-theme-overlay: var(--bg-color-overlay);
+  --app-theme-overlay: var(--bg-color-surface);
   --app-theme-overlay-light: var(--app-theme-gray-light);
 
   /* Component colors */

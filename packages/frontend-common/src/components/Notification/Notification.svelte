@@ -30,6 +30,7 @@
     timerPercentage = (remainingMs / duration) * 100;
   };
 
+  // svelte-ignore state_referenced_locally
   let timer = new Timer(duration, onClose, onTimerUpdate);
 
   timer.start();

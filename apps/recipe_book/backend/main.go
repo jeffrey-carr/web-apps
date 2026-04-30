@@ -4,6 +4,7 @@ import (
 	"context"
 	"federation/sdk"
 	"fmt"
+	globalConstants "go-common/constants"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/jhttp/middlewares"
@@ -11,7 +12,6 @@ import (
 	"go-common/utils"
 	"net/http"
 	"os"
-	globalConstants "go-common/constants"
 	recipeDomain "recipe-book/domains/recipe"
 	"recipe-book/recipe"
 	"recipe-book/types"
@@ -64,7 +64,7 @@ func main() {
 	recipeController := recipe.NewController(federationSDK, recipeRepo)
 
 	// HANDLERS //
-	recipeHandler := recipeDomain.NewRecipeHandler(recipeController)
+	recipeHandler := recipeDomain.NewHandler(recipeController)
 
 	// ROUTER //
 	mux := http.NewServeMux()

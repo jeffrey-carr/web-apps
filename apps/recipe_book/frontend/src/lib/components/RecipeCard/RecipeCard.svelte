@@ -78,8 +78,12 @@
   </div>
 
   <div class={styles.footer}>
-    {#if recipe.tags && recipe.tags.length > 0}
-      <Tag data={recipe.tags[0]} />
+    {#if recipe.tags}
+      <div class={styles.tags}>
+        {#each recipe.tags as tag (tag.uuid)}
+          <Tag data={tag} />
+        {/each}
+      </div>
     {/if}
     {#if recipe.cookTimeMs}
       <span class={styles.cookTime}>

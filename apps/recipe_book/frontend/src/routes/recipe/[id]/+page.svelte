@@ -78,11 +78,6 @@
     }
 
     recipeStore.current.isFavorited = isFavorited;
-    notificationQueue.push({
-      level: 'success',
-      title: 'Success',
-      message: `Recipe ${isFavorited ? 'favorited' : 'unfavorited'}`,
-    });
   };
 
   const requestWakeLock = async () => {
@@ -131,6 +126,10 @@
     loadingKeepAwake = false;
   };
 </script>
+
+<svelte:head>
+  <title>{recipe.name} - Jean's Recipe Book</title>
+</svelte:head>
 
 <IngredientsModal ingredients={allIngredients} bind:open={showAllIngredients} />
 <!-- svelte-ignore a11y_media_has_caption -->

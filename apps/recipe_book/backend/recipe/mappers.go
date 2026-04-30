@@ -10,7 +10,8 @@ import (
 	"time"
 )
 
-func RecipeCreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []recipe.Tag, user types.CommonUser) (recipe.Recipe, error) {
+// CreateRequestToRecipe converts a CreateRequest into a Recipe
+func CreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []recipe.Tag, user types.CommonUser) (recipe.Recipe, error) {
 	name := strings.TrimSpace(request.Name)
 	// TODO: clean for XSS
 	description := strings.TrimSpace(request.Description)
@@ -61,6 +62,8 @@ func RecipeCreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []reci
 	}, nil
 }
 
+// AttemptToParseAmountStr does its best at determining the actual
+// numerical amount specified in the recipe.
 func AttemptToParseAmountStr(amountStr string) (float32, bool) {
 	parts := strings.Split(amountStr, " ")
 	var total float32
@@ -88,7 +91,8 @@ func AttemptToParseAmountStr(amountStr string) (float32, bool) {
 	return total, false
 }
 
-func RecipeFavoriteRequestToFavorite(
+// FavoriteRequestToFavorite converts a FavoriteRequest into a Favorite
+func FavoriteRequestToFavorite(
 	user types.CommonUser,
 	rec recipe.Recipe,
 ) recipe.UserFavorite {
@@ -100,7 +104,9 @@ func RecipeFavoriteRequestToFavorite(
 	}
 }
 
-func RecipeToPublicRecipe(
+// ToPublicRecipe applies the missing info and strips out
+// sensitive info from a Recipe to make it a full PublicRecipe
+func ToPublicRecipe(
 	rec recipe.Recipe,
 	tags []recipe.Tag,
 	author *types.CommonUser,

@@ -21,7 +21,7 @@ type Services struct {
 	MongoClient      *mongo.Client
 	RecipeRepo       recipe.Repository
 	RecipeController recipe.Controller
-	RecipeHandler    recipeDomain.RecipeHandler
+	RecipeHandler    recipeDomain.Handler
 	FederationSDK    sdk.SDK
 }
 
@@ -66,7 +66,7 @@ func main() {
 	recipeController := recipe.NewController(federationSDK, recipeRepo)
 
 	// HANDLERS //
-	recipeHandler := recipeDomain.NewRecipeHandler(recipeController)
+	recipeHandler := recipeDomain.NewHandler(recipeController)
 
 	services := &Services{
 		Config:           config,

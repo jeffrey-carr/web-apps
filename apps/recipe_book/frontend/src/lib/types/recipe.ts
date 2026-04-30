@@ -93,7 +93,8 @@ export type SearchOptions = {
   recipeName?: string;
   favoritesOnly?: boolean;
   authorUUID?: string;
-  tagUUIDs?: string[];
+  selectedTagUUIDs?: string[];
+  inverseTagUUIDs?: string[];
   limit?: number;
   page?: number;
 };

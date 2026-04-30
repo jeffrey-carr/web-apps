@@ -76,6 +76,10 @@
   };
 </script>
 
+<svelte:head>
+  <title>Create Recipe - Jean's Recipe Book</title>
+</svelte:head>
+
 <div class={styles.container}>
   <ExpandButton onclick={goHome}>Back to home</ExpandButton>
 

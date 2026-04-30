@@ -84,8 +84,10 @@ type Ingredient struct {
 	Unit      IngredientUnit `json:"unit" bson:"unit"`
 }
 
+// IngredientUnit is the unit for an ingredient
 type IngredientUnit string
 
+// These all represent the legal IngredientUnits
 const (
 	Teaspoon   IngredientUnit = "tsp"
 	Tablespoon IngredientUnit = "tbsp"
@@ -99,6 +101,7 @@ const (
 	Item       IngredientUnit = "item"
 )
 
+// ValidIngredientUnits is a slice of all valid ingredient units
 var ValidIngredientUnits = []IngredientUnit{
 	Teaspoon, Tablespoon, Ounce, FluidOunce,
 	Cup, Pint, Quart, Gallon, Pound, Item,
@@ -146,16 +149,17 @@ type PaginatedResponse[T any] struct {
 // SearchOpts are the options that can apply to a search
 // request
 type SearchOpts struct {
-	Name          *string   `json:"name"`
-	FavoritesOnly bool      `json:"favoritesOnly"`
-	TagUUIDs      *[]string `json:"tagUUIDs"`
-	AuthorUUID    *string   `json:"authorUUID"`
-	Limit         int64     `json:"limit"`
-	Page          int64     `json:"page"`
+	Name             *string   `json:"name"`
+	FavoritesOnly    bool      `json:"favoritesOnly"`
+	SelectedTagUUIDs *[]string `json:"selectedTagUUIDs"`
+	InverseTagUUIDs  *[]string `json:"inverseTagUUIDs"`
+	AuthorUUID       *string   `json:"authorUUID"`
+	Limit            int64     `json:"limit"`
+	Page             int64     `json:"page"`
 }
 
-// RecipeUpdateRequest is the request to update a recipe
-type RecipeUpdateRequest struct {
+// UpdateRequest is the request to update a recipe
+type UpdateRequest struct {
 	Name        *string
 	Description *string
 	CookTimeMs  *int64

@@ -68,7 +68,8 @@
   let drawerOpen = $state(false);
 
   let nameSearchValue = $derived(data.searchOpts.recipeName ?? '');
-  let tagUUIDsSearchValue = $state('');
+  let selectedTags = $state<Tag[]>([]);
+  let inverseTags = $state<Tag[]>([]);
   let favoritesOnlySearchValue = $derived(!!data.searchOpts.favoritesOnly);
 
   onMount(() => {
@@ -106,11 +107,11 @@
         });
       } else {
         tags = tagsResult;
-        if (!!data.searchOpts.tagUUIDs && data.searchOpts.tagUUIDs.length > 0) {
-          const searchUUID = data.searchOpts.tagUUIDs[0];
-          const searchedTag = tags.find(tag => tag.uuid === searchUUID);
-          if (!searchedTag) return;
-          tagUUIDsSearchValue = searchUUID;
+        if (!!data.searchOpts.selectedTagUUIDs && data.searchOpts.selectedTagUUIDs.length > 0) {
+          selectedTags = tags.filter(t => data.searchOpts.selectedTagUUIDs?.includes(t.uuid));
+        }
+        if (!!data.searchOpts.inverseTagUUIDs && data.searchOpts.inverseTagUUIDs.length > 0) {
+          inverseTags = tags.filter(t => data.searchOpts.inverseTagUUIDs?.includes(t.uuid));
         }
       }
     };
@@ -253,6 +254,10 @@
   };
 </script>
 
+<svelte:head>
+  <title>Jean's Recipe Book</title>
+</svelte:head>
+
 <main class={styles.container}>
   <div class={styles.header}>
     <div class={styles.title}>
@@ -279,7 +284,8 @@
       onApplyFilters={onUpdateFilters}
       {loadingTags}
       nameValue={nameSearchValue}
-      tagValue={tagUUIDsSearchValue}
+      bind:selectedTags
+      bind:inverseTags
       favoritesOnlyValue={favoritesOnlySearchValue}
       {loginURL}
     />

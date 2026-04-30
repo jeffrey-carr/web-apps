@@ -97,6 +97,10 @@
   };
 </script>
 
+<svelte:head>
+  <title>Edit {recipe.name} - Jean's Recipe Book</title>
+</svelte:head>
+
 <main class={styles.container}>
   <ExpandButton onclick={goToRecipe}>Back to Recipe</ExpandButton>
 

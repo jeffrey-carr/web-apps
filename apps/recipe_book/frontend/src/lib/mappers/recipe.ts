@@ -133,8 +133,11 @@ export const makeSearchQueryString = (opts: SearchOptions): Record<string, strin
   if (opts.authorUUID) {
     q['author'] = opts.authorUUID;
   }
-  if (opts.tagUUIDs && opts.tagUUIDs.length > 0) {
-    q['tags'] = opts.tagUUIDs.join(',');
+  if (opts.selectedTagUUIDs && opts.selectedTagUUIDs.length > 0) {
+    q['selectedTags'] = opts.selectedTagUUIDs.join(',');
+  }
+  if (opts.inverseTagUUIDs && opts.inverseTagUUIDs.length > 0) {
+    q['inverseTags'] = opts.inverseTagUUIDs.join(',');
   }
   if (opts.limit && opts.limit > 0) {
     q['limit'] = `${opts.limit}`;
@@ -156,12 +159,21 @@ export const parseSearchQueryString = (params: URLSearchParams): SearchOptions =
       return parseInt(str);
     }
   };
+  const getStringArrayParam = (key: string): string[] => {
+    const str = getParam(key);
+    if (str) {
+      return str.split(",");
+    }
+
+    return [];
+  };
 
   return {
     recipeName: getParam('name'),
     favoritesOnly: getParam('favorites_only') === 'true',
     authorUUID: getParam('author'),
-    tagUUIDs: getParam('tags')?.split(','),
+    selectedTagUUIDs: getStringArrayParam('selectedTags'),
+    inverseTagUUIDs: getStringArrayParam('inverseTags'),
     limit: getNumberParam('limit'),
     page: getNumberParam('page'),
   };

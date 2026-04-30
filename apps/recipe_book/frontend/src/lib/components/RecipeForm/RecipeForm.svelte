@@ -29,7 +29,7 @@
     backHref?: string;
   } = $props();
 
-  let loadingTags = $state(true);
+  let loadingTags = $state(false);
   let tags = $state<Tag[]>([]);
   let tagNames = $derived(tags.map(tag => tag.name));
 
@@ -95,15 +95,15 @@
     return { uuid: generateUUID(), step: '' };
   };
 
-  let recipeName = $state(initialData?.recipeName ?? '');
-  let recipeDescription = $state(initialData?.recipeDescription ?? '');
-  let recipeSections = $state<Section[]>(initialData?.recipeSections ?? [createEmptySection()]);
-  let cookTimeHoursStr = $state(initialData?.cookTimeHours?.toString() ?? '');
+  let recipeName = $state('');
+  let recipeDescription = $state('');
+  let recipeSections = $state<Section[]>([createEmptySection()]);
+  let cookTimeHoursStr = $state('');
   let cookTimeHours = $derived(Number(cookTimeHoursStr));
-  let cookTimeMinutesStr = $state(initialData?.cookTimeMinutes?.toString() ?? '');
+  let cookTimeMinutesStr = $state('');
   let cookTimeMinutes = $derived(Number(cookTimeMinutesStr));
 
-  let selectedTags = $state<string[]>(initialData?.selectedTags ?? []);
+  let selectedTags = $state<string[]>([]);
   let tagInput = $state('');
   let tagErr = $state<string>();
   let tagTimer: number | undefined = undefined;
@@ -116,8 +116,23 @@
     tagErr = undefined;
   };
 
-  let importURL = $state(initialData?.importURL ?? '');
-  let publish = $state(initialData?.publish ?? true);
+  let importURL = $state('');
+  let publish = $state(true);
+
+  $effect(() => {
+    if (initialData) {
+      recipeName = initialData.recipeName ?? '';
+      recipeDescription = initialData.recipeDescription ?? '';
+      recipeSections = initialData.recipeSections ?? [createEmptySection()];
+      cookTimeHoursStr = initialData.cookTimeHours?.toString() ?? '';
+      cookTimeMinutesStr = initialData.cookTimeMinutes?.toString() ?? '';
+
+      selectedTags = initialData.selectedTags ?? [];
+
+      importURL = initialData.importURL ?? '';
+      publish = initialData.publish ?? true;
+    }
+  });
 
   // reset is called when the form is reset
   const reset = () => {
