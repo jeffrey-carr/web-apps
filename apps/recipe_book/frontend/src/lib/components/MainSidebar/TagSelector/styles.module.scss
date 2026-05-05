@@ -1,0 +1,82 @@
+.trigger {
+  width: 100%;
+  min-width: 150px;
+  max-width: 350px;
+
+  font-family: var(--app-theme-font);
+
+  border: 1px solid var(--app-theme-border-color);
+  border-radius: 5px;
+  background-color: transparent;
+
+  padding: 0.5rem;
+
+  transition:
+    background-color linear var(--default-transition-ms),
+    border-color linear var(--default-transition-ms);
+
+  &:not(:disabled):hover {
+    cursor: pointer;
+
+    background-color: var(--app-theme-border-color);
+    border-color: var(--app-theme-primary);
+  }
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+
+  height: 100%;
+  width: 100%;
+
+  background-color: transparent;
+  border: none;
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+
+  max-height: 350px;
+  overflow: auto;
+
+  padding: 1rem;
+
+  background-color: var(--bg-color-overlay);
+
+  border: 1px solid var(--app-theme-primary);
+  border-radius: 5px;
+}
+
+.tagList {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.itemButton {
+  display: block;
+  width: 100%;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 0.5rem;
+  text-align: left;
+
+  transition:
+    border-color linear var(--default-transition-ms),
+    background-color linear var(--default-transition-ms);
+
+  &:hover {
+    cursor: pointer;
+    border-color: var(--app-theme-primary);
+    background-color: var(--bg-color-surface);
+  }
+}
+
+.tagItem {
+  padding: 0.25rem;
+}

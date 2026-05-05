@@ -9,6 +9,7 @@ import (
 	"net/http"
 )
 
+// SDK is the official SDK for the Jeffiverse Federation API
 type SDK interface {
 	GetUserByUUID(ctx context.Context, uuid string) (*types.CommonUser, error)
 	GetUsersByUUIDs(ctx context.Context, uuids []string) (*[]types.CommonUser, error)

@@ -15,6 +15,7 @@
   import { userState } from '$lib/globals/user.svelte';
   import UserProfileButton from '../UserProfileButton/UserProfileButton.svelte';
   import { greetUser } from '$lib/mappers/greeting';
+  import TagSelector from './TagSelector/TagSelector.svelte';
 
   let {
     user,
@@ -22,7 +23,8 @@
     tags = [],
     loadingTags = false,
     nameValue = $bindable(''),
-    tagValue = $bindable(''),
+    selectedTags = $bindable([]),
+    inverseTags = $bindable([]),
     favoritesOnlyValue = $bindable(false),
     loginURL = '',
   }: {
@@ -31,17 +33,11 @@
     tags?: Tag[];
     loadingTags?: boolean;
     nameValue?: string;
-    tagValue?: string;
+    selectedTags?: Tag[];
+    inverseTags?: Tag[];
     favoritesOnlyValue?: boolean;
     loginURL?: string;
   } = $props();
-  let tagOptions = $derived([
-    { label: 'All', value: '' },
-    ...tags.map(tag => ({
-      label: tag.name,
-      value: tag.uuid,
-    })),
-  ]);
 
   let selected = $state('filters');
   let loadingCreate = $state(false);
@@ -60,14 +56,11 @@
 
   const applyFilters = async () => {
     loadingApply = true;
-    let tags: string[] | undefined;
-    if (tagValue) {
-      tags = [tagValue];
-    }
     const filters: SearchOptions = {
       recipeName: nameValue,
       favoritesOnly: favoritesOnlyValue,
-      tagUUIDs: tags,
+      selectedTagUUIDs: selectedTags.map(t => t.uuid),
+      inverseTagUUIDs: inverseTags.map(t => t.uuid),
     };
 
     await onApplyFilters?.(filters);
@@ -77,7 +70,8 @@
   const clearFilters = () => {
     nameValue = '';
     favoritesOnlyValue = false;
-    tagValue = '';
+    selectedTags = [];
+    inverseTags = [];
     applyFilters();
   };
 
@@ -131,13 +125,8 @@
     {#if user}
       <Checkbox label="Favorites only" bind:checked={favoritesOnlyValue} />
     {/if}
-    <Select
-      label="Category"
-      class={styles.search}
-      options={tagOptions}
-      loadingOptions={loadingTags}
-      bind:value={tagValue}
-    />
+    <TagSelector {tags} bind:selected={selectedTags} bind:inverse={inverseTags} {loadingTags} />
+
     <!-- TODO: author search -->
     <!-- <Select -->
     <!--   label="Author" -->

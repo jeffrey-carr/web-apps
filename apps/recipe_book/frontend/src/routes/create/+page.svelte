@@ -52,7 +52,13 @@
       return;
     }
 
-    let response: RecipeCreateResponse | ServerError = await createRecipe(createRequest);
+    const data = new FormData();
+    data.append('createRequest', JSON.stringify(createRequest));
+    if (formData.image) {
+      data.append('image', formData.image);
+    }
+
+    let response: RecipeCreateResponse | ServerError = await createRecipe(data);
     if (response instanceof ServerError) {
       notificationQueue.push({
         level: 'error',
@@ -64,7 +70,8 @@
 
     notificationQueue.push({
       level: 'success',
-      message: 'Recipe created',
+      title: 'Recipe Created',
+      message: `Successfully created ${formData.recipeName}`,
     });
 
     if (!response) {
@@ -75,6 +82,10 @@
     goto(`/recipe/${response.slug}`);
   };
 </script>
+
+<svelte:head>
+  <title>Create Recipe - Jean's Recipe Book</title>
+</svelte:head>
 
 <div class={styles.container}>
   <ExpandButton onclick={goHome}>Back to home</ExpandButton>

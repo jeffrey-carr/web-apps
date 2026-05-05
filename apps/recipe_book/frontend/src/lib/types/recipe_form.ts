@@ -9,4 +9,5 @@ export type RecipeFormData = {
   recipeSections?: Section[];
   importURL?: string;
   publish?: boolean;
+  image?: File | null;
 };

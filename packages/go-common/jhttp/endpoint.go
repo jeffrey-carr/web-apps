@@ -7,9 +7,18 @@ import (
 	"go-common/jhttp/errors"
 	"go-common/jhttp/middlewares"
 	"io"
+	"mime"
 	"net/http"
 	"net/url"
+
+	"github.com/gorilla/schema"
 )
+
+var decoder = schema.NewDecoder()
+
+func init() {
+	decoder.IgnoreUnknownKeys(true)
+}
 
 // NewEndpoint creates a new HTTP endpoint. It manages parsing path variables,
 // query parameters, and a JSON body.
@@ -52,25 +61,44 @@ func NewEndpoint[T any, K any](
 		}
 
 		var body T
-		if r.Body != nil && r.ContentLength > 0 {
-			defer r.Body.Close()
-			data, readErr := io.ReadAll(r.Body)
-			if readErr != nil {
-				err := errors.NewBadRequestError(fmt.Sprintf("Invalid request: %s", readErr.Error()))
-				writeErr(w, *err)
-				return
-			}
-			unmarshalErr := json.Unmarshal(data, &body)
-			if unmarshalErr != nil {
-				err := errors.NewInternalServerError(unmarshalErr)
-				writeErr(w, *err)
-				return
+		mediatype, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
+		if r.Body != nil {
+			if mediatype == "application/json" {
+				defer r.Body.Close()
+				data, readErr := io.ReadAll(r.Body)
+				if readErr != nil {
+					err := errors.NewBadRequestError(fmt.Sprintf("Invalid request: %s", readErr.Error()))
+					writeErr(w, *err)
+					return
+				}
+				if len(data) > 0 {
+					unmarshalErr := json.Unmarshal(data, &body)
+					if unmarshalErr != nil {
+						err := errors.NewInternalServerError(unmarshalErr)
+						writeErr(w, *err)
+						return
+					}
+				}
+			} else if mediatype == "multipart/form-data" || mediatype == "application/x-www-form-urlencoded" {
+				// ParseMultipartForm is a no-op for application/x-www-form-urlencoded
+				// and will parse both if it's multipart/form-data
+				err := r.ParseMultipartForm(32 << 20) // 32MB max memory
+				if err != nil && err != http.ErrNotMultipart {
+					writeErr(w, *errors.NewBadRequestError(fmt.Sprintf("Error parsing form: %s", err.Error())))
+					return
+				}
+
+				if err := decoder.Decode(&body, r.PostForm); err != nil {
+					writeErr(w, *errors.NewInternalServerError(err))
+					return
+				}
 			}
 		}
 
 		v, err := f(
 			ctx,
 			RequestData[T]{
+				Request:    r,
 				Writer:     &w,
 				PathValues: pathValues,
 				Query:      query,

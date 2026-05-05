@@ -112,6 +112,12 @@
   padding: 0.7rem 1rem;
 }
 
+.tags {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wraps;
+}
+
 .cookTime {
   display: flex;
   align-items: center;

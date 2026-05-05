@@ -51,7 +51,8 @@ func ValidateRecipeCreateRequest(request CreateRecipeRequest) string {
 	return ""
 }
 
-func ValidateRecipeUpdateRequest(request RecipeUpdateRequest) string {
+// ValidateRecipeUpdateRequest validates a recipe update request
+func ValidateRecipeUpdateRequest(request UpdateRequest) string {
 	if request.Name != nil && len(strings.TrimSpace(*request.Name)) == 0 {
 		return "Recipe name is required."
 	}
@@ -89,6 +90,7 @@ func ValidateRecipeUpdateRequest(request RecipeUpdateRequest) string {
 	return ""
 }
 
+// ValidateTagName validates a tag name
 func ValidateTagName(name string) string {
 	if len(strings.TrimSpace(name)) > 0 && len(strings.TrimSpace(name)) < 3 {
 		return fmt.Sprintf("Tags must be at least %d characters", minTagLength)

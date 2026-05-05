@@ -4,15 +4,18 @@ import (
 	"context"
 	"federation/sdk"
 	"fmt"
+	globalConstants "go-common/constants"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/jhttp/middlewares"
+	"go-common/services/jcloudinary"
 	"go-common/services/jmongo"
 	"go-common/utils"
 	"net/http"
 	"os"
-	globalConstants "go-common/constants"
+	filesDomain "recipe-book/domains/files"
 	recipeDomain "recipe-book/domains/recipe"
+	"recipe-book/files"
 	"recipe-book/recipe"
 	"recipe-book/types"
 
@@ -51,20 +54,30 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	filesMongoCollection, err := jmongo.NewMongo[filesDomain.File](mongoClient, "recipe_book", "files")
+	if err != nil {
+		panic(err)
+	}
 	federationSDK := sdk.NewSDK(config.FederationAPIKey)
+	cloudinaryService, err := jcloudinary.NewCloudinary(config.CloudinaryAPIKey)
+	if err != nil {
+		panic(err)
+	}
 
 	// MIDDLEWARES //
 	userMiddleware := middlewares.NewGetUser(nil)
 	authMiddleware := middlewares.NewRequireAuth(false)
 
 	// REPOSITORIES //
+	filesRepo := files.NewRepository(filesMongoCollection)
 	recipeRepo := recipe.NewRepository(recipeMongoCollection, userFavoritesMongoCollection, tagMongoCollection)
 
 	// CONTROLLERS //
-	recipeController := recipe.NewController(federationSDK, recipeRepo)
+	filesController := files.NewController(cloudinaryService, filesRepo)
+	recipeController := recipe.NewController(federationSDK, recipeRepo, filesController)
 
 	// HANDLERS //
-	recipeHandler := recipeDomain.NewRecipeHandler(recipeController)
+	recipeHandler := recipeDomain.NewHandler(recipeController)
 
 	// ROUTER //
 	mux := http.NewServeMux()

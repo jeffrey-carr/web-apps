@@ -160,28 +160,27 @@ func (m *Mongo[T]) FuzzySearch(
 	opts FuzzySearchOpts,
 ) ([]FuzzySearchResult[T], error) {
 
-	//nolint:govet
 	pipeline := mongo.Pipeline{
 		bson.D{
-			{"$search", bson.D{
-				{"index", index},
-				{"text", bson.D{
-					{"query", query},
-					{"path", field},
-					{"fuzzy", bson.D{
-						{"maxEdits", 2},
-						{"prefixLength", 1},
+			{Key: "$search", Value: bson.D{
+				{Key: "index", Value: index},
+				{Key: "text", Value: bson.D{
+					{Key: "query", Value: query},
+					{Key: "path", Value: field},
+					{Key: "fuzzy", Value: bson.D{
+						{Key: "maxEdits", Value: 2},
+						{Key: "prefixLength", Value: 1},
 					}},
 				}},
 			}},
 		},
-		bson.D{{"$skip", max(0, opts.PageIndex*opts.Limit)}},
+		bson.D{{Key: "$skip", Value: max(0, opts.PageIndex*opts.Limit)}},
 	}
 	if opts.Limit > 0 {
-		pipeline = append(pipeline, bson.D{{"$limit", opts.Limit}})
+		pipeline = append(pipeline, bson.D{{Key: "$limit", Value: opts.Limit}})
 	}
-	pipeline = append(pipeline, bson.D{{"$set", bson.D{
-		{"score", bson.D{{"$meta", "searchScore"}}},
+	pipeline = append(pipeline, bson.D{{Key: "$set", Value: bson.D{
+		{Key: "score", Value: bson.D{{Key: "$meta", Value: "searchScore"}}},
 	}}})
 
 	cursor, err := m.collection.Aggregate(ctx, pipeline)
@@ -206,20 +205,19 @@ func (m *Mongo[T]) Aggregate(ctx context.Context, pipeline mongo.Pipeline) ([]T,
 
 // AggregateCount performs an aggregation pipeline and returns the count from a $count stage
 func (m *Mongo[T]) AggregateCount(ctx context.Context, pipeline mongo.Pipeline) (int64, error) {
-	pipeline = append(pipeline, bson.D{{"$count", "count"}})
+	pipeline = append(pipeline, bson.D{{Key: "$count", Value: "count"}})
 	cursor, err := m.collection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return 0, err
 	}
 	defer cursor.Close(ctx)
 
-	var results []struct {
+	type countStruct struct {
 		Count int64 `bson:"count"`
 	}
+	var results []countStruct
 	for cursor.Next(ctx) {
-		var result struct {
-			Count int64 `bson:"count"`
-		}
+		var result countStruct
 		if err := cursor.Decode(&result); err != nil {
 			return 0, err
 		}

@@ -8,8 +8,11 @@ export const makeRequest = async <T, E = undefined>(
   info: RouteInformation, 
   params: makeRequestParams = {}, 
   fetcher: typeof fetch = fetch,
-): Promise<T> => { let headers: Record<string, string> = {};
-  if (info.method === METHODS.POST) {
+): Promise<T> => { 
+  let headers: Record<string, string> = {};
+  const isFormData = params?.body instanceof FormData;
+
+  if (info.method === METHODS.POST && !isFormData) {
     headers['Content-Type'] = 'application/json';
   }
   headers = { ...headers, ...params?.additionalHeaders };
@@ -30,7 +33,11 @@ export const makeRequest = async <T, E = undefined>(
   
   let body;
   if (params?.body) {
-    body = JSON.stringify(params.body);
+    if (isFormData) {
+      body = params.body;
+    } else {
+      body = JSON.stringify(params.body);
+    }
   }
   let credentials: RequestCredentials = 'include';
   if (info.credentials === 'none') {

@@ -14,7 +14,6 @@
   import Tag from '../Tag/Tag.svelte';
 
   const imgs = [placeholderImg1, placeholderImg2, placeholderImg3, placeholderImg4];
-  const img = getRandomElement(imgs);
 
   let {
     recipe,
@@ -26,6 +25,15 @@
     onDelete?: () => Promise<void>;
   } = $props();
   let loadingDeleting = $state(false);
+  let imgFailed = $state(false);
+  let img = $derived(
+    imgFailed || recipe.imageURL === '' ? getRandomElement(imgs) : recipe.imageURL
+  );
+
+  $effect(() => {
+    recipe.imageURL;
+    imgFailed = false;
+  });
 
   let go = () => {
     goto(`/recipe/${recipe.slug}`);
@@ -67,7 +75,12 @@
         </button>
       {/if}
     {/if}
-    <img class={styles.image} src={img} alt="Missing recipe" />
+    <img
+      class={styles.image}
+      src={img}
+      alt={`Image of ${recipe.name}`}
+      onerror={() => (imgFailed = true)}
+    />
   </div>
 
   <div class={styles.content}>
@@ -78,8 +91,12 @@
   </div>
 
   <div class={styles.footer}>
-    {#if recipe.tags && recipe.tags.length > 0}
-      <Tag data={recipe.tags[0]} />
+    {#if recipe.tags}
+      <div class={styles.tags}>
+        {#each recipe.tags as tag (tag.uuid)}
+          <Tag data={tag} />
+        {/each}
+      </div>
     {/if}
     {#if recipe.cookTimeMs}
       <span class={styles.cookTime}>

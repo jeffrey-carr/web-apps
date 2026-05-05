@@ -1,6 +1,12 @@
 <script lang="ts">
   import { getContext, onDestroy, onMount } from 'svelte';
-  import { Button, ExpandButton, ReactiveIcon, ServerError } from '@jeffrey-carr/frontend-common';
+  import {
+    Button,
+    ConfirmModal,
+    ExpandButton,
+    ReactiveIcon,
+    ServerError,
+  } from '@jeffrey-carr/frontend-common';
   import { goto } from '$app/navigation';
   import styles from './page.module.scss';
   import { cookTimeToStr } from '$lib/mappers/recipe';
@@ -9,15 +15,17 @@
   import type { Recipe } from '$lib/types/recipe';
   import KeepAwakeVideo from '$lib/assets/keep_awake.mp4?url';
   import { userState } from '$lib/globals/user.svelte';
-  import { EditButton, FavoriteButton } from '$lib/components';
+  import { DeleteButton, EditButton, FavoriteButton } from '$lib/components';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
-  import { favoriteRecipe, unFavoriteRecipe } from '$lib/requests/recipe';
+  import { deleteRecipe, favoriteRecipe, unFavoriteRecipe } from '$lib/requests/recipe';
   import Tag from '$lib/components/Tag/Tag.svelte';
 
   let recipeStore = getContext<{ current: Recipe }>('recipe');
   let recipe = $derived(recipeStore.current);
+  let recipeImgFailed = $state(false);
   let fullAuthorName = $derived(`${recipe.authorFName} ${recipe.authorLName}`.trim());
   let allIngredients = $derived(recipe.sections.flatMap(section => section.ingredients));
+  let showDeleteConfirmation = $state(false);
 
   let showAllIngredients = $state(false);
 
@@ -45,6 +53,12 @@
     }
   });
 
+  // Set failure to false if recipe image changes. Maybe they fixed it!
+  $effect(() => {
+    recipe.imageURL;
+    recipeImgFailed = false;
+  });
+
   const goHome = async () => {
     await goto('/');
   };
@@ -52,6 +66,31 @@
   const goToEditRecipe = async () => {
     if (!recipe) return;
     await goto(`/recipe/${recipe.slug}/edit`);
+  };
+
+  const onDelete = async () => {
+    showDeleteConfirmation = true;
+  };
+
+  const onDeleteRecipe = async () => {
+    if (!recipe) return;
+
+    const result = await deleteRecipe(recipe.uuid);
+    if (result instanceof ServerError) {
+      notificationQueue.push({
+        level: 'error',
+        title: 'Error deleting recipe',
+        message: result.message,
+      });
+      return;
+    }
+
+    notificationQueue.push({
+      level: 'success',
+      title: 'Recipe deleted',
+      message: `${recipe.name} was deleted. Poof!`,
+    });
+    await goHome();
   };
 
   const onFavorite = async () => {
@@ -78,11 +117,6 @@
     }
 
     recipeStore.current.isFavorited = isFavorited;
-    notificationQueue.push({
-      level: 'success',
-      title: 'Success',
-      message: `Recipe ${isFavorited ? 'favorited' : 'unfavorited'}`,
-    });
   };
 
   const requestWakeLock = async () => {
@@ -132,7 +166,14 @@
   };
 </script>
 
+<svelte:head>
+  <title>{recipe.name} - Jean's Recipe Book</title>
+</svelte:head>
+
 <IngredientsModal ingredients={allIngredients} bind:open={showAllIngredients} />
+<ConfirmModal bind:open={showDeleteConfirmation} onAccept={onDeleteRecipe}>
+  <p>Are you sure you want to delete <em>{recipe.name}</em>? This is <b>irreversible</b>!</p>
+</ConfirmModal>
 <!-- svelte-ignore a11y_media_has_caption -->
 <!-- this is just a video to keep the screen awake,
    -- we don't need this to be caption'd -->
@@ -149,11 +190,20 @@
   <ExpandButton onclick={goHome}>Back to home</ExpandButton>
   <div class={styles.header}>
     <h1>{recipe.name}</h1>
+    {#if recipe.imageURL && !recipeImgFailed}
+      <img
+        class={styles.recipeImage}
+        src={recipe.imageURL}
+        alt={`Image of ${recipe.name}`}
+        onerror={() => (recipeImgFailed = true)}
+      />
+    {/if}
     {#if userState.user}
       <div class={styles.userActions}>
         <FavoriteButton isFavorited={recipe.isFavorited} {onFavorite} />
         {#if userState.user.isAdmin || userState.user.uuid === recipe.authorUUID}
           <EditButton edit={goToEditRecipe} />
+          <DeleteButton {onDelete} />
         {/if}
       </div>
     {/if}

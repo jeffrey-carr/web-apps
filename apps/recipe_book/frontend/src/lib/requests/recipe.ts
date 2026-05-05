@@ -18,7 +18,7 @@ import {
 } from '@jeffrey-carr/frontend-common';
 
 export const createRecipe = async (
-  createRequest: RecipeCreateRequest
+  createRequest: RecipeCreateRequest | FormData
 ): Promise<RecipeCreateResponse | ServerError> => {
   const endpoint: RouteInformation = {
     path: '/api/recipe',
@@ -45,7 +45,7 @@ const updateRecipeEndpoint: RouteInformation = {
 
 export const updateRecipe = async (
   recipeUUID: string,
-  updateRequest: RecipeUpdateRequest
+  updateRequest: RecipeUpdateRequest | FormData
 ): Promise<Recipe | ServerError> => {
   let updatedRecipe: Recipe;
   try {

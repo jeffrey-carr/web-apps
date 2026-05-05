@@ -28,6 +28,7 @@ func makeRequestAndParseResponse[T any, K any](ctx context.Context, method strin
 		return nil, err
 	}
 	req.Header.Add(constants.APIKeyHeaderKey, apiKey)
+	req.Header.Set("Content-Type", "application/json")
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -62,8 +63,6 @@ func makeRequestAndParseResponse[T any, K any](ctx context.Context, method strin
 			return nil, err
 		}
 	}
-
-	fmt.Printf("%v\n", data)
 
 	return &data, nil
 }

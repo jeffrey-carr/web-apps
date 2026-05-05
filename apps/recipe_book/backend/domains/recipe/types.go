@@ -22,7 +22,8 @@ type Recipe struct {
 	OriginalURL string    `json:"originalURL" bson:"originalURL"`
 	Slug        string    `json:"slug" bson:"slug"`
 	AuthorUUID  string    `json:"authorUUID" bson:"authorUUID"`
-	ImageUUID   string    `json:"imageUUID" bson:"imageUUID"`
+	ImageUUID   string    `json:"imageUUID,omitempty" bson:"imageUUID,omitempty"`
+	ImageURL    string    `json:"imageURL,omitempty" bson:"imageURL,omitempty"`
 	Status      Status    `json:"status" bson:"status"`
 	Sections    []Section `json:"sections" bson:"sections"`
 	CreatedAt   int64     `json:"createdAt" bson:"createdAt"`
@@ -84,8 +85,10 @@ type Ingredient struct {
 	Unit      IngredientUnit `json:"unit" bson:"unit"`
 }
 
+// IngredientUnit is the unit for an ingredient
 type IngredientUnit string
 
+// These all represent the legal IngredientUnits
 const (
 	Teaspoon   IngredientUnit = "tsp"
 	Tablespoon IngredientUnit = "tbsp"
@@ -99,6 +102,7 @@ const (
 	Item       IngredientUnit = "item"
 )
 
+// ValidIngredientUnits is a slice of all valid ingredient units
 var ValidIngredientUnits = []IngredientUnit{
 	Teaspoon, Tablespoon, Ounce, FluidOunce,
 	Cup, Pint, Quart, Gallon, Pound, Item,
@@ -146,21 +150,22 @@ type PaginatedResponse[T any] struct {
 // SearchOpts are the options that can apply to a search
 // request
 type SearchOpts struct {
-	Name          *string   `json:"name"`
-	FavoritesOnly bool      `json:"favoritesOnly"`
-	TagUUIDs      *[]string `json:"tagUUIDs"`
-	AuthorUUID    *string   `json:"authorUUID"`
-	Limit         int64     `json:"limit"`
-	Page          int64     `json:"page"`
+	Name             *string   `json:"name"`
+	FavoritesOnly    bool      `json:"favoritesOnly"`
+	SelectedTagUUIDs *[]string `json:"selectedTagUUIDs"`
+	InverseTagUUIDs  *[]string `json:"inverseTagUUIDs"`
+	AuthorUUID       *string   `json:"authorUUID"`
+	Limit            int64     `json:"limit"`
+	Page             int64     `json:"page"`
 }
 
-// RecipeUpdateRequest is the request to update a recipe
-type RecipeUpdateRequest struct {
-	Name        *string
-	Description *string
-	CookTimeMs  *int64
-	TagNames    *[]string
-	OriginalURL *string
-	Status      *Status
-	Sections    *[]Section
+// UpdateRequest is the request to update a recipe
+type UpdateRequest struct {
+	Name        *string    `json:"name" schema:"name"`
+	Description *string    `json:"description" schema:"description"`
+	CookTimeMs  *int64     `json:"cookTimeMs" schema:"cookTimeMs"`
+	TagNames    *[]string  `json:"tagNames" schema:"tagNames"`
+	OriginalURL *string    `json:"originalURL" schema:"originalURL"`
+	Status      *Status    `json:"status" schema:"status"`
+	Sections    *[]Section `json:"sections" schema:"sections"`
 }

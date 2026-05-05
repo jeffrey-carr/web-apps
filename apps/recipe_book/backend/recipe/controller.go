@@ -6,12 +6,11 @@ import (
 	"federation/sdk"
 	"fmt"
 	"go-common/jcontext"
-	"go-common/services/jmongo"
 	"go-common/types"
 	"go-common/utils"
+	"recipe-book/domains/files"
 	"recipe-book/domains/recipe"
 	"recipe-book/mappers"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -30,20 +29,32 @@ var (
 
 // Controller controls the business logic for recipes
 type Controller struct {
-	repo          Repository
-	federationSDK sdk.SDK
+	repo            Repository
+	federationSDK   sdk.SDK
+	filesController files.Controller
 }
 
 // NewController creates a new recipe controller
-func NewController(federationSDK sdk.SDK, repo Repository) Controller {
+func NewController(federationSDK sdk.SDK, repo Repository, filesController files.Controller) Controller {
 	return Controller{
-		repo:          repo,
-		federationSDK: federationSDK,
+		repo:            repo,
+		federationSDK:   federationSDK,
+		filesController: filesController,
 	}
 }
 
 // CreateRecipe creates a new recipe
-func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, createRequest recipe.CreateRecipeRequest) (recipe.Recipe, error) {
+func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, createRequest recipe.CreateRecipeRequest, imageCreateRequest *files.CreateRequest) (recipe.Recipe, error) {
+	var image *files.File
+	if imageCreateRequest != nil {
+		imageResult, err := c.filesController.UploadImage(ctx, *imageCreateRequest, user)
+		if err != nil {
+			return recipe.Recipe{}, err
+		}
+
+		image = &imageResult
+	}
+
 	tags, err := c.tagNamesToTags(ctx, createRequest.TagNames)
 	if err != nil {
 		return recipe.Recipe{}, err
@@ -55,7 +66,7 @@ func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, cre
 	}
 	createRequest.Slug = slug
 
-	rec, err := RecipeCreateRequestToRecipe(createRequest, tags, user)
+	rec, err := CreateRequestToRecipe(createRequest, tags, image, user)
 	if err != nil {
 		return recipe.Recipe{}, err
 	}
@@ -64,47 +75,61 @@ func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, cre
 	if err != nil {
 		return recipe.Recipe{}, err
 	}
-	return recipe.Recipe{}, nil
+
+	return rec, nil
 }
 
-func (c Controller) UpdateRecipe(ctx context.Context, existingRecipe recipe.Recipe, updateRequest recipe.RecipeUpdateRequest) (recipe.Recipe, error) {
+// UpdateRecipe applies an update request to a recipe
+func (c Controller) UpdateRecipe(
+	ctx context.Context,
+	existingRecipe recipe.Recipe,
+	updateRequest recipe.UpdateRequest,
+	imageCreateRequest *files.CreateRequest,
+) (recipe.Recipe, error) {
+	var newSlug *string
 	if updateRequest.Name != nil {
-		existingRecipe.Name = *updateRequest.Name
-		slug, err := c.getAvailableSlug(ctx, existingRecipe.Name)
+		slug, err := c.getAvailableSlug(ctx, *updateRequest.Name)
 		if err != nil {
 			return existingRecipe, err
 		}
-		existingRecipe.Slug = slug
+		newSlug = &slug
 	}
-
-	if updateRequest.Description != nil {
-		existingRecipe.Description = *updateRequest.Description
-	}
-
-	if updateRequest.CookTimeMs != nil {
-		existingRecipe.CookTimeMs = *updateRequest.CookTimeMs
-	}
-
+	var updatedTagUUIDs *[]string
 	if updateRequest.TagNames != nil {
 		tags, err := c.tagNamesToTags(ctx, *updateRequest.TagNames)
 		if err != nil {
 			return existingRecipe, err
 		}
-		existingRecipe.TagUUIDs = utils.Map(tags, func(tag recipe.Tag) string { return tag.UUID })
+		tagUUIDs := utils.Map(tags, func(tag recipe.Tag) string { return tag.UUID })
+		updatedTagUUIDs = &tagUUIDs
 	}
 
-	if updateRequest.OriginalURL != nil {
-		existingRecipe.OriginalURL = *updateRequest.OriginalURL
+	var newImage *files.File
+	if imageCreateRequest != nil {
+		user, ok := jcontext.GetUser(ctx)
+		if !ok {
+			return existingRecipe, errors.New("could not get user")
+		}
+		var createdImage files.File
+		var err error
+		if existingRecipe.ImageUUID != "" {
+			existingImageFile, err := c.filesController.GetByUUID(ctx, existingRecipe.ImageUUID)
+			if err != nil {
+				return existingRecipe, err
+			}
+
+			createdImage, err = c.swapImage(ctx, *imageCreateRequest, existingImageFile, user)
+		} else {
+			createdImage, err = c.filesController.UploadImage(ctx, *imageCreateRequest, user)
+		}
+		if err != nil {
+			return existingRecipe, err
+		}
+
+		newImage = &createdImage
 	}
 
-	if updateRequest.Status != nil {
-		existingRecipe.Status = *updateRequest.Status
-	}
-
-	if updateRequest.Sections != nil {
-		existingRecipe.Sections = *updateRequest.Sections
-	}
-
+	existingRecipe = ApplyUpdateRequest(updateRequest, existingRecipe, newSlug, updatedTagUUIDs, newImage)
 	err := c.repo.Update(ctx, existingRecipe)
 	if err != nil {
 		return recipe.Recipe{}, err
@@ -113,10 +138,13 @@ func (c Controller) UpdateRecipe(ctx context.Context, existingRecipe recipe.Reci
 	return existingRecipe, nil
 }
 
+// DeleteRecipe deletes a recipe
 func (c Controller) DeleteRecipe(ctx context.Context, recipeUUID string) error {
 	return c.repo.DeleteRecipe(ctx, recipeUUID)
 }
 
+// GetAllUserFavorites gets all a user's favorited recipes
+// TODO: pagination
 func (c Controller) GetAllUserFavorites(ctx context.Context, userUUID string) ([]recipe.UserFavorite, error) {
 	return c.repo.GetAllUserFavorites(ctx, userUUID)
 }
@@ -136,7 +164,7 @@ func (c Controller) FavoriteRecipe(ctx context.Context, user types.CommonUser, r
 		return recipe.UserFavorite{}, err
 	}
 
-	favObject := RecipeFavoriteRequestToFavorite(user, rec)
+	favObject := FavoriteRequestToFavorite(user, rec)
 	return c.repo.SaveUserFavorite(ctx, favObject)
 }
 
@@ -164,6 +192,7 @@ func (c Controller) GetRecipe(ctx context.Context, recipeID string) (recipe.Reci
 	} else {
 		rec, err = c.repo.GetRecipeBySlug(ctx, recipeID)
 	}
+
 	return rec, err
 }
 
@@ -190,13 +219,8 @@ func (c Controller) GetAllTags(ctx context.Context) ([]recipe.Tag, error) {
 	return c.repo.GetAllTags(ctx)
 }
 
-// DeleteTag deletes a tag
-func (c Controller) DeleteTag(ctx context.Context, tagUUID string) error {
-	return c.repo.DeleteTag(ctx, tagUUID)
-}
-
+// Search allows searching for recipes
 func (c Controller) Search(ctx context.Context, opts recipe.SearchOpts) ([]recipe.PublicRecipe, int64, error) {
-	fmt.Printf("opts: %+v\n", opts)
 	var userFavoriteUUIDs []string
 	if opts.FavoritesOnly {
 		user, ok := jcontext.GetUser(ctx)
@@ -227,28 +251,8 @@ func (c Controller) Search(ctx context.Context, opts recipe.SearchOpts) ([]recip
 	return publicRecipes, total, err
 }
 
-// FuzzySearchRecipeName searches for a recipe and returns the recipes ordered by match score
-func (c Controller) FuzzySearchRecipeName(ctx context.Context, query string) ([]recipe.Recipe, error) {
-	return c.FuzzySearchRecipeNameOpts(ctx, query, jmongo.FuzzySearchOpts{})
-}
-
-func (c Controller) FuzzySearchRecipeNameOpts(ctx context.Context, query string, opts jmongo.FuzzySearchOpts) ([]recipe.Recipe, error) {
-	recipesWithScore, err := c.repo.FuzzySearchRecipeNameOpts(ctx, query, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	slices.SortFunc(recipesWithScore, func(recA, recB jmongo.FuzzySearchResult[recipe.Recipe]) int {
-		return int(recA.Score - recB.Score)
-	})
-	recipes := utils.Map(recipesWithScore, func(recipeWithScore jmongo.FuzzySearchResult[recipe.Recipe]) recipe.Recipe {
-		return recipeWithScore.Result
-	})
-
-	return recipes, nil
-
-}
-
+// fillInRecipestoPublicRecipes fills in the missing info (author details, etc) onto a recipe
+// and strips out any sensitive information
 func (c Controller) fillInRecipesToPublicRecipes(ctx context.Context, recipes []recipe.Recipe) ([]recipe.PublicRecipe, error) {
 	var favoriteUUIDs utils.Set[string]
 	if user, ok := jcontext.GetUser(ctx); ok {
@@ -272,8 +276,9 @@ func (c Controller) fillInRecipesToPublicRecipes(ctx context.Context, recipes []
 		return nil, err
 	}
 	authorsByUUID := map[string]*types.CommonUser{}
-	for _, author := range *authors {
-		authorsByUUID[author.UUID] = &author
+	authorsSlice := *authors
+	for i := range authorsSlice {
+		authorsByUUID[authorsSlice[i].UUID] = &authorsSlice[i]
 	}
 
 	tags, err := c.repo.GetTagsByUUID(ctx, uniqueTagUUIDs.ToSlice())
@@ -299,7 +304,7 @@ func (c Controller) fillInRecipesToPublicRecipes(ctx context.Context, recipes []
 			}
 		}
 
-		publicRecipes[i] = RecipeToPublicRecipe(
+		publicRecipes[i] = ToPublicRecipe(
 			rec,
 			recipeTags,
 			authorsByUUID[rec.AuthorUUID],
@@ -320,10 +325,6 @@ func (c Controller) getAvailableSlug(ctx context.Context, recipeName string) (st
 	sluggedRecipes, err := c.repo.GetMatchingSlugPrefix(ctx, slugified)
 	if err != nil {
 		return "", err
-	}
-	fmt.Printf("Found %d recipes with matching slugs:\n", len(sluggedRecipes))
-	for _, response := range sluggedRecipes {
-		fmt.Printf("\t%s - %s\n", response.Name, response.Slug)
 	}
 
 	// Find the next available number
@@ -369,4 +370,18 @@ func (c Controller) tagNamesToTags(ctx context.Context, tagNames []string) ([]re
 	}
 
 	return tags, nil
+}
+
+func (c Controller) swapImage(ctx context.Context, imageCreateRequest files.CreateRequest, existingImage files.File, user types.CommonUser) (files.File, error) {
+	newImage, err := c.filesController.UploadImage(ctx, imageCreateRequest, user)
+	if err != nil {
+		return files.File{}, err
+	}
+
+	err = c.filesController.DeleteFile(ctx, existingImage)
+	if err != nil {
+		// TODO: make some noise that the image got uploaded but there was an error deleting the old one
+	}
+
+	return newImage, nil
 }

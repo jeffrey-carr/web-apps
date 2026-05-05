@@ -11,7 +11,8 @@
     ServerError,
     Textarea,
   } from '@jeffrey-carr/frontend-common';
-  import { RecipeSection } from '$lib/components';
+  import { ImageUploader } from '$lib/components';
+  import RecipeSection from '../create/RecipeSection/RecipeSection.svelte';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
   import type { Direction, Ingredient, Section, Tag } from '$lib/types/recipe';
 
@@ -29,7 +30,7 @@
     backHref?: string;
   } = $props();
 
-  let loadingTags = $state(true);
+  let loadingTags = $state(false);
   let tags = $state<Tag[]>([]);
   let tagNames = $derived(tags.map(tag => tag.name));
 
@@ -60,7 +61,8 @@
   });
 
   let loadingSubmit = $state(false);
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
     loadingSubmit = true;
     const finalTags = selectedTags.map(t => t.trim?.()).filter(Boolean);
 
@@ -73,6 +75,7 @@
       recipeSections,
       importURL,
       publish,
+      image,
     });
 
     loadingSubmit = false;
@@ -95,15 +98,16 @@
     return { uuid: generateUUID(), step: '' };
   };
 
-  let recipeName = $state(initialData?.recipeName ?? '');
-  let recipeDescription = $state(initialData?.recipeDescription ?? '');
-  let recipeSections = $state<Section[]>(initialData?.recipeSections ?? [createEmptySection()]);
-  let cookTimeHoursStr = $state(initialData?.cookTimeHours?.toString() ?? '');
+  let recipeName = $state('');
+  let recipeDescription = $state('');
+  let recipeSections = $state<Section[]>([createEmptySection()]);
+  let cookTimeHoursStr = $state('');
   let cookTimeHours = $derived(Number(cookTimeHoursStr));
-  let cookTimeMinutesStr = $state(initialData?.cookTimeMinutes?.toString() ?? '');
+  let cookTimeMinutesStr = $state('');
   let cookTimeMinutes = $derived(Number(cookTimeMinutesStr));
+  let image = $state<File | null>(null);
 
-  let selectedTags = $state<string[]>(initialData?.selectedTags ?? []);
+  let selectedTags = $state<string[]>([]);
   let tagInput = $state('');
   let tagErr = $state<string>();
   let tagTimer: number | undefined = undefined;
@@ -116,8 +120,24 @@
     tagErr = undefined;
   };
 
-  let importURL = $state(initialData?.importURL ?? '');
-  let publish = $state(initialData?.publish ?? true);
+  let importURL = $state('');
+  let publish = $state(true);
+
+  $effect(() => {
+    if (initialData) {
+      recipeName = initialData.recipeName ?? '';
+      recipeDescription = initialData.recipeDescription ?? '';
+      recipeSections = initialData.recipeSections ?? [createEmptySection()];
+      cookTimeHoursStr = initialData.cookTimeHours?.toString() ?? '';
+      cookTimeMinutesStr = initialData.cookTimeMinutes?.toString() ?? '';
+
+      selectedTags = initialData.selectedTags ?? [];
+
+      importURL = initialData.importURL ?? '';
+      publish = initialData.publish ?? true;
+      image = initialData.image ?? null;
+    }
+  });
 
   // reset is called when the form is reset
   const reset = () => {
@@ -131,6 +151,7 @@
     selectedTags = initialData?.selectedTags ? [...initialData.selectedTags] : [];
     importURL = initialData?.importURL ?? '';
     publish = initialData?.publish ?? true;
+    image = initialData?.image ?? null;
     resetTagErr();
   };
 
@@ -162,6 +183,11 @@
 </script>
 
 <form class={styles.form} onsubmit={handleSubmit} onreset={reset}>
+  <div class={styles.formItem}>
+    <h3>Image:</h3>
+    <ImageUploader bind:imageFile={image} />
+  </div>
+
   <div class={styles.formItem}>
     <h3>Name:</h3>
     <Input

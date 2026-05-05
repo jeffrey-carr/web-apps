@@ -57,7 +57,7 @@
 </script>
 
 <svelte:head>
-  <title>Recipe Book</title>
+  <title>Jean's Recipe Book</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=Atma:wght@300;400;500;600;700&family=Quicksand:wght@300..700&display=swap"

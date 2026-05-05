@@ -2,49 +2,61 @@ package recipe
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"go-common/jcontext"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/types"
 	"go-common/utils"
+	"net/http"
+	"net/url"
+	"recipe-book/domains/files"
 	"strconv"
 	"strings"
 )
 
 const (
-	RecipeIDPathVar            = "recipeID"
+	// RecipeIDPathVar is the path variable for a recipe ID
+	RecipeIDPathVar = "recipeID"
+	// RecipeIDQueryParameterName is the query parameter for a recipe ID
 	RecipeIDQueryParameterName = "recipe"
 )
 
-// RecipeHandler represents the recipe handler
-type RecipeHandler struct {
+// Handler represents the recipe handler
+type Handler struct {
 	controller Controller
 }
 
-// NewRecipeHandler creates a new Recipe handler
-func NewRecipeHandler(controller Controller) RecipeHandler {
-	return RecipeHandler{
+// NewHandler creates a new Recipe handler
+func NewHandler(controller Controller) Handler {
+	return Handler{
 		controller: controller,
 	}
 }
 
 // Create allows users to create new recipes
-func (h RecipeHandler) Create(ctx context.Context, r jhttp.RequestData[CreateRecipeRequest]) (*CreateRecipeResponse, *JHTTPErrors.JHTTPError) {
+func (h Handler) Create(ctx context.Context, r jhttp.RequestData[struct{}]) (*CreateRecipeResponse, *JHTTPErrors.JHTTPError) {
 	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
 	}
 
-	if r.Body == nil {
-		return nil, JHTTPErrors.NewBadRequestError("Bad request")
+	err := r.Request.ParseMultipartForm(files.MaxSizeMB << 20)
+	if err != nil {
+		return nil, JHTTPErrors.NewBadRequestError("File is too large")
 	}
 
-	request := *r.Body
+	request, imageCreateRequest, httpErr := formDataToRequest[CreateRecipeRequest](r.Request, "createRequest")
+	if httpErr != nil {
+		return nil, httpErr
+	}
+
 	if validationErr := ValidateRecipeCreateRequest(request); validationErr != "" {
 		return nil, JHTTPErrors.NewValidationError(validationErr)
 	}
 
-	recipe, err := h.controller.CreateRecipe(ctx, user, request)
+	recipe, err := h.controller.CreateRecipe(ctx, user, request, imageCreateRequest)
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
@@ -52,7 +64,9 @@ func (h RecipeHandler) Create(ctx context.Context, r jhttp.RequestData[CreateRec
 	return &CreateRecipeResponse{Slug: recipe.Slug}, nil
 }
 
-func (h RecipeHandler) Update(ctx context.Context, r jhttp.RequestData[RecipeUpdateRequest]) (*Recipe, *JHTTPErrors.JHTTPError) {
+// Update handles an update request
+func (h Handler) Update(ctx context.Context, r jhttp.RequestData[struct{}]) (*Recipe, *JHTTPErrors.JHTTPError) {
+	fmt.Println("Recieved update request!")
 	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
@@ -63,11 +77,16 @@ func (h RecipeHandler) Update(ctx context.Context, r jhttp.RequestData[RecipeUpd
 		return nil, JHTTPErrors.NewBadRequestError("Recipe UUID is required")
 	}
 
-	if r.Body == nil {
-		return nil, JHTTPErrors.NewBadRequestError("Bad request")
+	err := r.Request.ParseMultipartForm(files.MaxSizeMB << 20)
+	if err != nil {
+		return nil, JHTTPErrors.NewBadRequestError("File is too large")
 	}
 
-	request := *r.Body
+	request, imageCreateRequest, httpErr := formDataToRequest[UpdateRequest](r.Request, "updateRequest")
+	if httpErr != nil {
+		return nil, httpErr
+	}
+
 	if validationErr := ValidateRecipeUpdateRequest(request); validationErr != "" {
 		return nil, JHTTPErrors.NewValidationError(validationErr)
 	}
@@ -84,16 +103,19 @@ func (h RecipeHandler) Update(ctx context.Context, r jhttp.RequestData[RecipeUpd
 		return nil, JHTTPErrors.NewForbiddenError()
 	}
 
-	updatedRecipe, err := h.controller.UpdateRecipe(ctx, existingRecipe, request)
+	updatedRecipe, err := h.controller.UpdateRecipe(ctx, existingRecipe, request, imageCreateRequest)
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
+
+	fmt.Printf("Before: %+v\n", existingRecipe)
+	fmt.Printf("After: %+v\n", updatedRecipe)
 
 	return &updatedRecipe, nil
 }
 
 // DeleteRecipe deletes a recipe
-func (h RecipeHandler) DeleteRecipe(ctx context.Context, r jhttp.RequestData[struct{}]) (*struct{}, *JHTTPErrors.JHTTPError) {
+func (h Handler) DeleteRecipe(ctx context.Context, r jhttp.RequestData[struct{}]) (*struct{}, *JHTTPErrors.JHTTPError) {
 	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
@@ -124,7 +146,7 @@ func (h RecipeHandler) DeleteRecipe(ctx context.Context, r jhttp.RequestData[str
 	return nil, h.deleteRecipe(ctx, recipeUUID)
 }
 
-func (h RecipeHandler) deleteRecipe(ctx context.Context, recipeUUID string) *JHTTPErrors.JHTTPError {
+func (h Handler) deleteRecipe(ctx context.Context, recipeUUID string) *JHTTPErrors.JHTTPError {
 	err := h.controller.DeleteRecipe(ctx, recipeUUID)
 	if err == types.ErrNotFound {
 		return JHTTPErrors.NewNotFoundError(recipeUUID)
@@ -137,7 +159,7 @@ func (h RecipeHandler) deleteRecipe(ctx context.Context, recipeUUID string) *JHT
 }
 
 // FavoriteRecipe saves a recipe to a user's list of favorite recipes. Supports both UUID and slug identifiers
-func (h RecipeHandler) FavoriteRecipe(ctx context.Context, r jhttp.RequestData[struct{}]) (*UserFavorite, *JHTTPErrors.JHTTPError) {
+func (h Handler) FavoriteRecipe(ctx context.Context, r jhttp.RequestData[struct{}]) (*UserFavorite, *JHTTPErrors.JHTTPError) {
 	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
@@ -160,7 +182,7 @@ func (h RecipeHandler) FavoriteRecipe(ctx context.Context, r jhttp.RequestData[s
 }
 
 // UnFavoriteRecipe unfavorites a recipe
-func (h RecipeHandler) UnFavoriteRecipe(ctx context.Context, r jhttp.RequestData[struct{}]) (*struct{}, *JHTTPErrors.JHTTPError) {
+func (h Handler) UnFavoriteRecipe(ctx context.Context, r jhttp.RequestData[struct{}]) (*struct{}, *JHTTPErrors.JHTTPError) {
 	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
@@ -183,7 +205,7 @@ func (h RecipeHandler) UnFavoriteRecipe(ctx context.Context, r jhttp.RequestData
 }
 
 // GetUserFavorites gets all of a user's favorites
-func (h RecipeHandler) GetUserFavorites(ctx context.Context, r jhttp.RequestData[struct{}]) (*[]UserFavorite, *JHTTPErrors.JHTTPError) {
+func (h Handler) GetUserFavorites(ctx context.Context, r jhttp.RequestData[struct{}]) (*[]UserFavorite, *JHTTPErrors.JHTTPError) {
 	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		return nil, JHTTPErrors.NewBadRequestError("User is not logged in.")
@@ -201,7 +223,7 @@ func (h RecipeHandler) GetUserFavorites(ctx context.Context, r jhttp.RequestData
 }
 
 // Get gets a recipe. It can get a recipe by it's UUID or slug
-func (h RecipeHandler) Get(ctx context.Context, r jhttp.RequestData[struct{}]) (*PublicRecipe, *JHTTPErrors.JHTTPError) {
+func (h Handler) Get(ctx context.Context, r jhttp.RequestData[struct{}]) (*PublicRecipe, *JHTTPErrors.JHTTPError) {
 	recipeID, ok := r.PathValues[RecipeIDPathVar]
 	if !ok {
 		return nil, JHTTPErrors.NewBadRequestError("Recipe ID is required")
@@ -219,7 +241,7 @@ func (h RecipeHandler) Get(ctx context.Context, r jhttp.RequestData[struct{}]) (
 
 // GetAllTags gets all existing tags
 // TODO: make the tag fetch iterative on the front as user types
-func (h RecipeHandler) GetAllTags(ctx context.Context, r jhttp.RequestData[struct{}]) (*[]Tag, *JHTTPErrors.JHTTPError) {
+func (h Handler) GetAllTags(ctx context.Context, r jhttp.RequestData[struct{}]) (*[]Tag, *JHTTPErrors.JHTTPError) {
 	tags, err := h.controller.GetAllTags(ctx)
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
@@ -229,60 +251,18 @@ func (h RecipeHandler) GetAllTags(ctx context.Context, r jhttp.RequestData[struc
 }
 
 // Search searches for a specified recipe. If no search parameters are passed, gets 10 random recipes
-func (h RecipeHandler) Search(ctx context.Context, r jhttp.RequestData[struct{}]) (*PaginatedResponse[[]PublicRecipe], *JHTTPErrors.JHTTPError) {
-	recipeName := r.Query.Get("name")
-	favoritesOnly := r.Query.Get("favorites_only")
-	tagUUIDsString := r.Query.Get("tags")
-	tagUUIDs := strings.Split(tagUUIDsString, ",")
-	tagUUIDs = utils.Filter(tagUUIDs, func(uuid string) bool { return uuid != "" })
-	authorUUID := r.Query.Get("author")
-	limitStr := r.Query.Get("limit")
-	pageStr := r.Query.Get("page")
+func (h Handler) Search(ctx context.Context, r jhttp.RequestData[struct{}]) (*PaginatedResponse[[]PublicRecipe], *JHTTPErrors.JHTTPError) {
+	opts, httpErr := queryToSearchParams(r.Query)
+	if httpErr != nil {
+		return nil, httpErr
+	}
 
-	if favoritesOnly == "true" {
+	if opts.FavoritesOnly {
 		_, ok := jcontext.GetUser(ctx)
 		if !ok {
 			return nil, JHTTPErrors.NewUnauthorizedError()
 		}
 	}
-
-	opts := SearchOpts{
-		FavoritesOnly: favoritesOnly == "true",
-	}
-
-	if recipeName != "" {
-		opts.Name = &recipeName
-	}
-	if len(tagUUIDs) > 0 {
-		opts.TagUUIDs = &tagUUIDs
-	}
-	if authorUUID != "" {
-		opts.AuthorUUID = &authorUUID
-	}
-
-	var limit int64
-	var page int64
-	var err error
-	if limitStr != "" {
-		limit, err = strconv.ParseInt(limitStr, 10, 64)
-		if err != nil {
-			return nil, JHTTPErrors.NewBadRequestError("limit must be an integer")
-		}
-		if limit <= 0 {
-			return nil, JHTTPErrors.NewBadRequestError("limit must be >= 0")
-		}
-	}
-	if pageStr != "" {
-		page, err = strconv.ParseInt(pageStr, 10, 64)
-		if err != nil {
-			return nil, JHTTPErrors.NewBadRequestError("page must be an integer")
-		}
-	}
-	if limit <= 0 {
-		limit = 10
-	}
-	opts.Limit = min(limit, 200)
-	opts.Page = max(1, page)
 
 	recipes, total, err := h.controller.Search(ctx, opts)
 	if err == types.ErrNotFound {
@@ -298,4 +278,99 @@ func (h RecipeHandler) Search(ctx context.Context, r jhttp.RequestData[struct{}]
 		Page:  opts.Page,
 		Limit: opts.Limit,
 	}, nil
+}
+
+func queryToSearchParams(query *url.Values) (SearchOpts, *JHTTPErrors.JHTTPError) {
+	opts := SearchOpts{}
+	if query == nil {
+		return opts, nil
+	}
+
+	recipeName := query.Get("name")
+	favoritesOnly := query.Get("favorites_only")
+	selectedTagUUIDsString := query.Get("selectedTags")
+	inverseTagUUIDsString := query.Get("inverseTags")
+	selectedTagUUIDs := strings.Split(selectedTagUUIDsString, ",")
+	selectedTagUUIDs = utils.Filter(selectedTagUUIDs, func(uuid string) bool { return uuid != "" })
+	inverseTagUUIDs := strings.Split(inverseTagUUIDsString, ",")
+	inverseTagUUIDs = utils.Filter(inverseTagUUIDs, func(uuid string) bool { return uuid != "" })
+	authorUUID := query.Get("author")
+	limitStr := query.Get("limit")
+	pageStr := query.Get("page")
+
+	var limit int64
+	var page int64
+	var err error
+	if limitStr != "" {
+		limit, err = strconv.ParseInt(limitStr, 10, 64)
+		if err != nil {
+			return SearchOpts{}, JHTTPErrors.NewBadRequestError("limit must be an integer")
+		}
+		if limit <= 0 {
+			return SearchOpts{}, JHTTPErrors.NewBadRequestError("limit must be >= 0")
+		}
+	}
+	if pageStr != "" {
+		page, err = strconv.ParseInt(pageStr, 10, 64)
+		if err != nil {
+			return SearchOpts{}, JHTTPErrors.NewBadRequestError("page must be an integer")
+		}
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	if recipeName != "" {
+		opts.Name = &recipeName
+	}
+	if len(selectedTagUUIDs) > 0 {
+		opts.SelectedTagUUIDs = &selectedTagUUIDs
+	}
+	if len(inverseTagUUIDs) > 0 {
+		opts.InverseTagUUIDs = &inverseTagUUIDs
+	}
+	if authorUUID != "" {
+		opts.AuthorUUID = &authorUUID
+	}
+	opts.FavoritesOnly = favoritesOnly == "true"
+	opts.Limit = min(limit, 200)
+	opts.Page = max(1, page)
+
+	return opts, nil
+}
+
+func formDataToRequest[T any](r *http.Request, requestKey string) (T, *files.CreateRequest, *JHTTPErrors.JHTTPError) {
+	var request T
+	err := r.ParseMultipartForm(files.MaxSizeMB << 20)
+	if err != nil {
+		return request, nil, JHTTPErrors.NewBadRequestError("File is too large")
+	}
+
+	requestStr := r.FormValue(requestKey)
+	err = json.Unmarshal([]byte(requestStr), &request)
+	if err != nil {
+		return request, nil, JHTTPErrors.NewBadRequestError("Invalid request")
+	}
+
+	imageFile, handler, err := r.FormFile("image")
+	if err == http.ErrMissingFile {
+		return request, nil, nil
+	}
+	if err != nil {
+		return request, nil, JHTTPErrors.NewBadRequestError("Error reading image")
+	}
+	defer imageFile.Close()
+
+	imageCreateRequest := files.CreateRequest{
+		Name: handler.Filename,
+		// MIME is hidden in a map that looks like:
+		// map[Content-Disposition:[form-data; name="image"; filename="Screenshot 2026-04-09 at 5.40.27 PM.png"] Content-Type:[image/png]]
+		// Get will pull that value out of the array for us
+		MIME:       handler.Header.Get("Content-Type"),
+		Size:       handler.Size,
+		Visibility: files.PublicVisibility,
+		Data:       imageFile,
+	}
+
+	return request, &imageCreateRequest, nil
 }

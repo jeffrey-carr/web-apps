@@ -30,16 +30,18 @@
     variant === 'secondary' || variant === 'plain' ? 'secondary' : 'primary'
   );
 
-  const steez = clsx(
-    styles.button,
-    styles[variant],
-    styles[size],
-    styles[shape],
-    {
-      [styles.loading]: loading,
-      [styles.animated]: animated,
-    },
-    className // className goes last to make sure callers have full control
+  let steez = $derived(
+    clsx(
+      styles.button,
+      styles[variant],
+      styles[size],
+      styles[shape],
+      {
+        [styles.loading]: loading,
+        [styles.animated]: animated,
+      },
+      className // className goes last to make sure callers have full control
+    )
   );
 
   let isAnchor = $derived(Boolean(rest.href) && !disabled);
