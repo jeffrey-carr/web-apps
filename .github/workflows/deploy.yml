@@ -53,7 +53,7 @@ jobs:
             echo "app_name=${APP_NAME}" >> "$GITHUB_OUTPUT"
             echo "tag=${TAG_NAME}" >> "$GITHUB_OUTPUT"
           fi
-          
+
           if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ "${{ inputs.deploy }}" == "false" ]; then
             echo "deploy=false" >> "$GITHUB_OUTPUT"
           else
@@ -204,7 +204,8 @@ jobs:
               "environment": "prod",
               "port": "9999",
               "mongo_connection_url": "${{ secrets.MONGO_CONNECTION_URL }}",
-              "federation_api_key": "${{ secrets.FEDERATION_API_KEY }}"
+              "federation_api_key": "${{ secrets.FEDERATION_API_KEY }}",
+              "cloudinary_api_key": "${{ secrets.CLOUDINARY_API_KEY }}"
             }
             EOF
 
