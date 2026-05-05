@@ -8,6 +8,7 @@ import (
 	"go-common/jcontext"
 	"go-common/types"
 	"go-common/utils"
+	"recipe-book/domains/files"
 	"recipe-book/domains/recipe"
 	"recipe-book/mappers"
 	"strconv"
@@ -28,20 +29,32 @@ var (
 
 // Controller controls the business logic for recipes
 type Controller struct {
-	repo          Repository
-	federationSDK sdk.SDK
+	repo            Repository
+	federationSDK   sdk.SDK
+	filesController files.Controller
 }
 
 // NewController creates a new recipe controller
-func NewController(federationSDK sdk.SDK, repo Repository) Controller {
+func NewController(federationSDK sdk.SDK, repo Repository, filesController files.Controller) Controller {
 	return Controller{
-		repo:          repo,
-		federationSDK: federationSDK,
+		repo:            repo,
+		federationSDK:   federationSDK,
+		filesController: filesController,
 	}
 }
 
 // CreateRecipe creates a new recipe
-func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, createRequest recipe.CreateRecipeRequest) (recipe.Recipe, error) {
+func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, createRequest recipe.CreateRecipeRequest, imageCreateRequest *files.CreateRequest) (recipe.Recipe, error) {
+	var image *files.File
+	if imageCreateRequest != nil {
+		imageResult, err := c.filesController.UploadImage(ctx, *imageCreateRequest, user)
+		if err != nil {
+			return recipe.Recipe{}, err
+		}
+
+		image = &imageResult
+	}
+
 	tags, err := c.tagNamesToTags(ctx, createRequest.TagNames)
 	if err != nil {
 		return recipe.Recipe{}, err
@@ -53,7 +66,7 @@ func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, cre
 	}
 	createRequest.Slug = slug
 
-	rec, err := CreateRequestToRecipe(createRequest, tags, user)
+	rec, err := CreateRequestToRecipe(createRequest, tags, image, user)
 	if err != nil {
 		return recipe.Recipe{}, err
 	}
@@ -62,48 +75,61 @@ func (c Controller) CreateRecipe(ctx context.Context, user types.CommonUser, cre
 	if err != nil {
 		return recipe.Recipe{}, err
 	}
-	return recipe.Recipe{}, nil
+
+	return rec, nil
 }
 
 // UpdateRecipe applies an update request to a recipe
-func (c Controller) UpdateRecipe(ctx context.Context, existingRecipe recipe.Recipe, updateRequest recipe.UpdateRequest) (recipe.Recipe, error) {
+func (c Controller) UpdateRecipe(
+	ctx context.Context,
+	existingRecipe recipe.Recipe,
+	updateRequest recipe.UpdateRequest,
+	imageCreateRequest *files.CreateRequest,
+) (recipe.Recipe, error) {
+	var newSlug *string
 	if updateRequest.Name != nil {
-		existingRecipe.Name = *updateRequest.Name
-		slug, err := c.getAvailableSlug(ctx, existingRecipe.Name)
+		slug, err := c.getAvailableSlug(ctx, *updateRequest.Name)
 		if err != nil {
 			return existingRecipe, err
 		}
-		existingRecipe.Slug = slug
+		newSlug = &slug
 	}
-
-	if updateRequest.Description != nil {
-		existingRecipe.Description = *updateRequest.Description
-	}
-
-	if updateRequest.CookTimeMs != nil {
-		existingRecipe.CookTimeMs = *updateRequest.CookTimeMs
-	}
-
+	var updatedTagUUIDs *[]string
 	if updateRequest.TagNames != nil {
 		tags, err := c.tagNamesToTags(ctx, *updateRequest.TagNames)
 		if err != nil {
 			return existingRecipe, err
 		}
-		existingRecipe.TagUUIDs = utils.Map(tags, func(tag recipe.Tag) string { return tag.UUID })
+		tagUUIDs := utils.Map(tags, func(tag recipe.Tag) string { return tag.UUID })
+		updatedTagUUIDs = &tagUUIDs
 	}
 
-	if updateRequest.OriginalURL != nil {
-		existingRecipe.OriginalURL = *updateRequest.OriginalURL
+	var newImage *files.File
+	if imageCreateRequest != nil {
+		user, ok := jcontext.GetUser(ctx)
+		if !ok {
+			return existingRecipe, errors.New("could not get user")
+		}
+		var createdImage files.File
+		var err error
+		if existingRecipe.ImageUUID != "" {
+			existingImageFile, err := c.filesController.GetByUUID(ctx, existingRecipe.ImageUUID)
+			if err != nil {
+				return existingRecipe, err
+			}
+
+			createdImage, err = c.swapImage(ctx, *imageCreateRequest, existingImageFile, user)
+		} else {
+			createdImage, err = c.filesController.UploadImage(ctx, *imageCreateRequest, user)
+		}
+		if err != nil {
+			return existingRecipe, err
+		}
+
+		newImage = &createdImage
 	}
 
-	if updateRequest.Status != nil {
-		existingRecipe.Status = *updateRequest.Status
-	}
-
-	if updateRequest.Sections != nil {
-		existingRecipe.Sections = *updateRequest.Sections
-	}
-
+	existingRecipe = ApplyUpdateRequest(updateRequest, existingRecipe, newSlug, updatedTagUUIDs, newImage)
 	err := c.repo.Update(ctx, existingRecipe)
 	if err != nil {
 		return recipe.Recipe{}, err
@@ -166,6 +192,7 @@ func (c Controller) GetRecipe(ctx context.Context, recipeID string) (recipe.Reci
 	} else {
 		rec, err = c.repo.GetRecipeBySlug(ctx, recipeID)
 	}
+
 	return rec, err
 }
 
@@ -249,8 +276,9 @@ func (c Controller) fillInRecipesToPublicRecipes(ctx context.Context, recipes []
 		return nil, err
 	}
 	authorsByUUID := map[string]*types.CommonUser{}
-	for _, author := range *authors {
-		authorsByUUID[author.UUID] = &author
+	authorsSlice := *authors
+	for i := range authorsSlice {
+		authorsByUUID[authorsSlice[i].UUID] = &authorsSlice[i]
 	}
 
 	tags, err := c.repo.GetTagsByUUID(ctx, uniqueTagUUIDs.ToSlice())
@@ -342,4 +370,18 @@ func (c Controller) tagNamesToTags(ctx context.Context, tagNames []string) ([]re
 	}
 
 	return tags, nil
+}
+
+func (c Controller) swapImage(ctx context.Context, imageCreateRequest files.CreateRequest, existingImage files.File, user types.CommonUser) (files.File, error) {
+	newImage, err := c.filesController.UploadImage(ctx, imageCreateRequest, user)
+	if err != nil {
+		return files.File{}, err
+	}
+
+	err = c.filesController.DeleteFile(ctx, existingImage)
+	if err != nil {
+		// TODO: make some noise that the image got uploaded but there was an error deleting the old one
+	}
+
+	return newImage, nil
 }

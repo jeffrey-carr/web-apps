@@ -89,7 +89,17 @@
   flex-wrap: wrap;
   gap: 1rem;
 
-  margin: 0 0 0.5rem;
+  margin: 0 0 1rem;
+}
+
+.recipeImage {
+  width: 100%;
+  max-width: 450px;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  object-fit: cover;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .ingredientsAndWakeLock {

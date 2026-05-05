@@ -2,12 +2,16 @@ package recipe
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"go-common/jcontext"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/types"
 	"go-common/utils"
+	"net/http"
 	"net/url"
+	"recipe-book/domains/files"
 	"strconv"
 	"strings"
 )
@@ -32,22 +36,27 @@ func NewHandler(controller Controller) Handler {
 }
 
 // Create allows users to create new recipes
-func (h Handler) Create(ctx context.Context, r jhttp.RequestData[CreateRecipeRequest]) (*CreateRecipeResponse, *JHTTPErrors.JHTTPError) {
+func (h Handler) Create(ctx context.Context, r jhttp.RequestData[struct{}]) (*CreateRecipeResponse, *JHTTPErrors.JHTTPError) {
 	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
 	}
 
-	if r.Body == nil {
-		return nil, JHTTPErrors.NewBadRequestError("Bad request")
+	err := r.Request.ParseMultipartForm(files.MaxSizeMB << 20)
+	if err != nil {
+		return nil, JHTTPErrors.NewBadRequestError("File is too large")
 	}
 
-	request := *r.Body
+	request, imageCreateRequest, httpErr := formDataToRequest[CreateRecipeRequest](r.Request, "createRequest")
+	if httpErr != nil {
+		return nil, httpErr
+	}
+
 	if validationErr := ValidateRecipeCreateRequest(request); validationErr != "" {
 		return nil, JHTTPErrors.NewValidationError(validationErr)
 	}
 
-	recipe, err := h.controller.CreateRecipe(ctx, user, request)
+	recipe, err := h.controller.CreateRecipe(ctx, user, request, imageCreateRequest)
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
@@ -56,7 +65,8 @@ func (h Handler) Create(ctx context.Context, r jhttp.RequestData[CreateRecipeReq
 }
 
 // Update handles an update request
-func (h Handler) Update(ctx context.Context, r jhttp.RequestData[UpdateRequest]) (*Recipe, *JHTTPErrors.JHTTPError) {
+func (h Handler) Update(ctx context.Context, r jhttp.RequestData[struct{}]) (*Recipe, *JHTTPErrors.JHTTPError) {
+	fmt.Println("Recieved update request!")
 	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
@@ -67,11 +77,16 @@ func (h Handler) Update(ctx context.Context, r jhttp.RequestData[UpdateRequest])
 		return nil, JHTTPErrors.NewBadRequestError("Recipe UUID is required")
 	}
 
-	if r.Body == nil {
-		return nil, JHTTPErrors.NewBadRequestError("Bad request")
+	err := r.Request.ParseMultipartForm(files.MaxSizeMB << 20)
+	if err != nil {
+		return nil, JHTTPErrors.NewBadRequestError("File is too large")
 	}
 
-	request := *r.Body
+	request, imageCreateRequest, httpErr := formDataToRequest[UpdateRequest](r.Request, "updateRequest")
+	if httpErr != nil {
+		return nil, httpErr
+	}
+
 	if validationErr := ValidateRecipeUpdateRequest(request); validationErr != "" {
 		return nil, JHTTPErrors.NewValidationError(validationErr)
 	}
@@ -88,10 +103,13 @@ func (h Handler) Update(ctx context.Context, r jhttp.RequestData[UpdateRequest])
 		return nil, JHTTPErrors.NewForbiddenError()
 	}
 
-	updatedRecipe, err := h.controller.UpdateRecipe(ctx, existingRecipe, request)
+	updatedRecipe, err := h.controller.UpdateRecipe(ctx, existingRecipe, request, imageCreateRequest)
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
+
+	fmt.Printf("Before: %+v\n", existingRecipe)
+	fmt.Printf("After: %+v\n", updatedRecipe)
 
 	return &updatedRecipe, nil
 }
@@ -319,4 +337,40 @@ func queryToSearchParams(query *url.Values) (SearchOpts, *JHTTPErrors.JHTTPError
 	opts.Page = max(1, page)
 
 	return opts, nil
+}
+
+func formDataToRequest[T any](r *http.Request, requestKey string) (T, *files.CreateRequest, *JHTTPErrors.JHTTPError) {
+	var request T
+	err := r.ParseMultipartForm(files.MaxSizeMB << 20)
+	if err != nil {
+		return request, nil, JHTTPErrors.NewBadRequestError("File is too large")
+	}
+
+	requestStr := r.FormValue(requestKey)
+	err = json.Unmarshal([]byte(requestStr), &request)
+	if err != nil {
+		return request, nil, JHTTPErrors.NewBadRequestError("Invalid request")
+	}
+
+	imageFile, handler, err := r.FormFile("image")
+	if err == http.ErrMissingFile {
+		return request, nil, nil
+	}
+	if err != nil {
+		return request, nil, JHTTPErrors.NewBadRequestError("Error reading image")
+	}
+	defer imageFile.Close()
+
+	imageCreateRequest := files.CreateRequest{
+		Name: handler.Filename,
+		// MIME is hidden in a map that looks like:
+		// map[Content-Disposition:[form-data; name="image"; filename="Screenshot 2026-04-09 at 5.40.27 PM.png"] Content-Type:[image/png]]
+		// Get will pull that value out of the array for us
+		MIME:       handler.Header.Get("Content-Type"),
+		Size:       handler.Size,
+		Visibility: files.PublicVisibility,
+		Data:       imageFile,
+	}
+
+	return request, &imageCreateRequest, nil
 }

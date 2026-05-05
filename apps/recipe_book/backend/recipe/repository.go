@@ -82,7 +82,6 @@ func (r Repository) UpsertTag(ctx context.Context, name string) (recipe.Tag, err
 
 // Put saves a recipe in Mongo
 func (r Repository) Put(ctx context.Context, rec recipe.Recipe) error {
-	rec.CreatedAt = time.Now().UnixMilli()
 	rec.ModifiedAt = time.Now().UnixMilli()
 	return r.recipeClient.InsertItem(ctx, rec)
 }

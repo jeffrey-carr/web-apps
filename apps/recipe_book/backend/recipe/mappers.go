@@ -4,6 +4,7 @@ import (
 	"go-common/types"
 	"go-common/utils"
 	"net/url"
+	"recipe-book/domains/files"
 	"recipe-book/domains/recipe"
 	"strconv"
 	"strings"
@@ -11,12 +12,24 @@ import (
 )
 
 // CreateRequestToRecipe converts a CreateRequest into a Recipe
-func CreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []recipe.Tag, user types.CommonUser) (recipe.Recipe, error) {
-	name := strings.TrimSpace(request.Name)
-	// TODO: clean for XSS
-	description := strings.TrimSpace(request.Description)
-
-	tagUUIDs := utils.Map(tags, func(tag recipe.Tag) string { return tag.UUID })
+func CreateRequestToRecipe(
+	request recipe.CreateRecipeRequest,
+	tags []recipe.Tag,
+	image *files.File,
+	user types.CommonUser,
+) (recipe.Recipe, error) {
+	rec := recipe.Recipe{
+		UUID: utils.NewUUID(),
+		Name: strings.TrimSpace(request.Name),
+		// TODO: clean for XSS
+		Description: strings.TrimSpace(request.Description),
+		CookTimeMs:  request.CookTimeMs,
+		TagUUIDs:    utils.Map(tags, func(t recipe.Tag) string { return t.UUID }),
+		AuthorUUID:  user.UUID,
+		Slug:        request.Slug,
+		Status:      recipe.StatusPublic,
+		CreatedAt:   time.Now().UnixMilli(),
+	}
 
 	importedURL := strings.TrimSpace(request.OriginalURL)
 	if importedURL != "" {
@@ -28,10 +41,11 @@ func CreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []recipe.Tag
 
 		url.RawQuery = ""
 		url.RawFragment = ""
-		importedURL = url.String()
+		rec.OriginalURL = url.String()
 	}
 
-	for i, section := range request.Sections {
+	cleanedSections := make([]recipe.Section, 0, len(request.Sections))
+	for _, section := range request.Sections {
 		for j, ingredient := range section.Ingredients {
 			amt, ok := AttemptToParseAmountStr(ingredient.AmountStr)
 			if ok {
@@ -39,27 +53,69 @@ func CreateRequestToRecipe(request recipe.CreateRecipeRequest, tags []recipe.Tag
 				section.Ingredients[j] = ingredient
 			}
 		}
-		request.Sections[i] = section
-	}
 
-	status := recipe.StatusPublic
+		cleanedSections = append(cleanedSections, section)
+	}
+	rec.Sections = cleanedSections
+
 	if !request.Publish {
-		status = recipe.StatusPrivate
+		rec.Status = recipe.StatusPrivate
 	}
 
-	return recipe.Recipe{
-		UUID:        utils.NewUUID(),
-		Name:        name,
-		Description: description,
-		CookTimeMs:  request.CookTimeMs,
-		OriginalURL: request.OriginalURL,
-		TagUUIDs:    tagUUIDs,
-		AuthorUUID:  user.UUID,
-		Slug:        request.Slug,
-		Status:      status,
-		Sections:    request.Sections,
-		CreatedAt:   time.Now().UnixMilli(),
-	}, nil
+	if image != nil {
+		rec.ImageUUID = image.UUID
+		rec.ImageURL = image.URL
+	}
+
+	return rec, nil
+}
+
+// ApplyUpdateRequest applies an update request to an existing recipe
+func ApplyUpdateRequest(
+	updateRequest recipe.UpdateRequest,
+	existingRecipe recipe.Recipe,
+	newSlug *string,
+	tagUUIDs *[]string,
+	newImage *files.File,
+) recipe.Recipe {
+	if updateRequest.Name != nil {
+		existingRecipe.Name = *updateRequest.Name
+	}
+
+	if newSlug != nil {
+		existingRecipe.Slug = *newSlug
+	}
+
+	if updateRequest.Description != nil {
+		existingRecipe.Description = *updateRequest.Description
+	}
+
+	if tagUUIDs != nil {
+		existingRecipe.TagUUIDs = *tagUUIDs
+	}
+
+	if updateRequest.CookTimeMs != nil {
+		existingRecipe.CookTimeMs = *updateRequest.CookTimeMs
+	}
+
+	if updateRequest.OriginalURL != nil {
+		existingRecipe.OriginalURL = *updateRequest.OriginalURL
+	}
+
+	if updateRequest.Status != nil {
+		existingRecipe.Status = *updateRequest.Status
+	}
+
+	if updateRequest.Sections != nil {
+		existingRecipe.Sections = *updateRequest.Sections
+	}
+
+	if newImage != nil {
+		existingRecipe.ImageUUID = newImage.UUID
+		existingRecipe.ImageURL = newImage.URL
+	}
+
+	return existingRecipe
 }
 
 // AttemptToParseAmountStr does its best at determining the actual
@@ -88,7 +144,7 @@ func AttemptToParseAmountStr(amountStr string) (float32, bool) {
 		}
 	}
 
-	return total, false
+	return total, true
 }
 
 // FavoriteRequestToFavorite converts a FavoriteRequest into a Favorite
@@ -112,7 +168,8 @@ func ToPublicRecipe(
 	author *types.CommonUser,
 	isFavorited bool,
 ) recipe.PublicRecipe {
-	var authorUUID, authorLName string
+	authorUUID := rec.AuthorUUID
+	var authorLName string
 	authorFName := "Unknown"
 	if author != nil {
 		authorUUID = author.UUID
@@ -132,7 +189,7 @@ func ToPublicRecipe(
 		AuthorUUID:  authorUUID,
 		AuthorFName: authorFName,
 		AuthorLName: authorLName,
-		ImageURL:    "",
+		ImageURL:    rec.ImageURL,
 		Status:      rec.Status,
 		IsFavorited: isFavorited,
 		CreatedAt:   rec.CreatedAt,

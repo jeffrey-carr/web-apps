@@ -74,6 +74,7 @@ export type Recipe = {
   authorUUID: string;
   authorFName: string;
   authorLName: string;
+  imageUUID?: string;
   imageURL?: string;
   status: 'public' | 'private' | 'draft';
   isFavorited: boolean;

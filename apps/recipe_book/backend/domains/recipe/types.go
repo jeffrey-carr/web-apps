@@ -22,7 +22,8 @@ type Recipe struct {
 	OriginalURL string    `json:"originalURL" bson:"originalURL"`
 	Slug        string    `json:"slug" bson:"slug"`
 	AuthorUUID  string    `json:"authorUUID" bson:"authorUUID"`
-	ImageUUID   string    `json:"imageUUID" bson:"imageUUID"`
+	ImageUUID   string    `json:"imageUUID,omitempty" bson:"imageUUID,omitempty"`
+	ImageURL    string    `json:"imageURL,omitempty" bson:"imageURL,omitempty"`
 	Status      Status    `json:"status" bson:"status"`
 	Sections    []Section `json:"sections" bson:"sections"`
 	CreatedAt   int64     `json:"createdAt" bson:"createdAt"`
@@ -160,11 +161,11 @@ type SearchOpts struct {
 
 // UpdateRequest is the request to update a recipe
 type UpdateRequest struct {
-	Name        *string
-	Description *string
-	CookTimeMs  *int64
-	TagNames    *[]string
-	OriginalURL *string
-	Status      *Status
-	Sections    *[]Section
+	Name        *string    `json:"name" schema:"name"`
+	Description *string    `json:"description" schema:"description"`
+	CookTimeMs  *int64     `json:"cookTimeMs" schema:"cookTimeMs"`
+	TagNames    *[]string  `json:"tagNames" schema:"tagNames"`
+	OriginalURL *string    `json:"originalURL" schema:"originalURL"`
+	Status      *Status    `json:"status" schema:"status"`
+	Sections    *[]Section `json:"sections" schema:"sections"`
 }

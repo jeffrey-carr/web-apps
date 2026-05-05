@@ -4,9 +4,12 @@ import (
 	"context"
 	"federation/sdk"
 	"fmt"
+	"go-common/services/jcloudinary"
 	"go-common/services/jmongo"
 	"go-common/utils"
+	filesDomain "recipe-book/domains/files"
 	recipeDomain "recipe-book/domains/recipe"
+	"recipe-book/files"
 	"recipe-book/recipe"
 	"recipe-book/types"
 	"strings"
@@ -57,13 +60,23 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	filesMongoCollection, err := jmongo.NewMongo[filesDomain.File](mongoClient, "recipe_book", "files")
+	if err != nil {
+		panic(err)
+	}
 	federationSDK := sdk.NewSDK(config.FederationAPIKey)
+	cloudinaryService, err := jcloudinary.NewCloudinary(config.CloudinaryAPIKey)
+	if err != nil {
+		panic(err)
+	}
 
 	// REPOSITORIES //
+	filesRepo := files.NewRepository(filesMongoCollection)
 	recipeRepo := recipe.NewRepository(recipeMongoCollection, userFavoritesMongoCollection, tagMongoCollection)
 
 	// CONTROLLERS //
-	recipeController := recipe.NewController(federationSDK, recipeRepo)
+	filesController := files.NewController(cloudinaryService, filesRepo)
+	recipeController := recipe.NewController(federationSDK, recipeRepo, filesController)
 
 	// HANDLERS //
 	recipeHandler := recipeDomain.NewHandler(recipeController)

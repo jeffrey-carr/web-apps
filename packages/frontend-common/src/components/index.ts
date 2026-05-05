@@ -3,6 +3,7 @@ import './globals.css';
 export { default as AutocompleteInput } from './AutocompleteInput/AutocompleteInput.svelte';
 export { default as Button } from './Button/Button.svelte';
 export { default as Confetti } from './Confetti.svelte';
+export { default as ConfirmModal } from './Modal/ConfirmModal.svelte';
 export { default as CharacterIcon } from './Character/CharacterIcon.svelte';
 export { default as Checkbox } from './Checkbox/Checkbox.svelte';
 export { default as CustomDropdown } from './CustomDropdown/CustomDropdown.svelte';

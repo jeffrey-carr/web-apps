@@ -6,4 +6,5 @@ type Config struct {
 	Port             string `json:"port"`
 	MongoURL         string `json:"mongo_connection_url"`
 	FederationAPIKey string `json:"federation_api_key"`
+	CloudinaryAPIKey string `json:"cloudinary_api_key"`
 }

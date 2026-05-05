@@ -11,7 +11,8 @@
     ServerError,
     Textarea,
   } from '@jeffrey-carr/frontend-common';
-  import { RecipeSection } from '$lib/components';
+  import { ImageUploader } from '$lib/components';
+  import RecipeSection from '../create/RecipeSection/RecipeSection.svelte';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
   import type { Direction, Ingredient, Section, Tag } from '$lib/types/recipe';
 
@@ -60,7 +61,8 @@
   });
 
   let loadingSubmit = $state(false);
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
     loadingSubmit = true;
     const finalTags = selectedTags.map(t => t.trim?.()).filter(Boolean);
 
@@ -73,6 +75,7 @@
       recipeSections,
       importURL,
       publish,
+      image,
     });
 
     loadingSubmit = false;
@@ -102,6 +105,7 @@
   let cookTimeHours = $derived(Number(cookTimeHoursStr));
   let cookTimeMinutesStr = $state('');
   let cookTimeMinutes = $derived(Number(cookTimeMinutesStr));
+  let image = $state<File | null>(null);
 
   let selectedTags = $state<string[]>([]);
   let tagInput = $state('');
@@ -131,6 +135,7 @@
 
       importURL = initialData.importURL ?? '';
       publish = initialData.publish ?? true;
+      image = initialData.image ?? null;
     }
   });
 
@@ -146,6 +151,7 @@
     selectedTags = initialData?.selectedTags ? [...initialData.selectedTags] : [];
     importURL = initialData?.importURL ?? '';
     publish = initialData?.publish ?? true;
+    image = initialData?.image ?? null;
     resetTagErr();
   };
 
@@ -177,6 +183,11 @@
 </script>
 
 <form class={styles.form} onsubmit={handleSubmit} onreset={reset}>
+  <div class={styles.formItem}>
+    <h3>Image:</h3>
+    <ImageUploader bind:imageFile={image} />
+  </div>
+
   <div class={styles.formItem}>
     <h3>Name:</h3>
     <Input

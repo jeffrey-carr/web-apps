@@ -8,6 +8,7 @@ import (
 )
 
 type RequestData[T any] struct {
+	Request    *http.Request
 	Writer     *http.ResponseWriter
 	PathValues map[string]string
 	Query      *url.Values
