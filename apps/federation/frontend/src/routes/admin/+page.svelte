@@ -130,6 +130,10 @@
   const closeNotif = () => {
     notif = undefined;
   };
+
+  const navToPage = (page: string) => {
+    goto(`/${page}`);
+  };
 </script>
 
 {#snippet keyTable(keys: APIKey[], activeTable: boolean)}
@@ -205,7 +209,19 @@
 <main class={styles.container}>
   <h1>Admin panel</h1>
   <p class={styles.greeting}>Hello, {userState.user?.fName}</p>
-  <button class={styles.logoutButton} onclick={logoutUser}>Logout</button>
+  <button
+    class={styles.actionButton}
+    onclick={() => {
+      navToPage('account');
+    }}>To account</button
+  >
+  <button
+    class={styles.actionButton}
+    onclick={() => {
+      navToPage('choose-app');
+    }}>To app selection</button
+  >
+  <button class={styles.actionButton} onclick={logoutUser}>Logout</button>
 
   {#if loadingKeys}
     <div class={styles.loading}>
