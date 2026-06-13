@@ -18,7 +18,7 @@
     {@render children()}
   {:else}
     <div class="loading-container">
-      <Spinner label="Loading your account..." />
+      <Spinner label="Loading your account..." size="2rem" />
     </div>
   {/if}
 </main>
@@ -34,8 +34,9 @@
   }
 
   .loading-container {
-    height: 4rem;
-    margin: auto;
-    margin-top: 5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
   }
 </style>

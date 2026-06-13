@@ -139,6 +139,17 @@
     >
       Go to an app
     </Button>
+
+    {#if user.isAdmin}
+      <Button
+        class={styles.actionButton}
+        size="md"
+        onclick={() => goto('/admin')}
+        variant="secondary"
+      >
+        Admin Dashboard
+      </Button>
+    {/if}
   </div>
 
   <div class={styles.sections}>
