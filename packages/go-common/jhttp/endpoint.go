@@ -22,8 +22,8 @@ func init() {
 
 // NewEndpoint creates a new HTTP endpoint. It manages parsing path variables,
 // query parameters, and a JSON body.
-func NewEndpoint[T any, K any](
-	f EndpointFunc[T, K],
+func NewEndpoint[T any, E any](
+	f EndpointFunc[T, E],
 	pathKeys []string,
 	mws ...middlewares.Middleware,
 ) func(http.ResponseWriter, *http.Request) {
@@ -63,7 +63,8 @@ func NewEndpoint[T any, K any](
 		var body T
 		mediatype, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type"))
 		if r.Body != nil {
-			if mediatype == "application/json" {
+			switch mediatype {
+			case "application/json":
 				defer r.Body.Close()
 				data, readErr := io.ReadAll(r.Body)
 				if readErr != nil {
@@ -79,7 +80,9 @@ func NewEndpoint[T any, K any](
 						return
 					}
 				}
-			} else if mediatype == "multipart/form-data" || mediatype == "application/x-www-form-urlencoded" {
+			case "multipart/form-data":
+				fallthrough
+			case "application/x-www-form-urlencoded":
 				// ParseMultipartForm is a no-op for application/x-www-form-urlencoded
 				// and will parse both if it's multipart/form-data
 				err := r.ParseMultipartForm(32 << 20) // 32MB max memory
