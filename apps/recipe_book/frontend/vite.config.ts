@@ -9,7 +9,11 @@ export default defineConfig({
   server: {
     allowedHosts: ['recipe.jeffreycarr.local'],
     proxy: {
-      '/api': 'http://127.0.0.1:8080',
+      '/api': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true,
+        xfwd: true,
+      },
     },
   },
 });

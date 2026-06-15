@@ -7,6 +7,7 @@ import (
 
 	"go-common/constants"
 	"go-common/jhttp/errors"
+	"go-common/jhttp/middlewares"
 	"go-common/types"
 	"net/http"
 )
@@ -19,6 +20,10 @@ func NewRequireAPIKey(apiService services.API) RequireAPIKey {
 
 type RequireAPIKey struct {
 	apiService services.API
+}
+
+func (rak RequireAPIKey) ID() middlewares.MiddlewareIdentifier {
+	return middlewares.MiddlewareIdentifier("require-api-key")
 }
 
 func (rak RequireAPIKey) Apply(ctx context.Context, _ http.ResponseWriter, r *http.Request) (context.Context, *errors.JHTTPError) {

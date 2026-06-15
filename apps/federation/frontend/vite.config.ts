@@ -11,7 +11,11 @@ export default defineConfig({
 		port: 5175,
 		allowedHosts: ['login.jeffreycarr.local'],
 		proxy: {
-			'/api': 'http://127.0.0.1:9999'
+			'/api': {
+				target: 'http://127.0.0.1:9999',
+				changeOrigin: true,
+				xfwd: true
+			}
 		},
 		fs: {
 			allow: [

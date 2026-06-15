@@ -10,7 +10,11 @@ export default defineConfig({
 	server: {
 		allowedHosts: ['games.jeffreycarr.local'],
 		proxy: {
-			'/api': 'http://127.0.0.1:8081'
+			'/api': {
+				target: 'http://127.0.0.1:8081',
+				changeOrigin: true,
+				xfwd: true
+			}
 		},
 		fs: {
 			allow: [
