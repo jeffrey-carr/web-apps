@@ -8,5 +8,6 @@ import (
 
 // Middleware represents a custom Jeff middleware
 type Middleware interface {
+	ID() MiddlewareIdentifier
 	Apply(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, *errors.JHTTPError)
 }

@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"regexp"
 
 	"github.com/google/uuid"
@@ -20,4 +22,10 @@ func IsUUID(suspect string) bool {
 	re := regexp.MustCompile("^[a-zA-Z0-9]{8}-(?:[a-zA-Z0-9]{4}-){3}[a-zA-Z0-9]{12}$")
 	found := re.FindString(suspect)
 	return len(found) > 0
+}
+
+// HashString creats a SHA256 hash of the provided string
+func HashString(s string) string {
+	hash := sha256.Sum256([]byte(s))
+	return hex.EncodeToString(hash[:])
 }

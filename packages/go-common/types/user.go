@@ -72,3 +72,8 @@ func (u *User) IsTokenValid() bool {
 
 	return time.Now().Before(*u.TokenValidTo)
 }
+
+// LoginRequest represents a normal login request
+type LoginRequest interface {
+	GetUserID() string
+}
