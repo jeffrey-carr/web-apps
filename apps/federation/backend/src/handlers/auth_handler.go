@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+var badLoginErr = JHTTPErrors.NewBadRequestError("Invalid email or password")
+
 // Auth handles auth requests
 type Auth struct {
 	controller auth.Controller
@@ -88,14 +90,14 @@ func (h *Auth) Login(ctx context.Context, r jhttp.RequestData[auth.LoginRequest]
 
 	validationErr := auth.ValidateLoginRequest(*r.Body)
 	if len(validationErr) != 0 {
-		return nil, JHTTPErrors.NewBadRequestError(validationErr)
+		return nil, badLoginErr
 	}
 
 	email := strings.TrimSpace(r.Body.Email)
 	password := strings.TrimSpace(r.Body.Password)
 	user, err := h.controller.Login(ctx, email, password)
 	if err == auth.ErrBadLogin {
-		return nil, JHTTPErrors.NewUnauthorizedError()
+		return nil, badLoginErr
 	}
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
