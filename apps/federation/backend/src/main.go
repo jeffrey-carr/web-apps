@@ -22,8 +22,10 @@ import (
 	"go-common/utils"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -35,8 +37,101 @@ func HandlePing(ctx context.Context, r jhttp.RequestData[struct{}]) (*string, *J
 	return &msg, nil
 }
 
+func loadConfig() (types.Config, error) {
+	loadInt := func(key string, optional bool) (int, error) {
+		strVal := os.Getenv(key)
+		if strVal == "" {
+			var err error
+			if !optional {
+				err = fmt.Errorf("missing variable: %s", key)
+			}
+			return 0, err
+		}
+		parsed, err := strconv.ParseInt(strVal, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("error parsing %s: %w", key, err)
+		}
+
+		return int(parsed), nil
+	}
+	loadStr := func(key string, optional bool, fallback string) (string, error) {
+		val := os.Getenv(key)
+		if val != "" {
+			return val, nil
+		}
+		if !optional {
+			return fallback, fmt.Errorf("missing variable %s", key)
+		}
+
+		return fallback, nil
+	}
+
+	// environment := os.Getenv("ENVIRONMENT")
+	// if environment == "" {
+	// 	environment = globalConstants.EnvDev
+	// }
+	// when optional, won't error
+	environment, _ := loadStr("ENVIRONMENT", true, globalConstants.EnvDev)
+	port, _ := loadStr("PORT", true, "9999")
+	hourlyRateLimit, err := loadInt("HOURLY_RATE_LIMIT", false)
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleCompartmentID, err := loadStr("ORACLE_COMPARTMENT_ID", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleUser, err := loadStr("ORACLE_USER", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleFingerprint, err := loadStr("ORACLE_FINGERPRINT", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleKey, err := loadStr("ORACLE_KEY", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleTenancy, err := loadStr("ORACLE_TENANCY", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleRegion, err := loadStr("ORACLE_REGION", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	mongoConnectionURL, err := loadStr("MONGO_CONNECTION_URL", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	redisConnectionURL, err := loadStr("REDIS_CONNECTION_URL", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+
+	return types.Config{
+		Environment:         environment,
+		Port:                port,
+		HourlyRateLimit:     hourlyRateLimit,
+		MongoConnectionURL:  mongoConnectionURL,
+		OracleCompartmentID: oracleCompartmentID,
+		OracleUser:          oracleUser,
+		OracleKey:           oracleKey,
+		OracleTenancy:       oracleTenancy,
+		OracleRegion:        oracleRegion,
+		OracleFingerprint:   oracleFingerprint,
+		RedisConnectionURL:  redisConnectionURL,
+	}, nil
+}
+
 func main() {
-	config, err := utils.OpenAndReadJSON[types.Config](".env")
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+
+	config, err := loadConfig()
 	if err != nil {
 		panic(err)
 	}

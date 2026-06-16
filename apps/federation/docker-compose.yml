@@ -31,4 +31,6 @@ services:
 
   redis:
     image: "redis:alpine" # Uses the lightweight Alpine Linux version of Redis
+    ports:
+      - '127.0.0.1:6379:6379'
 
