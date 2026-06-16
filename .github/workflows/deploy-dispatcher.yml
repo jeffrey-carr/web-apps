@@ -1,0 +1,24 @@
+name: Deploy App
+
+on:
+  push:
+    tags:
+      - 'federation-v*'
+      - 'recipe_book-v*'
+      - 'web_games-v*'
+
+jobs:
+  deploy-federation:
+    if: startsWith(github.ref_name, 'federation-v')
+    uses: ./.github/workflows/deploy-federation.yml
+    secrets: inherit
+
+  deploy-recipe-book:
+    if: startsWith(github.ref_name, 'recipe_book-v')
+    uses: ./.github/workflows/deploy-recipe-book.yml
+    secrets: inherit
+
+  deploy-web-games:
+    if: startsWith(github.ref_name, 'web_games-v')
+    uses: ./.github/workflows/deploy-web-games.yml
+    secrets: inherit
