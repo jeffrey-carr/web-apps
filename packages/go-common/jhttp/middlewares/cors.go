@@ -35,6 +35,10 @@ func NewCORs() CORs {
 	}
 }
 
+func (c CORs) ID() MiddlewareIdentifier {
+	return MiddlewareIdentifierCORs
+}
+
 // WithOrigins allows overriding the CORs origin
 func (c CORs) WithOrigins(origins ...string) CORs {
 	newCORs := c.clone()

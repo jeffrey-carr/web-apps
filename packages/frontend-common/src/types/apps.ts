@@ -16,7 +16,7 @@ export const Apps: Record<App, AppInfo> = {
   Auth: {
     friendlyName: '01100001 01110101 01110100 01101000',
     subdomain: 'login',
-    devPort: '9999',
+    devPort: '5175',
   },
   Federation: {
     friendlyName: 'The Jeffiverse Portal',

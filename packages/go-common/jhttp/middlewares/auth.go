@@ -91,6 +91,10 @@ func NewGetUser(opts *GetUserOpts) GetUser {
 	return GetUser{UserFetcher: fetcher}
 }
 
+func (gu GetUser) ID() MiddlewareIdentifier {
+	return MiddlewareIdentifierGetUser
+}
+
 // Apply applies the middleware to the HTTP call
 func (gu GetUser) Apply(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, *JHTTPErrors.JHTTPError) {
 	if r == nil {
@@ -130,6 +134,10 @@ func NewRequireAuth(requiresAdmin bool) RequireAuth {
 	return RequireAuth{
 		RequiresAdmin: requiresAdmin,
 	}
+}
+
+func (ra RequireAuth) ID() MiddlewareIdentifier {
+	return MiddlewareIdentifierRequireAuth
 }
 
 // Apply applies the middleware to the HTTP call

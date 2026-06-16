@@ -37,14 +37,14 @@ func NewBadRequestError(msg string) *JHTTPError {
 
 // NewNotFoundError creates a new HTTP Not Found error
 func NewNotFoundError[T any](requested T) *JHTTPError {
-	type NotFoundData struct {
-		Requested T
+	type NotFoundData[T any] struct {
+		Requested T `json:"requested"`
 	}
 
 	return &JHTTPError{
 		StatusCode: http.StatusNotFound,
 		Message:    "Not found",
-		Data:       NotFoundData{Requested: requested},
+		Data:       NotFoundData[T]{Requested: requested},
 	}
 }
 
@@ -82,4 +82,12 @@ func NewForbiddenError() *JHTTPError {
 // `errs` parameter should be a map of field -> error
 func NewValidationError(validationErr string) *JHTTPError {
 	return NewBadRequestError(validationErr)
+}
+
+// NewTooManyRequestsError creates a new HTTP StatusTooManyRequests error
+func NewTooManyRequestsError(msg string) *JHTTPError {
+	return &JHTTPError{
+		StatusCode: http.StatusTooManyRequests,
+		Message:    msg,
+	}
 }
