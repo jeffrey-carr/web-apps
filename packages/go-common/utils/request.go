@@ -11,7 +11,7 @@ func GetIPAddr(header http.Header) string {
 	if ip == "" {
 		ffIP := header.Get("X-Forwarded-For")
 		if ffIP != "" {
-			ip = strings.TrimSpace(strings.Split(ffIP, ", ")[0])
+			ip = strings.TrimSpace(strings.Split(ffIP, ",")[0])
 		}
 	}
 

@@ -17,11 +17,15 @@ import (
 	"go-common/jhttp/middlewares"
 	"go-common/services/jemail"
 	"go-common/services/jmongo"
+	"go-common/services/jredis"
 	globalTypes "go-common/types"
 	"go-common/utils"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/oracle/oci-go-sdk/v65/common"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -33,8 +37,101 @@ func HandlePing(ctx context.Context, r jhttp.RequestData[struct{}]) (*string, *J
 	return &msg, nil
 }
 
+func loadConfig() (types.Config, error) {
+	loadInt := func(key string, optional bool) (int, error) {
+		strVal := os.Getenv(key)
+		if strVal == "" {
+			var err error
+			if !optional {
+				err = fmt.Errorf("missing variable: %s", key)
+			}
+			return 0, err
+		}
+		parsed, err := strconv.ParseInt(strVal, 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("error parsing %s: %w", key, err)
+		}
+
+		return int(parsed), nil
+	}
+	loadStr := func(key string, optional bool, fallback string) (string, error) {
+		val := os.Getenv(key)
+		if val != "" {
+			return val, nil
+		}
+		if !optional {
+			return fallback, fmt.Errorf("missing variable %s", key)
+		}
+
+		return fallback, nil
+	}
+
+	// environment := os.Getenv("ENVIRONMENT")
+	// if environment == "" {
+	// 	environment = globalConstants.EnvDev
+	// }
+	// when optional, won't error
+	environment, _ := loadStr("ENVIRONMENT", true, globalConstants.EnvDev)
+	port, _ := loadStr("PORT", true, "9999")
+	hourlyRateLimit, err := loadInt("HOURLY_RATE_LIMIT", false)
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleCompartmentID, err := loadStr("ORACLE_COMPARTMENT_ID", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleUser, err := loadStr("ORACLE_USER", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleFingerprint, err := loadStr("ORACLE_FINGERPRINT", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleKey, err := loadStr("ORACLE_KEY", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleTenancy, err := loadStr("ORACLE_TENANCY", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	oracleRegion, err := loadStr("ORACLE_REGION", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	mongoConnectionURL, err := loadStr("MONGO_CONNECTION_URL", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	redisConnectionURL, err := loadStr("REDIS_CONNECTION_URL", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+
+	return types.Config{
+		Environment:         environment,
+		Port:                port,
+		HourlyRateLimit:     hourlyRateLimit,
+		MongoConnectionURL:  mongoConnectionURL,
+		OracleCompartmentID: oracleCompartmentID,
+		OracleUser:          oracleUser,
+		OracleKey:           oracleKey,
+		OracleTenancy:       oracleTenancy,
+		OracleRegion:        oracleRegion,
+		OracleFingerprint:   oracleFingerprint,
+		RedisConnectionURL:  redisConnectionURL,
+	}, nil
+}
+
 func main() {
-	config, err := utils.OpenAndReadJSON[types.Config](".env")
+	err := godotenv.Load()
+	if err != nil {
+		panic(err)
+	}
+
+	config, err := loadConfig()
 	if err != nil {
 		panic(err)
 	}
@@ -65,7 +162,7 @@ func main() {
 		panic(err)
 	}
 
-	// SERVIES //
+	// SERVICES //
 	apiService := services.NewAPI(apiKeyMongoCollection)
 	emailConfig := common.NewRawConfigurationProvider(
 		config.OracleTenancy,
@@ -75,7 +172,16 @@ func main() {
 		oraclePrivateKey,
 		nil,
 	)
-	emailService, err := jemail.NewEmail(emailConfig, "noreply@jeffreycarr.dev", "The Jeffiverse", config.OracleCompartmentID)
+	emailService, err := jemail.NewEmail(
+		emailConfig,
+		"noreply@jeffreycarr.dev",
+		"The Jeffiverse",
+		config.OracleCompartmentID,
+	)
+	if err != nil {
+		panic(err)
+	}
+	redisService, err := jredis.NewJRedis[string](config.RedisConnectionURL)
 	if err != nil {
 		panic(err)
 	}
@@ -92,6 +198,9 @@ func main() {
 	)
 	adminMiddleware := middlewares.NewRequireAuth(true)
 	apiKeyMiddleware := localMiddleware.NewRequireAPIKey(apiService)
+	rateLimitingMiddleware := middlewares.NewRateLimiterMiddleware(redisService)
+	loginRateLimitingMiddleware := middlewares.NewLoginRateLimiterMiddleware[auth.LoginRequest](redisService)
+	// TODO: login rate limiting middleware
 
 	// HANDLERS //
 	userHandler := handlers.NewUserHandler(userController)
@@ -101,144 +210,110 @@ func main() {
 	// ROUTER //
 	mux := http.NewServeMux()
 
-	// Public endpoints
-	mux.HandleFunc(
-		"POST /api/auth/logout",
-		jhttp.NewEndpoint(
-			authHandler.Logout,
-			nil,
-			corsMiddleware,
-			userMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"GET /api/auth/authed-user",
-		jhttp.NewEndpoint(
-			authHandler.ValidateCookie,
-			nil,
-			corsMiddleware,
-			userMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"GET /api/user/{userUUID}",
-		jhttp.NewEndpoint(
-			userHandler.GetUserByUUID,
-			[]string{constants.UserUUIDPathVariable},
-			corsMiddleware,
-			apiKeyMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"PUT /api/user/{userUUID}/update-password",
-		jhttp.NewEndpoint(
-			authHandler.UpdatePassword,
-			[]string{constants.UserUUIDPathVariable},
-			userMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"PUT /api/user/{userUUID}/update",
-		jhttp.NewEndpoint(
-			userHandler.UpdateUser,
-			[]string{constants.UserUUIDPathVariable},
-			userMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"POST /api/auth/users",
-		jhttp.NewEndpoint(
-			userHandler.BulkGetUsersByUUIDs,
-			nil,
-			corsMiddleware,
-			apiKeyMiddleware,
-		),
-	)
+	endpointBuilder := jhttp.NewEndpointBuilder(func() middlewares.Middleware {
+		return rateLimitingMiddleware.WithLimit(config.HourlyRateLimit, time.Hour)
+	})
 
-	mux.HandleFunc(
-		"POST /api/ping/api-key",
-		jhttp.NewEndpoint(
-			HandlePing,
-			nil,
-			corsMiddleware,
-			apiKeyMiddleware,
-		),
-	)
+	// PUBLIC endpoints //
+	jhttp.
+		NewEndpointFunction("/api/ping", HandlePing).
+		WithMethod(http.MethodPost).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(corsMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/auth/logout", authHandler.Logout).
+		WithMethod(http.MethodPost).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(corsMiddleware, userMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/auth/authed-user", authHandler.ValidateCookie).
+		WithMethod(http.MethodGet).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(corsMiddleware, userMiddleware).
+		HandleEndpoint(mux)
 
-	mux.HandleFunc(
-		"POST /api/ping/admin",
-		jhttp.NewEndpoint(
-			HandlePing,
-			nil,
-			corsMiddleware,
-			userMiddleware,
-			adminMiddleware,
-		),
-	)
+	// API endpoints //
+	jhttp.
+		NewEndpointFunction("/api/ping/api-key", HandlePing).
+		WithMethod(http.MethodPost).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(corsMiddleware, apiKeyMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/user/{userUUID}", userHandler.GetUserByUUID).
+		WithPathKeys(constants.UserUUIDPathVariable).
+		WithMethod(http.MethodGet).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(corsMiddleware, apiKeyMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/auth/users", userHandler.BulkGetUsersByUUIDs).
+		WithMethod(http.MethodPost).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(corsMiddleware, apiKeyMiddleware).
+		HandleEndpoint(mux)
 
-	mux.HandleFunc(
-		"POST /api/ping",
-		jhttp.NewEndpoint(
-			HandlePing,
-			nil,
-			corsMiddleware,
-		),
-	)
+	// Admin endpoints //
+	jhttp.NewEndpointFunction("/api/ping/admin", HandlePing).
+		WithMethod(http.MethodPost).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(corsMiddleware, userMiddleware, adminMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/admin/keys", adminHandler.GetAllKeys).
+		WithMethod(http.MethodGet).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(userMiddleware, adminMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/admin/keys", adminHandler.CreateNewAPIKey).
+		WithMethod(http.MethodPost).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(userMiddleware, adminMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/admin/keys/revoke", adminHandler.RevokeAPIKey).
+		WithMethod(http.MethodPost).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(userMiddleware, adminMiddleware).
+		HandleEndpoint(mux)
+
+	// User endpoints //
+	jhttp.
+		NewEndpointFunction("/api/user/{userUUID}/update-password", authHandler.UpdatePassword).
+		WithPathKeys(constants.UserUUIDPathVariable).
+		WithMethod(http.MethodPut).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(userMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/user/{userUUID}/update", userHandler.UpdateUser).
+		WithPathKeys(constants.UserUUIDPathVariable).
+		WithMethod(http.MethodPut).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(userMiddleware).
+		HandleEndpoint(mux)
 
 	// Auth
-	mux.HandleFunc(
-		"POST /api/auth/create",
-		jhttp.NewEndpoint(
-			authHandler.CreateUser,
-			nil,
-		),
-	)
-	mux.HandleFunc(
-		"POST /api/auth/verify",
-		jhttp.NewEndpoint(
-			authHandler.VerifyEmail,
-			nil,
-		),
-	)
-	mux.HandleFunc(
-		"POST /api/auth/login",
-		jhttp.NewEndpoint(
-			authHandler.Login,
-			nil,
-			userMiddleware,
-		),
-	)
-
-	// Admin
-	mux.HandleFunc(
-		"GET /api/admin/keys",
-		jhttp.NewEndpoint(
-			adminHandler.GetAllKeys,
-			nil,
-			userMiddleware,
-			adminMiddleware,
-		),
-	)
-
-	mux.HandleFunc(
-		"POST /api/admin/keys",
-		jhttp.NewEndpoint(
-			adminHandler.CreateNewAPIKey,
-			nil,
-			userMiddleware,
-			adminMiddleware,
-		),
-	)
-
-	mux.HandleFunc(
-		"POST /api/admin/keys/revoke",
-		jhttp.NewEndpoint(
-			adminHandler.RevokeAPIKey,
-			nil,
-			userMiddleware,
-			adminMiddleware,
-		),
-	)
+	jhttp.
+		NewEndpointFunction("/api/auth/create", authHandler.CreateUser).
+		WithMethod(http.MethodPost).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(rateLimitingMiddleware.WithLimit(3, time.Hour)).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/auth/verify", authHandler.VerifyEmail).
+		WithMethod(http.MethodPost).
+		WithBuilder(endpointBuilder).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/auth/login", authHandler.Login).
+		WithMethod(http.MethodPost).
+		WithBuilder(endpointBuilder).
+		WithMiddlewares(loginRateLimitingMiddleware.WithLimit(5, time.Minute), userMiddleware).
+		HandleEndpoint(mux)
 
 	mux.HandleFunc(
 		"OPTIONS /api/auth/{rest...}",

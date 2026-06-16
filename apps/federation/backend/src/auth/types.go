@@ -20,6 +20,12 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+// GetUserID satisfies the `LoginRequest ` interface for the
+// login middleware
+func (login LoginRequest) GetUserID() string {
+	return login.Email
+}
+
 // LogoutRequest is used to logout
 type LogoutRequest struct {
 	LogoutEverywhere bool `json:"logoutEverywhere"`

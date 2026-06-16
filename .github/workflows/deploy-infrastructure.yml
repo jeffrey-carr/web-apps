@@ -1,0 +1,40 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    tags:
+      - "infra-v*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+
+      - name: Copy Config and Reload Nginx
+        run: |
+          # 1. Securely copy the single configuration file to the remote host
+          scp infra/federation/nginx/federation ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/federation
+
+          # 2. Move the file, create the symlink, and reload Nginx
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'bash -s' << 'EOF'
+            # Ensure the target directory exists
+            sudo mkdir -p /opt/apps/federation/nginx
+            
+            # Move the file into place
+            sudo mv /tmp/federation.conf /opt/apps/federation/nginx/federation
+            
+            # Force the symlink directly into sites-enabled (overwrites if it already exists)
+            sudo ln -sf /opt/apps/federation/nginx/federation /etc/nginx/sites-available/federation
+            sudo ln -sf /etc/nginx/sites-available/federation /etc/nginx/sites-enabled/federation
+            
+            # Test syntax and reload
+            sudo nginx -t && sudo systemctl reload nginx
+          EOF
