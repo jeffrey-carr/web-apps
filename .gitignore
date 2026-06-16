@@ -24,6 +24,8 @@ Thumbs.db
 .oci
 .env
 .env.*
+*.env
+docker.env
 !.env.example
 !.env.test
 

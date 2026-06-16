@@ -11,7 +11,7 @@ services:
     environment:
       NODE_ENV: production
     ports:
-      - '3001:3000'
+      - '127.0.0.1:3001:3000'
 
   federation_backend:
     # ... build args ...
@@ -19,15 +19,16 @@ services:
     container_name: federation_backend
     restart: unless-stopped
     volumes:
-      - ./backend/.env:/app/.env:ro
+      - ./backend/docker.env:/app/.env:ro
 
       - ./backend/.oci:/app/.oci:ro
 
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     ports:
-      - '3101:9999'
+      - '127.0.0.1:3101:9999'
 
   redis:
     image: "redis:alpine" # Uses the lightweight Alpine Linux version of Redis
-    ports:
-      - "6379:6379"
 
