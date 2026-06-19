@@ -83,7 +83,7 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_KEY }}
           REMOTE_HOST: ${{ vars.SERVER_IP }}
-          REMOTE_USER: ${{ vars.SSH_USERNAME }}
+          REMOTE_USER: ${{ vars.SSH_USERNAME || 'ubuntu' }}
           SOURCE: "apps/${{ env.APP_NAME }}/"
           TARGET: "/opt/apps/${{ env.APP_NAME }}"
 
@@ -91,13 +91,13 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.SERVER_IP }}
-          username: ${{ vars.SSH_USERNAME }}
+          username: ${{ vars.SSH_USERNAME || 'ubuntu' }}
           key: ${{ secrets.SSH_KEY }}
           script: |
             set -e
             cd /opt/apps/${{ env.APP_NAME }}
             
-            sudo chown -R ${{ vars.SSH_USERNAME }}:${{ vars.SSH_USERNAME }} .
+            sudo chown -R ${{ vars.SSH_USERNAME || 'ubuntu' }}:${{ vars.SSH_USERNAME || 'ubuntu' }} .
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
             
             docker compose pull
