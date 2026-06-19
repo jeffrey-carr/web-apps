@@ -75,8 +75,8 @@ jobs:
           echo "${{ secrets.OCI_PRIVATE_KEY }}" > backend/.oci/prod_private.pem
           chmod 644 backend/.oci/prod_private.pem
 
-          echo '${{ toJSON(secrets) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' > backend/docker.env
-          echo '${{ toJSON(vars) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> backend/docker.env
+          echo '${{ toJSON(secrets) }}' | jq -r 'to_entries[] | select(.key != "SSH_KEY") | "\(.key)=\"\(.value)\""' > backend/docker.env
+          echo '${{ toJSON(vars) }}' | jq -r 'to_entries[] | "\(.key)=\"\(.value)\""' >> backend/docker.env
 
       - name: Ensure Rsync is Installed on Remote Server
         uses: appleboy/ssh-action@master

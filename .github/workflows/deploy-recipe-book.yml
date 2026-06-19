@@ -72,8 +72,8 @@ jobs:
         working-directory: ./apps/${{ env.APP_NAME }}
         run: |
           mkdir -p backend
-          echo '${{ toJSON(secrets) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' > backend/docker.env
-          echo '${{ toJSON(vars) }}' | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> backend/docker.env
+          echo '${{ toJSON(secrets) }}' | jq -r 'to_entries[] | select(.key != "SSH_KEY") | "\(.key)=\"\(.value)\""' > backend/docker.env
+          echo '${{ toJSON(vars) }}' | jq -r 'to_entries[] | "\(.key)=\"\(.value)\""' >> backend/docker.env
 
       - name: Ensure Rsync is Installed on Remote Server
         uses: appleboy/ssh-action@master
