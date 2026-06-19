@@ -8,32 +8,49 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        app: [federation, recipe_book, web_games]
+    environment: ${{ matrix.app }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check if config exists
+        id: check_config
+        run: |
+          if [ -d "infra/${{ matrix.app }}" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Found infrastructure configuration for ${{ matrix.app }}."
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "No infrastructure configuration found for ${{ matrix.app }}, skipping."
+          fi
+
       - name: Install SSH Key
+        if: steps.check_config.outputs.exists == 'true'
         uses: shimataro/ssh-key-action@v2
         with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: "unnecessary"
 
       - name: Copy Config and Reload Nginx
+        if: steps.check_config.outputs.exists == 'true'
         run: |
-          # 1. Securely copy the single configuration file to the remote host
-          scp infra/federation/nginx/federation ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp/federation
+          # 1. Securely copy the configuration file ignoring host key checking
+          scp -o StrictHostKeyChecking=no infra/${{ matrix.app }}/nginx/${{ matrix.app }} ${{ vars.SSH_USERNAME || 'ubuntu' }}@${{ vars.SERVER_IP }}:/tmp/${{ matrix.app }}
 
           # 2. Move the file, create the symlink, and reload Nginx
-          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'bash -s' << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ vars.SSH_USERNAME || 'ubuntu' }}@${{ vars.SERVER_IP }} 'bash -s' << 'EOF'
             # Ensure the target directory exists
-            sudo mkdir -p /opt/apps/federation/nginx
+            sudo mkdir -p /opt/apps/${{ matrix.app }}/nginx
             
             # Move the file into place
-            sudo mv /tmp/federation.conf /opt/apps/federation/nginx/federation
+            sudo mv /tmp/${{ matrix.app }} /opt/apps/${{ matrix.app }}/nginx/${{ matrix.app }}
             
             # Force the symlink directly into sites-enabled (overwrites if it already exists)
-            sudo ln -sf /opt/apps/federation/nginx/federation /etc/nginx/sites-available/federation
-            sudo ln -sf /etc/nginx/sites-available/federation /etc/nginx/sites-enabled/federation
+            sudo ln -sf /opt/apps/${{ matrix.app }}/nginx/${{ matrix.app }} /etc/nginx/sites-available/${{ matrix.app }}
+            sudo ln -sf /etc/nginx/sites-available/${{ matrix.app }} /etc/nginx/sites-enabled/${{ matrix.app }}
             
             # Test syntax and reload
             sudo nginx -t && sudo systemctl reload nginx
