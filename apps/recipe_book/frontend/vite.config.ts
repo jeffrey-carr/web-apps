@@ -4,8 +4,15 @@ import dns from 'node:dns';
 
 dns.setDefaultResultOrder('ipv4first');
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
   plugins: [sveltekit()],
+  build: {
+    rollupOptions: {
+      output: {
+        inlineDynamicImports: isSsrBuild === true
+      }
+    }
+  },
   server: {
     allowedHosts: ['recipe.jeffreycarr.local'],
     proxy: {
@@ -16,4 +23,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

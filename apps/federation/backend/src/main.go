@@ -73,9 +73,12 @@ func loadConfig() (types.Config, error) {
 	// when optional, won't error
 	environment, _ := loadStr("ENVIRONMENT", true, globalConstants.EnvDev)
 	port, _ := loadStr("PORT", true, "9999")
-	hourlyRateLimit, err := loadInt("HOURLY_RATE_LIMIT", false)
+	hourlyRateLimit, err := loadInt("HOURLY_RATE_LIMIT", true)
 	if err != nil {
 		return types.Config{}, err
+	}
+	if hourlyRateLimit == 0 {
+		hourlyRateLimit = 3000
 	}
 	oracleCompartmentID, err := loadStr("ORACLE_COMPARTMENT_ID", false, "")
 	if err != nil {
@@ -89,9 +92,15 @@ func loadConfig() (types.Config, error) {
 	if err != nil {
 		return types.Config{}, err
 	}
-	oracleKey, err := loadStr("ORACLE_KEY", false, "")
+	oracleKey, err := loadStr("ORACLE_KEY", true, "")
 	if err != nil {
 		return types.Config{}, err
+	}
+	if oracleKey == "" {
+		oracleKey, err = loadStr("ORACLE_KEY_PATH", false, "")
+		if err != nil {
+			return types.Config{}, err
+		}
 	}
 	oracleTenancy, err := loadStr("ORACLE_TENANCY", false, "")
 	if err != nil {
@@ -105,7 +114,7 @@ func loadConfig() (types.Config, error) {
 	if err != nil {
 		return types.Config{}, err
 	}
-	redisConnectionURL, err := loadStr("REDIS_CONNECTION_URL", false, "")
+	redisConnectionURL, err := loadStr("REDIS_CONNECTION_URL", true, "redis://redis:6379")
 	if err != nil {
 		return types.Config{}, err
 	}

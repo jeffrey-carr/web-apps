@@ -5,8 +5,15 @@ import dns from 'node:dns';
 
 dns.setDefaultResultOrder('ipv4first');
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
 	plugins: [sveltekit()],
+	build: {
+		rollupOptions: {
+			output: {
+				inlineDynamicImports: isSsrBuild === true
+			}
+		}
+	},
 	server: {
 		port: 5175,
 		allowedHosts: ['login.jeffreycarr.local'],
@@ -23,4 +30,4 @@ export default defineConfig({
 			],
 		}
 	}
-});
+}));
