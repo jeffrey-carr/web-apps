@@ -10,6 +10,9 @@ env:
 jobs:
   build-backend:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -96,10 +99,10 @@ jobs:
           script: |
             set -e
             cd /opt/apps/${{ env.APP_NAME }}
-            
+
             sudo chown -R ${{ vars.SSH_USERNAME || 'ubuntu' }}:${{ vars.SSH_USERNAME || 'ubuntu' }} .
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ vars.GHCR_USERNAME }} --password-stdin
-            
+
             docker compose pull
             docker compose up -d
             docker image prune -f
