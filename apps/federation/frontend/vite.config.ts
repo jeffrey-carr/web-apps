@@ -10,7 +10,7 @@ export default defineConfig(({ isSsrBuild }) => ({
 	build: {
 		rollupOptions: {
 			output: {
-				inlineDynamicImports: isSsrBuild === true
+				codeSplitting: isSsrBuild === true ? false : true
 			}
 		}
 	},
