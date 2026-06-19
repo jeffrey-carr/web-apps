@@ -40,6 +40,11 @@ RUN \
   else npm install --omit=dev; \
   fi
 
+# Create symlinks to resolve static asset path resolution in split chunks under Vite 8
+RUN mkdir -p /app/build/server/chunks && \
+    ln -sf /app/build/client /app/build/server/chunks/client && \
+    ln -sf /app/build/prerendered /app/build/server/chunks/prerendered
+
 EXPOSE 3000
 
 CMD ["node", "build"]

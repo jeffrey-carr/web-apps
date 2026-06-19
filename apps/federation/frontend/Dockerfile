@@ -36,6 +36,11 @@ COPY --from=build /app/apps/${APP}/frontend/package.json ./
 # We treat the output as a standalone app now
 RUN npm install --omit=dev
 
+# Create symlinks to resolve static asset path resolution in split chunks under Vite 8
+RUN mkdir -p /app/build/server/chunks && \
+    ln -sf /app/build/client /app/build/server/chunks/client && \
+    ln -sf /app/build/prerendered /app/build/server/chunks/prerendered
+
 EXPOSE 3000
 
 CMD ["node", "build"]
