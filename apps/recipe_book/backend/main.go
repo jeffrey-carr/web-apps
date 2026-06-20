@@ -39,7 +39,10 @@ func loadConfig() (types.Config, error) {
 	}
 
 	environment, _ := loadStr("RECIPE_BOOK_ENVIRONMENT", true, globalConstants.EnvDev)
-	port, _ := loadStr("RECIPE_BOOK_PORT", true, "8080")
+	port, _ := loadStr("RECIPE_BOOK_PORT", true, "")
+	if port == "" {
+		port, _ = loadStr("PORT", true, "8080")
+	}
 	mongoConnectionURL, err := loadStr("RECIPE_BOOK_MONGO_CONNECTION_URL", false, "")
 	if err != nil {
 		return types.Config{}, err
