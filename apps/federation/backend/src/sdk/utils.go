@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"go-common/constants"
 	jHTTPErrors "go-common/jhttp/errors"
+	"go-common/utils"
 	"io"
 	"net/http"
 )
@@ -29,6 +31,16 @@ func makeRequestAndParseResponse[T any, K any](ctx context.Context, method strin
 	}
 	req.Header.Add(constants.APIKeyHeaderKey, apiKey)
 	req.Header.Set("Content-Type", "application/json")
+	ip := utils.GetIPFromContext(ctx)
+	if ip == "" {
+		return nil, errors.New("IP address is required")
+	}
+	req.Header.Set(constants.RealIPHeaderKey, ip)
+	ua := utils.GetUAFromContext(ctx)
+	if ua == "" {
+		return nil, errors.New("UA address is required")
+	}
+	req.Header.Set("User-Agent", ua)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

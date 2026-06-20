@@ -8,4 +8,5 @@ const (
 	MiddlewareIdentifierRequireAuth      MiddlewareIdentifier = "require-auth"
 	MiddlewareIdentifierRateLimiter      MiddlewareIdentifier = "rate-limiter"
 	MiddlewareIdentifierLoginRateLimiter MiddlewareIdentifier = "login-rate-limiter"
+	MiddlewareIdentifierAPIRateLimiter   MiddlewareIdentifier = "api-rate-limiter"
 )
