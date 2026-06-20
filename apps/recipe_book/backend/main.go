@@ -52,10 +52,11 @@ func loadConfig() (types.Config, error) {
 	if err != nil {
 		return types.Config{}, err
 	}
-	redisConnectionURL, err := loadStr("RECIPE_BOOK_REDIS_CONNECTION_URL", false, "")
-	if err != nil {
-		return types.Config{}, err
+	redisFallback := "redis://localhost:6379"
+	if environment == globalConstants.EnvProd {
+		redisFallback = "redis://redis:6379"
 	}
+	redisConnectionURL, _ := loadStr("RECIPE_BOOK_REDIS_CONNECTION_URL", true, redisFallback)
 
 	return types.Config{
 		Environment:        environment,
