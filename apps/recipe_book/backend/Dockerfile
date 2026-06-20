@@ -29,7 +29,7 @@ WORKDIR /app
 
 COPY --from=build /app/server ./server
 
-ENV PORT=9999
-EXPOSE 9999
+ENV PORT=8080
+EXPOSE 8080
 
 CMD ["./server"]
