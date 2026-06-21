@@ -66,11 +66,6 @@ func loadConfig() (types.Config, error) {
 		return fallback, nil
 	}
 
-	// environment := os.Getenv("ENVIRONMENT")
-	// if environment == "" {
-	// 	environment = globalConstants.EnvDev
-	// }
-	// when optional, won't error
 	environment, _ := loadStr("ENVIRONMENT", true, globalConstants.EnvDev)
 	port, _ := loadStr("PORT", true, "9999")
 	hourlyRateLimit, err := loadInt("HOURLY_RATE_LIMIT", true)
@@ -209,7 +204,7 @@ func main() {
 	apiKeyMiddleware := localMiddleware.NewRequireAPIKey(apiService)
 	rateLimitingMiddleware := middlewares.NewRateLimiterMiddleware(redisService)
 	loginRateLimitingMiddleware := middlewares.NewLoginRateLimiterMiddleware[auth.LoginRequest](redisService)
-	// TODO: login rate limiting middleware
+	apiKeyRateLimitingMiddleware := middlewares.NewAPIRateLimiterMiddleware(redisService)
 
 	// HANDLERS //
 	userHandler := handlers.NewUserHandler(userController)
@@ -227,65 +222,77 @@ func main() {
 	jhttp.
 		NewEndpointFunction("/api/ping", HandlePing).
 		WithMethod(http.MethodPost).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(corsMiddleware).
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/auth/logout", authHandler.Logout).
 		WithMethod(http.MethodPost).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(corsMiddleware, userMiddleware).
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/auth/authed-user", authHandler.ValidateCookie).
 		WithMethod(http.MethodGet).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(corsMiddleware, userMiddleware).
 		HandleEndpoint(mux)
 
 	// API endpoints //
+	apiEndpointBuilder := jhttp.NewEndpointBuilder(
+		func() middlewares.Middleware {
+			return apiKeyRateLimitingMiddleware.WithLimit(10000, time.Hour)
+		},
+	)
+
 	jhttp.
 		NewEndpointFunction("/api/ping/api-key", HandlePing).
 		WithMethod(http.MethodPost).
-		WithBuilder(endpointBuilder).
-		WithMiddlewares(corsMiddleware, apiKeyMiddleware).
+		WithBuilders(endpointBuilder, apiEndpointBuilder).
+		WithMiddlewares(
+			corsMiddleware,
+			apiKeyMiddleware,
+		).
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/user/{userUUID}", userHandler.GetUserByUUID).
 		WithPathKeys(constants.UserUUIDPathVariable).
 		WithMethod(http.MethodGet).
-		WithBuilder(endpointBuilder).
-		WithMiddlewares(corsMiddleware, apiKeyMiddleware).
+		WithBuilders(endpointBuilder, apiEndpointBuilder).
+		WithMiddlewares(
+			corsMiddleware,
+			apiKeyMiddleware,
+		).
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/auth/users", userHandler.BulkGetUsersByUUIDs).
 		WithMethod(http.MethodPost).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder, apiEndpointBuilder).
 		WithMiddlewares(corsMiddleware, apiKeyMiddleware).
 		HandleEndpoint(mux)
 
 	// Admin endpoints //
 	jhttp.NewEndpointFunction("/api/ping/admin", HandlePing).
 		WithMethod(http.MethodPost).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(corsMiddleware, userMiddleware, adminMiddleware).
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/admin/keys", adminHandler.GetAllKeys).
 		WithMethod(http.MethodGet).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(userMiddleware, adminMiddleware).
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/admin/keys", adminHandler.CreateNewAPIKey).
 		WithMethod(http.MethodPost).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(userMiddleware, adminMiddleware).
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/admin/keys/revoke", adminHandler.RevokeAPIKey).
 		WithMethod(http.MethodPost).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(userMiddleware, adminMiddleware).
 		HandleEndpoint(mux)
 
@@ -294,14 +301,14 @@ func main() {
 		NewEndpointFunction("/api/user/{userUUID}/update-password", authHandler.UpdatePassword).
 		WithPathKeys(constants.UserUUIDPathVariable).
 		WithMethod(http.MethodPut).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(userMiddleware).
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/user/{userUUID}/update", userHandler.UpdateUser).
 		WithPathKeys(constants.UserUUIDPathVariable).
 		WithMethod(http.MethodPut).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(userMiddleware).
 		HandleEndpoint(mux)
 
@@ -309,18 +316,18 @@ func main() {
 	jhttp.
 		NewEndpointFunction("/api/auth/create", authHandler.CreateUser).
 		WithMethod(http.MethodPost).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(rateLimitingMiddleware.WithLimit(3, time.Hour)).
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/auth/verify", authHandler.VerifyEmail).
 		WithMethod(http.MethodPost).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/auth/login", authHandler.Login).
 		WithMethod(http.MethodPost).
-		WithBuilder(endpointBuilder).
+		WithBuilders(endpointBuilder).
 		WithMiddlewares(loginRateLimitingMiddleware.WithLimit(5, time.Minute), userMiddleware).
 		HandleEndpoint(mux)
 
@@ -332,3 +339,5 @@ func main() {
 	fmt.Printf("Starting server on port %s\n", config.Port)
 	http.ListenAndServe(fmt.Sprintf(":%s", config.Port), mux)
 }
+
+// Trigger reload

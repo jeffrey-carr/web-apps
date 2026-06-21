@@ -118,7 +118,7 @@ export const getUserFavorites = async (
 };
 
 const favoriteRecipeEndpoint: RouteInformation = {
-  path: '/api/user/favorite-recipe',
+  path: '/api/user/favorite',
   method: METHODS.POST,
   credentials: 'required',
 };
@@ -136,7 +136,7 @@ export const favoriteRecipe = async (
 };
 
 const unFavoriteRecipeEndpoint: RouteInformation = {
-  path: '/api/user/unfavorite-recipe',
+  path: '/api/user/favorite',
   method: METHODS.DELETE,
   credentials: 'required',
 };

@@ -29,7 +29,7 @@ type EndpointProperties[T, E any] struct {
 	middlewares         []middlewares.Middleware
 	excludedMiddlewares utils.Set[middlewares.MiddlewareIdentifier]
 	callback            EndpointFunc[T, E]
-	builder             *EndpointBuilder
+	builders            []EndpointBuilder
 }
 
 // NewEndpointFunction creates a new EndpointProperties instance for a callback.
@@ -42,8 +42,8 @@ func NewEndpointFunction[T, E any](slug string, f EndpointFunc[T, E]) EndpointPr
 
 // WithBuilder adds the builder's default middlewares to this endpoint, merging them
 // with any already specified middlewares.
-func (e EndpointProperties[T, E]) WithBuilder(builder EndpointBuilder) EndpointProperties[T, E] {
-	e.builder = &builder
+func (e EndpointProperties[T, E]) WithBuilders(builders ...EndpointBuilder) EndpointProperties[T, E] {
+	e.builders = append(e.builders, builders...)
 	return e
 }
 
@@ -78,14 +78,16 @@ func (e EndpointProperties[T, E]) ExcludeMiddlewares(ids ...middlewares.Middlewa
 // HandleEndpoint compiles the endpoint properties into a standard HTTP handler function.
 func (e EndpointProperties[T, E]) HandleEndpoint(mux *http.ServeMux) {
 	var mws []middlewares.Middleware
-	if e.builder != nil {
-		for _, factory := range e.builder.defaultMiddlewareFactories {
-			mw := factory()
-			if e.excludedMiddlewares.Has(mw.ID()) {
-				continue
-			}
+	if len(e.builders) > 0 {
+		for _, builder := range e.builders {
+			for _, factory := range builder.defaultMiddlewareFactories {
+				mw := factory()
+				if e.excludedMiddlewares.Has(mw.ID()) {
+					continue
+				}
 
-			mws = append(mws, mw)
+				mws = append(mws, mw)
+			}
 		}
 	}
 	mws = append(mws, e.middlewares...)

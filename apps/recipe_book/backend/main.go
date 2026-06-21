@@ -10,7 +10,7 @@ import (
 	"go-common/jhttp/middlewares"
 	"go-common/services/jcloudinary"
 	"go-common/services/jmongo"
-	"go-common/utils"
+	"go-common/services/jredis"
 	"net/http"
 	"os"
 	filesDomain "recipe-book/domains/files"
@@ -18,10 +18,58 @@ import (
 	"recipe-book/files"
 	"recipe-book/recipe"
 	"recipe-book/types"
+	"time"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
+
+func loadConfig() (types.Config, error) {
+	loadStr := func(key string, optional bool, fallback string) (string, error) {
+		val := os.Getenv(key)
+		if val != "" {
+			return val, nil
+		}
+		if !optional {
+			return fallback, fmt.Errorf("missing variable %s", key)
+		}
+
+		return fallback, nil
+	}
+
+	environment, _ := loadStr("RECIPE_BOOK_ENVIRONMENT", true, globalConstants.EnvDev)
+	port, _ := loadStr("RECIPE_BOOK_PORT", true, "")
+	if port == "" {
+		port, _ = loadStr("PORT", true, "8080")
+	}
+	mongoConnectionURL, err := loadStr("RECIPE_BOOK_MONGO_CONNECTION_URL", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	federationAPIKey, err := loadStr("RECIPE_BOOK_FEDERATION_API_KEY", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	cloudinaryAPIKey, err := loadStr("RECIPE_BOOK_CLOUDINARY_API_KEY", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	redisFallback := "redis://localhost:6379"
+	if environment == globalConstants.EnvProd {
+		redisFallback = "redis://redis:6379"
+	}
+	redisConnectionURL, _ := loadStr("RECIPE_BOOK_REDIS_CONNECTION_URL", true, redisFallback)
+
+	return types.Config{
+		Environment:        environment,
+		Port:               port,
+		MongoURL:           mongoConnectionURL,
+		FederationAPIKey:   federationAPIKey,
+		CloudinaryAPIKey:   cloudinaryAPIKey,
+		RedisConnectionURL: redisConnectionURL,
+	}, nil
+}
 
 // HandlePing handles the test 'ping' function
 func HandlePing(ctx context.Context, r jhttp.RequestData[struct{}]) (*string, *JHTTPErrors.JHTTPError) {
@@ -30,7 +78,12 @@ func HandlePing(ctx context.Context, r jhttp.RequestData[struct{}]) (*string, *J
 }
 
 func main() {
-	config, err := utils.OpenAndReadJSON[types.Config](".env")
+	err := godotenv.Load()
+	if err != nil {
+		panic(fmt.Errorf("failed to load environment variables: %w", err))
+	}
+
+	config, err := loadConfig()
 	if err != nil {
 		panic(fmt.Errorf("could not load config %w", err))
 	}
@@ -63,10 +116,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	redisService, err := jredis.NewJRedis[string](config.RedisConnectionURL)
+	if err != nil {
+		panic(err)
+	}
 
 	// MIDDLEWARES //
 	userMiddleware := middlewares.NewGetUser(nil)
 	authMiddleware := middlewares.NewRequireAuth(false)
+	rateLimitingMiddlware := middlewares.NewRateLimiterMiddleware(redisService)
 
 	// REPOSITORIES //
 	filesRepo := files.NewRepository(filesMongoCollection)
@@ -80,94 +138,78 @@ func main() {
 	recipeHandler := recipeDomain.NewHandler(recipeController)
 
 	// ROUTER //
+	defaultBuilder := jhttp.NewEndpointBuilder(
+		func() middlewares.Middleware {
+			return rateLimitingMiddlware.WithLimit(3000, time.Hour)
+		},
+	)
 	mux := http.NewServeMux()
 
 	// ENDPOINTS //
 	// Recipe
-	mux.HandleFunc(
-		"POST /api/recipe",
-		jhttp.NewEndpoint(
-			recipeHandler.Create,
-			nil,
-			userMiddleware,
-			authMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"PATCH /api/recipe",
-		jhttp.NewEndpoint(
-			recipeHandler.Update,
-			nil,
-			userMiddleware,
-			authMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"GET /api/recipe/all-tags",
-		jhttp.NewEndpoint(
-			recipeHandler.GetAllTags,
-			nil,
-		),
-	)
-	mux.HandleFunc(
-		"GET /api/recipe/search",
-		jhttp.NewEndpoint(
-			recipeHandler.Search,
-			nil,
-			userMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		fmt.Sprintf("GET /api/recipe/{%s}", recipeDomain.RecipeIDPathVar),
-		jhttp.NewEndpoint(
-			recipeHandler.Get,
-			[]string{recipeDomain.RecipeIDPathVar},
-			userMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"DELETE /api/recipe",
-		jhttp.NewEndpoint(
-			recipeHandler.DeleteRecipe,
-			nil,
-			userMiddleware,
-		),
-	)
+	jhttp.
+		NewEndpointFunction("/api/recipe", recipeHandler.Create).
+		WithMethod(http.MethodPost).
+		WithBuilders(defaultBuilder).
+		WithMiddlewares(userMiddleware, authMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/recipe", recipeHandler.Create).
+		WithMethod(http.MethodPatch).
+		WithBuilders(defaultBuilder).
+		WithMiddlewares(userMiddleware, authMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/recipe/all-tags", recipeHandler.GetAllTags).
+		WithMethod(http.MethodGet).
+		WithBuilders(defaultBuilder).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/recipe/search", recipeHandler.Search).
+		WithMethod(http.MethodGet).
+		WithBuilders(defaultBuilder).
+		WithMiddlewares(userMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction(fmt.Sprintf("/api/recipe/{%s}", recipeDomain.RecipeIDPathVar), recipeHandler.Get).
+		WithPathKeys(recipeDomain.RecipeIDPathVar).
+		WithMethod(http.MethodGet).
+		WithBuilders(defaultBuilder).
+		WithMiddlewares(userMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/recipe", recipeHandler.DeleteRecipe).
+		WithMethod(http.MethodDelete).
+		WithBuilders(defaultBuilder).
+		WithMiddlewares(userMiddleware).
+		HandleEndpoint(mux)
 
 	// User
-	mux.HandleFunc(
-		"GET /api/user/favorites",
-		jhttp.NewEndpoint(
-			recipeHandler.GetUserFavorites,
-			nil,
-			userMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"POST /api/user/favorite-recipe",
-		jhttp.NewEndpoint(
-			recipeHandler.FavoriteRecipe,
-			nil,
-			userMiddleware,
-		),
-	)
-	mux.HandleFunc(
-		"DELETE /api/user/unfavorite-recipe",
-		jhttp.NewEndpoint(
-			recipeHandler.UnFavoriteRecipe,
-			nil,
-			userMiddleware,
-		),
-	)
+	jhttp.
+		NewEndpointFunction("/api/user/favorites", recipeHandler.GetUserFavorites).
+		WithMethod(http.MethodGet).
+		WithBuilders(defaultBuilder).
+		WithMiddlewares(userMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/user/favorite", recipeHandler.FavoriteRecipe).
+		WithMethod(http.MethodPost).
+		WithBuilders(defaultBuilder).
+		WithMiddlewares(userMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/user/favorite", recipeHandler.UnFavoriteRecipe).
+		WithMethod(http.MethodDelete).
+		WithBuilders(defaultBuilder).
+		WithMiddlewares(userMiddleware).
+		HandleEndpoint(mux)
 
 	// Test
-	mux.HandleFunc(
-		"POST /api/ping",
-		jhttp.NewEndpoint(
-			HandlePing,
-			nil,
-		),
-	)
+	jhttp.
+		NewEndpointFunction("/api/ping", HandlePing).
+		WithMethod(http.MethodPost).
+		WithBuilders(defaultBuilder).
+		HandleEndpoint(mux)
 
 	fmt.Printf("Starting server on port %s\n", config.Port)
 	http.ListenAndServe(fmt.Sprintf(":%s", config.Port), mux)

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"go-common/constants"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/services/jredis"
 	"go-common/types"
@@ -138,6 +139,50 @@ func (lrl loginRateLimiter[T]) WithLimit(limit int, duration time.Duration) Rate
 	lrl.limit = limit
 	lrl.duration = duration
 	return lrl
+}
+
+type apiRateLimiter struct {
+	baseRateLimiter
+}
+
+func NewAPIRateLimiterMiddleware(redis jredis.JRedis[string]) RateLimiter {
+	return apiRateLimiter{baseRateLimiter{
+		redis: redis,
+	}}
+}
+
+func (arl apiRateLimiter) ID() MiddlewareIdentifier {
+	return MiddlewareIdentifierAPIRateLimiter
+}
+
+func (arl apiRateLimiter) Apply(ctx context.Context, w http.ResponseWriter, r *http.Request) (context.Context, *JHTTPErrors.JHTTPError) {
+	if r == nil {
+		return ctx, JHTTPErrors.NewBadRequestError("unknown request")
+	}
+
+	apiKey := r.Header.Get(constants.APIKeyHeaderKey)
+	if apiKey == "" {
+		return ctx, JHTTPErrors.NewBadRequestError("api key is required")
+	}
+	fingerprint := fmt.Sprintf("%s:%s", arl.id, apiKey)
+
+	count, err := arl.incrCount(ctx, fingerprint)
+	if err != nil {
+		return ctx, JHTTPErrors.NewInternalServerError(nil)
+	}
+
+	if count > int64(arl.limit) {
+		return ctx, JHTTPErrors.NewTooManyRequestsError("too many requests")
+	}
+
+	return ctx, nil
+}
+
+func (arl apiRateLimiter) WithLimit(limit int, duration time.Duration) RateLimiter {
+	arl.id = utils.NewUUID()
+	arl.limit = limit
+	arl.duration = duration
+	return arl
 }
 
 type baseRateLimiter struct {

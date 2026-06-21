@@ -14,7 +14,6 @@ services:
       - '127.0.0.1:3001:3000'
 
   federation_backend:
-    # ... build args ...
     image: ghcr.io/jeffrey-carr/federation-backend:latest
     container_name: federation_backend
     restart: unless-stopped
@@ -30,7 +29,6 @@ services:
       - '127.0.0.1:3101:9999'
 
   redis:
-    image: "redis:alpine" # Uses the lightweight Alpine Linux version of Redis
+    image: 'redis:alpine'
     ports:
       - '127.0.0.1:6379:6379'
-

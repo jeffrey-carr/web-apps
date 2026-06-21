@@ -20,6 +20,14 @@ export default defineConfig(({ isSsrBuild }) => ({
         target: 'http://127.0.0.1:8080',
         changeOrigin: true,
         xfwd: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            const ip = req.socket.remoteAddress;
+            if (ip) {
+              proxyReq.setHeader('X-Real-IP', ip);
+            }
+          });
+        },
       },
     },
   },
