@@ -54,10 +54,12 @@
       <h2>{section.title}</h2>
     </div>
   {:else}
-    <div class={styles.ingredients}>
-      <h3 class={styles.areaTitle}>Ingredients</h3>
-      <IngredientsTable ingredients={section.ingredients} />
-    </div>
+    {#if section.ingredients.length > 0}
+      <div class={styles.ingredients}>
+        <h3 class={styles.areaTitle}>Ingredients</h3>
+        <IngredientsTable ingredients={section.ingredients} />
+      </div>
+    {/if}
 
     <div class={styles.directions}>
       <h3>Directions</h3>

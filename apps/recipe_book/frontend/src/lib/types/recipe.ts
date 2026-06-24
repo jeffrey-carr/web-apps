@@ -35,6 +35,8 @@ export const INGREDIENT_UNITS = [
   'quart',
   'gallon',
   'lb',
+  'clove',
+  'bunch',
 ];
 export type IngredientUnit = (typeof INGREDIENT_UNITS)[number];
 
