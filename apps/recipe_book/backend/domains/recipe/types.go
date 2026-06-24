@@ -97,13 +97,15 @@ const (
 	Quart      IngredientUnit = "quart"
 	Gallon     IngredientUnit = "gallon"
 	Pound      IngredientUnit = "lb"
+	Clove      IngredientUnit = "clove"
+	Bunch      IngredientUnit = "bunch"
 	Item       IngredientUnit = "item"
 )
 
 // ValidIngredientUnits is a slice of all valid ingredient units
 var ValidIngredientUnits = []IngredientUnit{
-	Teaspoon, Tablespoon, Ounce, FluidOunce,
-	Cup, Pint, Quart, Gallon, Pound, Item,
+	Teaspoon, Tablespoon, Ounce, FluidOunce, Cup,
+	Pint, Quart, Gallon, Pound, Clove, Bunch, Item,
 }
 
 // Direction represents one direction in a recipe

@@ -140,7 +140,31 @@ func (c Controller) UpdateRecipe(
 
 // DeleteRecipe deletes a recipe
 func (c Controller) DeleteRecipe(ctx context.Context, recipeUUID string) error {
-	return c.repo.DeleteRecipe(ctx, recipeUUID)
+	rec, err := c.GetRecipe(ctx, recipeUUID)
+	if err != nil {
+		return err
+	}
+
+	var imgFile files.File
+	if rec.ImageUUID != "" {
+		imgFile, err = c.filesController.GetByUUID(ctx, rec.ImageUUID)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = c.repo.DeleteRecipe(ctx, rec.UUID)
+	if err != nil {
+		return err
+	}
+
+	err = c.filesController.DeleteFile(ctx, imgFile)
+	if err != nil {
+		// TODO: make some noise about the recipe getting deleted and the file not,
+		// or make it transactional
+	}
+
+	return nil
 }
 
 // GetAllUserFavorites gets all a user's favorited recipes

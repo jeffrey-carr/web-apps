@@ -221,10 +221,12 @@
           </div>
         {/if}
       </div>
-      <div class={styles.cookTime}>
-        <ReactiveIcon icon="stopwatch" />
-        <span class={styles.actualCookTime}>{cookTimeToStr(recipe.cookTimeMs)}</span>
-      </div>
+      {#if recipe.cookTimeMs}
+        <div class={styles.cookTime}>
+          <ReactiveIcon icon="stopwatch" />
+          <span class={styles.actualCookTime}>{cookTimeToStr(recipe.cookTimeMs)}</span>
+        </div>
+      {/if}
     </div>
     <div class={styles.tagsContainer}>
       {#each recipe.tags ?? [] as tag (tag.uuid)}
