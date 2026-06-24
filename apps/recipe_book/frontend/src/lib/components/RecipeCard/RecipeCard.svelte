@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import { cookTimeToStr } from '$lib/mappers/recipe';
   import type { Recipe } from '$lib/types/recipe';
-  import { FavoriteButton } from '$lib/components';
+  import { DraftBadge, FavoriteButton } from '$lib/components';
   import { getRandomElement, ReactiveIcon, Spinner } from '@jeffrey-carr/frontend-common';
   import styles from './styles.module.scss';
   import placeholderImg1 from '$lib/images/missing_img_1.png';
@@ -29,6 +29,7 @@
   let img = $derived(
     imgFailed || recipe.imageURL === '' ? getRandomElement(imgs) : recipe.imageURL
   );
+  let isDraft = $derived(recipe.status === 'draft');
 
   $effect(() => {
     recipe.imageURL;
@@ -76,7 +77,7 @@
       {/if}
     {/if}
     <img
-      class={styles.image}
+      class={clsx(styles.image, { [styles.disabled]: isDraft })}
       src={img}
       alt={`Image of ${recipe.name}`}
       onerror={() => (imgFailed = true)}
@@ -85,6 +86,11 @@
 
   <div class={styles.content}>
     <h3 class={styles.title}>{recipe.name}</h3>
+    {#if isDraft}
+      <div class={styles.badgeContainer}>
+        <DraftBadge />
+      </div>
+    {/if}
     <div class={styles.description}>
       {@html recipe.description}
     </div>

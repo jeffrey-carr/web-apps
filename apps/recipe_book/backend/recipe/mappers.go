@@ -59,7 +59,7 @@ func CreateRequestToRecipe(
 	rec.Sections = cleanedSections
 
 	if !request.Publish {
-		rec.Status = recipe.StatusPrivate
+		rec.Status = recipe.StatusDraft
 	}
 
 	if image != nil {

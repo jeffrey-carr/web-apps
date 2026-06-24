@@ -28,15 +28,9 @@
 }
 
 .logoutButton {
-  padding: 0.5rem;
+  width: 100%;
+}
 
-  background-color: transparent;
-  border: none;
-
-  transition: background-color var(--default-transition-ms) ease-in-out;
-
-  &:hover {
-    cursor: pointer;
-    background-color: var(--bg-color-light);
-  }
+.dropdown {
+  background-color: var(--bg-color-overlay);
 }

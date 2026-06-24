@@ -122,7 +122,7 @@ func main() {
 	}
 
 	// MIDDLEWARES //
-	userMiddleware := middlewares.NewGetUser(nil)
+	userMiddleware := middlewares.NewGetUser(nil, federationSDK)
 	authMiddleware := middlewares.NewRequireAuth(false)
 	rateLimitingMiddlware := middlewares.NewRateLimiterMiddleware(redisService)
 
@@ -154,7 +154,7 @@ func main() {
 		WithMiddlewares(userMiddleware, authMiddleware).
 		HandleEndpoint(mux)
 	jhttp.
-		NewEndpointFunction("/api/recipe", recipeHandler.Create).
+		NewEndpointFunction("/api/recipe", recipeHandler.Update).
 		WithMethod(http.MethodPatch).
 		WithBuilders(defaultBuilder).
 		WithMiddlewares(userMiddleware, authMiddleware).

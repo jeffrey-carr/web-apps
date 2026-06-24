@@ -11,6 +11,7 @@ import (
 
 // SDK is the official SDK for the Jeffiverse Federation API
 type SDK interface {
+	GetUserByCookie(ctx context.Context, cookie string) (*types.CommonUser, error)
 	GetUserByUUID(ctx context.Context, uuid string) (*types.CommonUser, error)
 	GetUsersByUUIDs(ctx context.Context, uuids []string) (*[]types.CommonUser, error)
 }
@@ -35,13 +36,24 @@ func GetAppURL() string {
 	return "http://login.jeffreycarr.local:9999/api"
 }
 
+// GetUserByCookie gets the user by the provided cookie
+func (s *sdk) GetUserByCookie(ctx context.Context, cookie string) (*types.CommonUser, error) {
+	if s.apiKey == "" {
+		return nil, ErrNoAPIKey
+	}
+
+	headers := http.Header{}
+	headers.Add("Cookie", cookie)
+	return makeRequestAndParseResponse[*struct{}, types.CommonUser](ctx, http.MethodGet, "auth/authed-user", &headers, nil, s.apiKey)
+}
+
 // GetUserByUUID gets a user by their UUID
 func (s *sdk) GetUserByUUID(ctx context.Context, uuid string) (*types.CommonUser, error) {
 	if s.apiKey == "" {
 		return nil, ErrNoAPIKey
 	}
 
-	user, err := makeRequestAndParseResponse[*struct{}, types.CommonUser](ctx, http.MethodGet, fmt.Sprintf("user/%s", uuid), nil, s.apiKey)
+	user, err := makeRequestAndParseResponse[*struct{}, types.CommonUser](ctx, http.MethodGet, fmt.Sprintf("user/%s", uuid), nil, nil, s.apiKey)
 	return user, err
 }
 
@@ -56,6 +68,7 @@ func (s *sdk) GetUsersByUUIDs(ctx context.Context, uuids []string) (*[]types.Com
 		ctx,
 		http.MethodPost,
 		"auth/users",
+		nil,
 		req,
 		s.apiKey,
 	)

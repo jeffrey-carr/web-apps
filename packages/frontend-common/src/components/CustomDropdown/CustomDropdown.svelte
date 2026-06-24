@@ -1,17 +1,31 @@
 <script lang="ts">
   import clsx from 'clsx';
   import styles from './styles.module.scss';
-  import type { Snippet } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
 
   let {
     trigger,
     content,
-    show,
+    show = $bindable(false),
   }: {
     trigger: Snippet;
     content: Snippet;
     show: boolean;
   } = $props();
+
+  onMount(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (show && wrapperObj && !wrapperObj.contains(e.target as Node)) {
+        show = false;
+      }
+    };
+
+    document.addEventListener('click', handleOutsideClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleOutsideClick, true);
+    };
+  });
 
   let wrapperObj = $state<HTMLDivElement>();
   let contentObj = $state<HTMLDivElement>();

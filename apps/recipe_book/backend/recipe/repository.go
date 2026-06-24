@@ -2,7 +2,9 @@ package recipe
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"go-common/jcontext"
 	"go-common/services/jmongo"
 	"go-common/types"
 	"go-common/utils"
@@ -130,9 +132,6 @@ func (r Repository) Search(ctx context.Context, opts recipe.SearchOpts, favorite
 	if opts.FavoritesOnly {
 		filter["_id"] = bson.M{"$in": favoriteUUIDs}
 	}
-	if opts.AuthorUUID != nil {
-		filter["authorUUID"] = *opts.AuthorUUID
-	}
 
 	hasSelectedTags := opts.SelectedTagUUIDs != nil && len(*opts.SelectedTagUUIDs) > 0
 	hasInverseTags := opts.InverseTagUUIDs != nil && len(*opts.InverseTagUUIDs) > 0
@@ -148,6 +147,23 @@ func (r Repository) Search(ctx context.Context, opts recipe.SearchOpts, favorite
 
 		// This safely applies $in, $nin, or both to the "tags" field
 		filter["tags"] = tagFilter
+	}
+
+	if opts.IncludeDrafts {
+		user, ok := jcontext.GetUser(ctx)
+		if !ok {
+			return nil, 0, errors.New("must be logged in")
+		}
+
+		opts.AuthorUUID = utils.Ptr(user.UUID)
+		filter["authorUUID"] = user.UUID
+		filter["status"] = recipe.StatusDraft
+	} else {
+		filter["status"] = recipe.StatusPublic
+	}
+
+	if opts.AuthorUUID != nil {
+		filter["authorUUID"] = *opts.AuthorUUID
 	}
 
 	limit := max(int64(1), opts.Limit)

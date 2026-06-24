@@ -13,6 +13,7 @@
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
   import { userState } from '$lib/globals/user.svelte';
+  import { navigating } from '$app/state';
 
   let { children }: { children?: () => any } = $props();
 
@@ -54,6 +55,18 @@
   const closeNotification = () => {
     notification = notificationQueue.shift();
   };
+
+  const getLoadingMessage = (): string => {
+    if (!navigating.to?.route?.id) return 'page';
+    switch (navigating.to.route.id) {
+      case '/':
+        return 'Loading home...';
+      case '/recipe/[id]':
+        return 'Loading recipe...';
+      default:
+        return `Loading page...`;
+    }
+  };
 </script>
 
 <svelte:head>
@@ -66,9 +79,15 @@
 </svelte:head>
 
 <main class="container">
-  <div class="child-container">
-    {@render children?.()}
-  </div>
+  {#if navigating.to}
+    <div class="spinner-container">
+      <Spinner size="1.75rem" label={getLoadingMessage()} />
+    </div>
+  {:else}
+    <div class="child-container">
+      {@render children?.()}
+    </div>
+  {/if}
 
   {#if notification}
     {#key notification}
@@ -92,6 +111,15 @@
     margin: 0;
 
     background-color: var(--app-theme-background);
+  }
+
+  .spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    height: 100%;
+    width: 100%;
   }
 
   .child-container {

@@ -5,7 +5,6 @@
     Checkbox,
     Input,
     ReactiveIcon,
-    Select,
     Spinner,
     type User,
   } from '@jeffrey-carr/frontend-common';
@@ -26,6 +25,7 @@
     selectedTags = $bindable([]),
     inverseTags = $bindable([]),
     favoritesOnlyValue = $bindable(false),
+    includeDraftsValue = $bindable(false),
     loginURL = '',
   }: {
     user?: User | null;
@@ -36,6 +36,7 @@
     selectedTags?: Tag[];
     inverseTags?: Tag[];
     favoritesOnlyValue?: boolean;
+    includeDraftsValue?: boolean;
     loginURL?: string;
   } = $props();
 
@@ -59,6 +60,7 @@
     const filters: SearchOptions = {
       recipeName: nameValue,
       favoritesOnly: favoritesOnlyValue,
+      includeDrafts: includeDraftsValue,
       selectedTagUUIDs: selectedTags.map(t => t.uuid),
       inverseTagUUIDs: inverseTags.map(t => t.uuid),
     };
@@ -70,6 +72,7 @@
   const clearFilters = () => {
     nameValue = '';
     favoritesOnlyValue = false;
+    includeDraftsValue = false;
     selectedTags = [];
     inverseTags = [];
     applyFilters();
@@ -124,6 +127,7 @@
     />
     {#if user}
       <Checkbox label="Favorites only" bind:checked={favoritesOnlyValue} />
+      <Checkbox label="Show drafts" bind:checked={includeDraftsValue} />
     {/if}
     <TagSelector {tags} bind:selected={selectedTags} bind:inverse={inverseTags} {loadingTags} />
 

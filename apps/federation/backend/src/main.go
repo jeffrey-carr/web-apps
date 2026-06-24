@@ -199,6 +199,7 @@ func main() {
 	corsMiddleware := middlewares.NewCORs()
 	userMiddleware := middlewares.NewGetUser(
 		&middlewares.GetUserOpts{UserFetcher: authController.GetUserFromCookie},
+		nil,
 	)
 	adminMiddleware := middlewares.NewRequireAuth(true)
 	apiKeyMiddleware := localMiddleware.NewRequireAPIKey(apiService)
