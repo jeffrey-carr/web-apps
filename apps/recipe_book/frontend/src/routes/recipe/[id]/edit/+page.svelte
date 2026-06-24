@@ -25,7 +25,7 @@
   };
 
   const goToRecipe = (newSlug?: string) => {
-    goto(`/recipe/${recipe.slug}`);
+    goto(`/recipe/${newSlug ?? recipe.slug}`);
   };
 
   const edit = async (formData: RecipeFormData) => {
@@ -55,7 +55,7 @@
       updateRequest.originalURL = formData.importURL;
     }
 
-    const newStatus = formData.publish ? 'public' : 'private';
+    const newStatus = formData.publish ? 'public' : 'draft';
     if (newStatus !== recipe.status) {
       updateRequest.status = newStatus;
     }

@@ -216,7 +216,12 @@ func (c Controller) GetPublicRecipe(ctx context.Context, recipeID string) (recip
 
 // GetAllTags gets all tags
 func (c Controller) GetAllTags(ctx context.Context) ([]recipe.Tag, error) {
-	return c.repo.GetAllTags(ctx)
+	tags, err := c.repo.GetAllTags(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return tags, nil
 }
 
 // Search allows searching for recipes
@@ -355,7 +360,7 @@ func (c Controller) tagNamesToTags(ctx context.Context, tagNames []string) ([]re
 		utils.FilterAndMap(
 			tagNames,
 			func(tagName string) (string, bool) {
-				trimmed := strings.TrimSpace(tagName)
+				trimmed := strings.ToLower(strings.TrimSpace(tagName))
 				return trimmed, trimmed != ""
 			},
 		)...,

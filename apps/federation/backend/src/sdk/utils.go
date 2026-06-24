@@ -13,7 +13,7 @@ import (
 	"net/http"
 )
 
-func makeRequestAndParseResponse[T any, K any](ctx context.Context, method string, slug string, body T, apiKey string) (*K, error) {
+func makeRequestAndParseResponse[T any, K any](ctx context.Context, method string, slug string, headers *http.Header, body T, apiKey string) (*K, error) {
 	b, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
@@ -28,6 +28,9 @@ func makeRequestAndParseResponse[T any, K any](ctx context.Context, method strin
 	)
 	if err != nil {
 		return nil, err
+	}
+	if headers != nil {
+		req.Header = *headers
 	}
 	req.Header.Add(constants.APIKeyHeaderKey, apiKey)
 	req.Header.Set("Content-Type", "application/json")
@@ -44,7 +47,6 @@ func makeRequestAndParseResponse[T any, K any](ctx context.Context, method strin
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Printf("error making request: %s\n", err.Error())
 		return nil, err
 	}
 	if res != nil && res.Body != nil {
@@ -64,7 +66,6 @@ func makeRequestAndParseResponse[T any, K any](ctx context.Context, method strin
 			errMsg = httpErr.Message
 		}
 
-		fmt.Printf("[%d] %s", res.StatusCode, errMsg)
 		return nil, fmt.Errorf("[%d] %s", res.StatusCode, errMsg)
 	}
 

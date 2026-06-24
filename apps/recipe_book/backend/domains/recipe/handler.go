@@ -3,7 +3,6 @@ package recipe
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"go-common/jcontext"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
@@ -65,8 +64,7 @@ func (h Handler) Create(ctx context.Context, r jhttp.RequestData[struct{}]) (*Cr
 }
 
 // Update handles an update request
-func (h Handler) Update(ctx context.Context, r jhttp.RequestData[struct{}]) (*Recipe, *JHTTPErrors.JHTTPError) {
-	fmt.Println("Recieved update request!")
+func (h Handler) Update(ctx context.Context, r jhttp.RequestData[struct{}]) (*PublicRecipe, *JHTTPErrors.JHTTPError) {
 	user, ok := jcontext.GetUser(ctx)
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
@@ -108,10 +106,12 @@ func (h Handler) Update(ctx context.Context, r jhttp.RequestData[struct{}]) (*Re
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
-	fmt.Printf("Before: %+v\n", existingRecipe)
-	fmt.Printf("After: %+v\n", updatedRecipe)
+	publicRecipe, err := h.controller.GetPublicRecipe(ctx, updatedRecipe.UUID)
+	if err != nil {
+		return nil, JHTTPErrors.NewInternalServerError(err)
+	}
 
-	return &updatedRecipe, nil
+	return &publicRecipe, nil
 }
 
 // DeleteRecipe deletes a recipe
@@ -236,6 +236,15 @@ func (h Handler) Get(ctx context.Context, r jhttp.RequestData[struct{}]) (*Publi
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
+	if recipe.Status == StatusDraft {
+		user, ok := jcontext.GetUser(ctx)
+		if !ok {
+			return nil, JHTTPErrors.NewUnauthorizedError()
+		} else if user.UUID != recipe.AuthorUUID {
+			return nil, JHTTPErrors.NewForbiddenError()
+		}
+	}
+
 	return &recipe, nil
 }
 
@@ -257,9 +266,9 @@ func (h Handler) Search(ctx context.Context, r jhttp.RequestData[struct{}]) (*Pa
 		return nil, httpErr
 	}
 
-	if opts.FavoritesOnly {
-		_, ok := jcontext.GetUser(ctx)
-		if !ok {
+	user, userLoggedIn := jcontext.GetUser(ctx)
+	if opts.FavoritesOnly || opts.IncludeDrafts {
+		if !userLoggedIn {
 			return nil, JHTTPErrors.NewUnauthorizedError()
 		}
 	}
@@ -270,6 +279,19 @@ func (h Handler) Search(ctx context.Context, r jhttp.RequestData[struct{}]) (*Pa
 	}
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
+	}
+
+	// On one hand, it kinda sucks to blow up the whole request because of (what is most likely) a coding error.
+	// On the other hand, if we just filter out the not-allowed recipes and return what we can, the other info
+	// (like total number of results) is incorrect. We could just subtract the removed recipes from the total,
+	// but there will still be an unknown number of private recipes included in that total. That'll confuse
+	// the frontend into thinking the user can jump to somthing like, say, page 25 when we don't actually have
+	// that many recipes to show.
+	// I'm sure there's something smarter we can do, but this is a personal project on a free website so whatever
+	if utils.Any(recipes, func(rec PublicRecipe) bool {
+		return rec.Status == StatusDraft && rec.AuthorUUID != user.UUID
+	}) {
+		return nil, JHTTPErrors.NewUnauthorizedError()
 	}
 
 	return &PaginatedResponse[[]PublicRecipe]{
@@ -288,6 +310,7 @@ func queryToSearchParams(query *url.Values) (SearchOpts, *JHTTPErrors.JHTTPError
 
 	recipeName := query.Get("name")
 	favoritesOnly := query.Get("favorites_only")
+	includeDrafts := query.Get("drafts")
 	selectedTagUUIDsString := query.Get("selectedTags")
 	inverseTagUUIDsString := query.Get("inverseTags")
 	selectedTagUUIDs := strings.Split(selectedTagUUIDsString, ",")
@@ -332,7 +355,8 @@ func queryToSearchParams(query *url.Values) (SearchOpts, *JHTTPErrors.JHTTPError
 	if authorUUID != "" {
 		opts.AuthorUUID = &authorUUID
 	}
-	opts.FavoritesOnly = favoritesOnly == "true"
+	opts.FavoritesOnly = strings.ToLower(favoritesOnly) == "true"
+	opts.IncludeDrafts = strings.ToLower(includeDrafts) == "true"
 	opts.Limit = min(limit, 200)
 	opts.Page = max(1, page)
 

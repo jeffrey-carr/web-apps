@@ -2,13 +2,13 @@ package middlewares
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
+	"federation/sdk"
 	"go-common/constants"
 	"go-common/jcontext"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/types"
 	"go-common/utils"
-	"io"
 	"net/http"
 )
 
@@ -17,60 +17,6 @@ const (
 	prodEndpoint = "https://login.jeffreycarr.dev/api/auth"
 )
 
-func defaultUserFetcher(ctx context.Context, cookie *http.Cookie) (types.CommonUser, error) {
-	endpoint := devEndpoint
-	if utils.GetEnv() == constants.EnvProd {
-		endpoint = prodEndpoint
-	}
-	endpoint += "/authed-user"
-
-	req, err := http.NewRequest(http.MethodGet, endpoint, nil)
-	if err != nil {
-		return types.CommonUser{}, err
-	}
-	req.Header.Add("Cookie", cookie.String())
-	authResponse, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return types.CommonUser{}, err
-	}
-
-	var bodyBytes []byte
-	if authResponse.Body != nil {
-		defer authResponse.Body.Close()
-
-		var readErr error
-		bodyBytes, readErr = io.ReadAll(authResponse.Body)
-		if readErr != nil {
-			return types.CommonUser{}, err
-		}
-	}
-
-	// If it's an internal server error, throw that error
-	if authResponse.StatusCode >= http.StatusInternalServerError {
-		var fedErr JHTTPErrors.JHTTPError
-		parseErr := json.Unmarshal(bodyBytes, &fedErr)
-		if parseErr != nil {
-			return types.CommonUser{}, parseErr
-		}
-
-		return types.CommonUser{}, fedErr
-	}
-
-	// If it's any other error, just don't save the user
-	if authResponse.StatusCode != http.StatusOK {
-		return types.CommonUser{}, nil
-	}
-
-	// If it's a 200, the body is the user
-	var user types.CommonUser
-	err = json.Unmarshal(bodyBytes, &user)
-	if err != nil {
-		return types.CommonUser{}, err
-	}
-
-	return user, nil
-}
-
 // GetUserOpts are the options for the GetUser middleware
 type GetUserOpts struct {
 	UserFetcher func(context.Context, *http.Cookie) (types.CommonUser, error)
@@ -78,17 +24,18 @@ type GetUserOpts struct {
 
 // GetUser gets the user from the auth cookie and attaches it to the context
 type GetUser struct {
-	UserFetcher func(context.Context, *http.Cookie) (types.CommonUser, error)
+	customFetcher func(context.Context, *http.Cookie) (types.CommonUser, error)
+	federationSDK sdk.SDK
 }
 
 // NewGetUser creates a new GetUser middleware
-func NewGetUser(opts *GetUserOpts) GetUser {
-	fetcher := defaultUserFetcher
+func NewGetUser(opts *GetUserOpts, federationSDK sdk.SDK) GetUser {
+	var fetcher func(context.Context, *http.Cookie) (types.CommonUser, error)
 	if opts != nil && opts.UserFetcher != nil {
 		fetcher = opts.UserFetcher
 	}
 
-	return GetUser{UserFetcher: fetcher}
+	return GetUser{customFetcher: fetcher, federationSDK: federationSDK}
 }
 
 func (gu GetUser) ID() MiddlewareIdentifier {
@@ -111,8 +58,16 @@ func (gu GetUser) Apply(ctx context.Context, w http.ResponseWriter, r *http.Requ
 
 	// Add the full user to context in case we need it
 	ctx = context.WithValue(ctx, jcontext.FullUserKey, utils.Ptr(types.User{}))
-	user, err := gu.UserFetcher(ctx, cookie)
+	var user types.CommonUser
+	if gu.customFetcher != nil {
+		user, err = gu.customFetcher(ctx, cookie)
+	} else {
+		user, err = gu.defaultUserFetcher(ctx, cookie)
+	}
 	if err != nil {
+		if errors.Is(err, sdk.ErrNotFound) {
+			return ctx, nil
+		}
 		return ctx, JHTTPErrors.NewInternalServerError(err)
 	}
 	if user.UUID != "" {
@@ -120,6 +75,11 @@ func (gu GetUser) Apply(ctx context.Context, w http.ResponseWriter, r *http.Requ
 	}
 
 	return ctx, nil
+}
+
+func (gu GetUser) defaultUserFetcher(ctx context.Context, cookie *http.Cookie) (types.CommonUser, error) {
+	user, err := gu.federationSDK.GetUserByCookie(ctx, cookie.String())
+	return utils.Deref(user), err
 }
 
 // RequireAuth enforces a user is authenticated.

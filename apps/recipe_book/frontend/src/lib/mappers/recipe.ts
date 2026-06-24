@@ -130,6 +130,9 @@ export const makeSearchQueryString = (opts: SearchOptions): Record<string, strin
   if (opts.favoritesOnly) {
     q['favorites_only'] = `${opts.favoritesOnly ? 'true' : 'false'}`;
   }
+  if (opts.includeDrafts) {
+    q['drafts'] = `${opts.includeDrafts ? 'true' : 'false'}`;
+  }
   if (opts.authorUUID) {
     q['author'] = opts.authorUUID;
   }
@@ -153,6 +156,10 @@ export const parseSearchQueryString = (params: URLSearchParams): SearchOptions =
   const getParam = (key: string): string | undefined => {
     return params.get(key) ?? undefined;
   };
+  const getBoolParam = (key: string): boolean => {
+    const param = params.get(key);
+    return param != null && param.toLowerCase() === 'true';
+  };
   const getNumberParam = (key: string): number | undefined => {
     const str = getParam(key);
     if (str) {
@@ -162,7 +169,7 @@ export const parseSearchQueryString = (params: URLSearchParams): SearchOptions =
   const getStringArrayParam = (key: string): string[] => {
     const str = getParam(key);
     if (str) {
-      return str.split(",");
+      return str.split(',');
     }
 
     return [];
@@ -170,7 +177,8 @@ export const parseSearchQueryString = (params: URLSearchParams): SearchOptions =
 
   return {
     recipeName: getParam('name'),
-    favoritesOnly: getParam('favorites_only') === 'true',
+    favoritesOnly: getBoolParam('favorites_only'),
+    includeDrafts: getBoolParam('drafts'),
     authorUUID: getParam('author'),
     selectedTagUUIDs: getStringArrayParam('selectedTags'),
     inverseTagUUIDs: getStringArrayParam('inverseTags'),

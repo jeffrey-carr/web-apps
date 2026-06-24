@@ -1,25 +1,17 @@
 <script lang="ts">
-  import { writable } from 'svelte/store';
-  import { Spinner } from '@jeffrey-carr/frontend-common';
-  import styles from './layout.module.scss';
   import type { LayoutProps } from './$types';
   import type { Recipe } from '$lib/types/recipe';
   import { setContext } from 'svelte';
 
   let { data, children }: LayoutProps = $props();
 
-  let recipe = $state<{ current: Recipe | null }>({ current: null });
+  // svelte-ignore state_referenced_locally
+  let recipe = $state<{ current: Recipe }>({ current: data.recipe });
   setContext('recipe', recipe);
 
-  data.recipePromise.then(resolvedRecipe => {
-    recipe.current = resolvedRecipe;
+  $effect(() => {
+    recipe.current = data.recipe;
   });
 </script>
 
-{#await data.recipePromise}
-  <div class={styles.container}>
-    <Spinner label="Loading recipe..." size="2rem" />
-  </div>
-{:then}
-  {@render children?.()}
-{/await}
+{@render children?.()}

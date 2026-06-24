@@ -52,13 +52,15 @@
   </button>
 {/snippet}
 {#snippet content()}
-  <Button
-    class={styles.logoutButton}
-    onclick={onLogout}
-    size="sm"
-    variant="plain"
-    loading={loadingLogout}>Log out</Button
-  >
+  <div class={styles.dropdown}>
+    <Button
+      class={styles.logoutButton}
+      onclick={onLogout}
+      size="sm"
+      variant="plain"
+      loading={loadingLogout}>Log out</Button
+    >
+  </div>
 {/snippet}
 
-<CustomDropdown {show} {trigger} {content} />
+<CustomDropdown bind:show {trigger} {content} />

@@ -58,7 +58,7 @@ export type RecipeUpdateRequest = {
   cookTimeMs?: number;
   tagNames?: string[];
   originalURL?: string;
-  status?: 'public' | 'private' | 'draft';
+  status?: 'public' | 'draft';
   sections?: Section[];
 };
 
@@ -76,7 +76,7 @@ export type Recipe = {
   authorLName: string;
   imageUUID?: string;
   imageURL?: string;
-  status: 'public' | 'private' | 'draft';
+  status: 'public' | 'draft';
   isFavorited: boolean;
 
   createdAt: number;
@@ -93,6 +93,7 @@ export type UserFavoriteRecipe = {
 export type SearchOptions = {
   recipeName?: string;
   favoritesOnly?: boolean;
+  includeDrafts?: boolean;
   authorUUID?: string;
   selectedTagUUIDs?: string[];
   inverseTagUUIDs?: string[];

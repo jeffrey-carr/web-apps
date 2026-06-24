@@ -43,6 +43,10 @@
 
   /* Special colors */
 
+  --app-theme-info: var(--blue);
+  --app-theme-info-light: #e4eef4;
+  --app-theme-info-dark: #254a61;
+
   --app-theme-success: var(--green);
   --app-theme-success-light: #e8f3e7;
 

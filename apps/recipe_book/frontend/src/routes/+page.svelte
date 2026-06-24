@@ -3,17 +3,12 @@
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
   import {
-    App,
-    APP_QUERY_PARAM,
     Button,
     debounce,
-    getAppURL,
     Input,
-    PATH_QUERY_PARAM,
     ReactiveIcon,
     ServerError,
     Spinner,
-    type Environment,
   } from '@jeffrey-carr/frontend-common';
   import styles from './page.module.scss';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
@@ -32,6 +27,7 @@
   import UserProfileButton from '$lib/components/UserProfileButton/UserProfileButton.svelte';
   import clsx from 'clsx';
   import { makeSearchQueryString } from '$lib/mappers/recipe';
+  import { constructLoginURL } from '$lib/mappers/requests';
 
   let { data } = $props();
 
@@ -71,6 +67,7 @@
   let selectedTags = $state<Tag[]>([]);
   let inverseTags = $state<Tag[]>([]);
   let favoritesOnlySearchValue = $derived(!!data.searchOpts.favoritesOnly);
+  let includeDraftsSearchValue = $derived(!!data.searchOpts.includeDrafts);
 
   onMount(() => {
     if (loadingRecipes || loadingTags) return;
@@ -119,17 +116,7 @@
     loadData();
   });
 
-  const constructLoginURL = (environment: Environment, path?: string): string => {
-    let route = getAppURL(environment, App.Federation);
-    route += `?${APP_QUERY_PARAM}=${App.RecipeBook}`;
-    if (path && path !== '/') {
-      route += `&${PATH_QUERY_PARAM}=${path}`;
-    }
-
-    return route;
-  };
-
-  let loginURL = $derived(constructLoginURL(PUBLIC_ENVIRONMENT, page.url.pathname.slice(1)));
+  let loginURL = $derived(constructLoginURL(PUBLIC_ENVIRONMENT, page));
 
   const onFavoriteRecipe = async (recipeUUID: string): Promise<void> => {
     let result;
@@ -287,6 +274,7 @@
       bind:selectedTags
       bind:inverseTags
       favoritesOnlyValue={favoritesOnlySearchValue}
+      includeDraftsValue={includeDraftsSearchValue}
       {loginURL}
     />
   </div>

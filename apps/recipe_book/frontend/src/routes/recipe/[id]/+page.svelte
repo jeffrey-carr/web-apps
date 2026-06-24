@@ -15,7 +15,7 @@
   import type { Recipe } from '$lib/types/recipe';
   import KeepAwakeVideo from '$lib/assets/keep_awake.mp4?url';
   import { userState } from '$lib/globals/user.svelte';
-  import { DeleteButton, EditButton, FavoriteButton } from '$lib/components';
+  import { DeleteButton, DraftBadge, EditButton, FavoriteButton } from '$lib/components';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
   import { deleteRecipe, favoriteRecipe, unFavoriteRecipe } from '$lib/requests/recipe';
   import Tag from '$lib/components/Tag/Tag.svelte';
@@ -190,6 +190,9 @@
   <ExpandButton onclick={goHome}>Back to home</ExpandButton>
   <div class={styles.header}>
     <h1>{recipe.name}</h1>
+    {#if recipe.status === 'draft'}
+      <DraftBadge />
+    {/if}
     {#if recipe.imageURL && !recipeImgFailed}
       <img
         class={styles.recipeImage}
@@ -224,7 +227,7 @@
       </div>
     </div>
     <div class={styles.tagsContainer}>
-      {#each recipe.tags as tag (tag.uuid)}
+      {#each recipe.tags ?? [] as tag (tag.uuid)}
         <Tag data={tag} />
       {/each}
     </div>

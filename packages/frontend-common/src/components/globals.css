@@ -13,6 +13,9 @@
   --theme-gray-dark: var(--app-theme-gray-dark, darkgray);
 
   /* Special colors */
+  --theme-info: var(--app-theme-info, #3b82f6);
+  --theme-info-light: var(--app-theme-info-light, #eff6ff);
+  --theme-info-dark: var(--app-theme-info-dark, #1e3a8a);
   --theme-success: var(--app-theme-success, #77dd77);
   --theme-success-light: var(--app-theme-success-light, #346134);
   --theme-warning: var(--app-theme-warning, #fdfd96);

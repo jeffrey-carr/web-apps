@@ -3,11 +3,22 @@ package jcontext
 import (
 	"context"
 	"go-common/types"
+	"go-common/utils"
 )
 
 // GetUser gets a user from the context and returns a boolean if the user was present
 func GetUser(ctx context.Context) (types.CommonUser, bool) {
-	return getValueFromContext[types.CommonUser](ctx, UserKey)
+	user, ok := getValueFromContext[types.CommonUser](ctx, UserKey)
+	if ok {
+		return user, ok
+	}
+
+	fullUser, ok := getValueFromContext[*types.User](ctx, FullUserKey)
+	if ok && utils.Deref(fullUser).UUID != "" {
+		return utils.UserToCommonUser(*fullUser), ok
+	}
+
+	return types.CommonUser{}, false
 }
 
 // GetFullUser gets a full user object from the context

@@ -6,8 +6,6 @@ type Status string
 const (
 	// StatusPublic represents a recipe that has been created and is public
 	StatusPublic Status = "public"
-	// StatusPrivate represents a recipe that has been created and is only viewable by the creator
-	StatusPrivate Status = "private"
 	// StatusDraft represents a recipe that has been created but is not finished and is only viewable by the creator
 	StatusDraft Status = "draft"
 )
@@ -152,6 +150,7 @@ type PaginatedResponse[T any] struct {
 type SearchOpts struct {
 	Name             *string   `json:"name"`
 	FavoritesOnly    bool      `json:"favoritesOnly"`
+	IncludeDrafts    bool      `json:"includeDrafts"`
 	SelectedTagUUIDs *[]string `json:"selectedTagUUIDs"`
 	InverseTagUUIDs  *[]string `json:"inverseTagUUIDs"`
 	AuthorUUID       *string   `json:"authorUUID"`

@@ -2,9 +2,10 @@
   import { onDestroy } from 'svelte';
   import type { NotificationLevel } from '../../types';
   import { Timer } from '../../utils/timer';
+  import clsx from 'clsx';
 
   let {
-    level,
+    level = 'info',
     title,
     message,
     close,
@@ -50,7 +51,7 @@
   <p class="message">{message}</p>
 
   <div
-    class={`timer ${timerPercentage > 0 ? 'visible' : ''} ${level}`}
+    class={clsx('timer', level, { visible: timerPercentage > 0 })}
     style={`width: ${timerPercentage}%; transition-duration: ${Timer.tickRate}ms`}
   ></div>
 </div>
@@ -79,8 +80,13 @@
     }
 
     &.info {
-      background-color: var(--theme-primary);
-      border-color: var(--theme-secondary);
+      background-color: var(--theme-info-light);
+      border-color: var(--theme-info);
+
+      .title,
+      .message {
+        color: var(--theme-info-dark);
+      }
     }
     &.warning {
       background-color: var(--theme-warning-light);
@@ -124,7 +130,6 @@
   .title {
     font-family: var(--theme-header-font);
     font-size: 1.2rem;
-    color: var(--theme-text-primary);
   }
 
   .message {
@@ -145,7 +150,7 @@
       border: 1px solid var(--theme-danger);
 
       &.info {
-        border-color: var(--theme-secondary);
+        border-color: var(--theme-info);
       }
       &.warning {
         border-color: var(--theme-warning);
