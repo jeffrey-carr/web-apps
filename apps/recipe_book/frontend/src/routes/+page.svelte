@@ -4,13 +4,13 @@
   import { onMount } from 'svelte';
   import {
     Button,
+    ConfirmModal,
     debounce,
     Input,
     ReactiveIcon,
     ServerError,
     Spinner,
   } from '@jeffrey-carr/frontend-common';
-  import styles from './page.module.scss';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
   import {
     deleteRecipe,
@@ -62,6 +62,8 @@
   let loadingRecipes = $state(false);
   let loadingTags = $state(false);
   let drawerOpen = $state(false);
+  let showDeleteModal = $state(false);
+  let recipeToDelete = $state<Recipe>();
 
   let nameSearchValue = $derived(data.searchOpts.recipeName ?? '');
   let selectedTags = $state<Tag[]>([]);
@@ -156,6 +158,21 @@
     recipes[recipeIndex].isFavorited = isFavorited;
   };
 
+  const handleDeleteRecipe = async (recipeUUID: string) => {
+    const recipeIdx = recipes.findIndex(recipe => recipe.uuid === recipeUUID);
+    if (recipeIdx < 0) {
+      notificationQueue.push({
+        level: 'error',
+        title: 'Error deleting recipe',
+        message: 'Recipe not found',
+      });
+      return;
+    }
+
+    recipeToDelete = recipes[recipeIdx];
+    showDeleteModal = true;
+  };
+
   const onDeleteRecipe = async (recipeUUID: string) => {
     const recipeIdx = recipes.findIndex(recipe => recipe.uuid === recipeUUID);
     if (recipeIdx < 0) {
@@ -245,16 +262,26 @@
   <title>Jean's Recipe Book</title>
 </svelte:head>
 
-<main class={styles.container}>
-  <div class={styles.header}>
-    <div class={styles.title}>
+<ConfirmModal
+  bind:open={showDeleteModal}
+  onAccept={() => onDeleteRecipe(recipeToDelete?.uuid ?? '')}
+  onDecline={async () => (recipeToDelete = undefined)}
+>
+  <p>
+    Are you sure you want to delete <em>{recipeToDelete?.name}</em>? This is <b>irreversible</b>!
+  </p>
+</ConfirmModal>
+
+<main class="container">
+  <div class="header">
+    <div class="title">
       <h1>Jean's Recipe Book</h1>
       <span>A Jeffrey Carr jawn</span>
     </div>
 
-    <div class={styles.userContainer}>
+    <div class="user-container">
       {#if userState.isLoading}
-        <Spinner class={styles.userLoadingSpinner} />
+        <Spinner class="user-loading-spinner" />
       {:else if userState.user != null}
         <UserProfileButton user={userState.user} />
         <p>{greetUser(userState.user.fName)}</p>
@@ -264,7 +291,7 @@
     </div>
   </div>
 
-  <div class={clsx(styles.sidebar, { [styles.drawerOpen]: drawerOpen })}>
+  <div class={clsx('sidebar', { ['drawer-open']: drawerOpen })}>
     <MainSidebar
       user={userState.user}
       {tags}
@@ -281,7 +308,7 @@
 
   {#if drawerOpen}
     <div
-      class={styles.drawerBackdrop}
+      class="drawer-backdrop"
       onclick={() => (drawerOpen = false)}
       onkeydown={e => e.key === 'Escape' && (drawerOpen = false)}
       role="button"
@@ -290,36 +317,36 @@
     ></div>
   {/if}
 
-  <div class={styles.mobileDrawerToggleButton}>
+  <div class="mobile-drawer-toggle-button">
     <Button onclick={() => (drawerOpen = !drawerOpen)} size="md" shape="round">
       <ReactiveIcon icon="funnel" /> Filters & Actions
     </Button>
   </div>
 
-  <div class={styles.main}>
+  <div class="main">
     {#if loadingRecipes}
-      <Spinner class={styles.pageLoading} label="Loading recipes..." />
+      <Spinner class="page-loading" label="Loading recipes..." />
     {:else if !recipes || recipes.length === 0}
-      <div class={styles.noRecipesContainer}>
-        <p class={styles.sadLogo}>:(</p>
+      <div class="no-recipes-container">
+        <p class="sad-logo">:(</p>
         <p>No recipes found</p>
       </div>
     {:else}
-      <div class={styles.recipeContainer}>
+      <ul class="recipe-list">
         {#each recipes as recipe (recipe.uuid)}
-          <div class={styles.recipeCardContainer}>
+          <li>
             <RecipeCard
               {recipe}
               onFavorite={() => onFavoriteRecipe(recipe.uuid)}
-              onDelete={() => onDeleteRecipe(recipe.uuid)}
+              onDelete={() => handleDeleteRecipe(recipe.uuid)}
             />
-          </div>
+          </li>
         {/each}
-      </div>
-      <div class={styles.paginationContainer}>
+      </ul>
+      <div class="pagination-container">
         {#if !loadingRecipes && totalPages > 1}
           <Button
-            class={styles.paginationButton}
+            class="pagination-button"
             variant="plain"
             size="sm"
             disabled={currentPage === 1}
@@ -329,17 +356,17 @@
           </Button>
 
           <Input
-            class={styles.paginationInput}
+            class="pagination-input"
             type="number"
             min={1}
             max={totalPages}
             bind:value={currentPageStr}
             hideErrArea
           />
-          <span class={styles.paginationTotal}>of {totalPages}</span>
+          <span class="pagination-total">of {totalPages}</span>
 
           <Button
-            class={styles.paginationButton}
+            class="pagination-button"
             variant="plain"
             size="sm"
             disabled={currentPage === totalPages}
@@ -352,3 +379,230 @@
     {/if}
   </div>
 </main>
+
+<style lang="scss">
+  .container {
+    display: grid;
+    grid-template-columns: 1fr 3fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      'head head head'
+      'main main side';
+    gap: 3.35rem 1rem;
+
+    height: 100%;
+    width: 100%;
+
+    padding: 1rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'head'
+        'main';
+      gap: 1rem;
+    }
+  }
+
+  .header {
+    grid-area: head;
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-template-areas: 'title title user';
+
+    @media (max-width: 768px) {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: 'title user';
+    }
+
+    .title {
+      grid-area: title;
+      min-width: 0;
+      overflow-wrap: break-word;
+    }
+
+    .user-container {
+      grid-area: user;
+      align-self: center;
+      justify-self: center;
+      margin-right: 1rem;
+
+      height: 4rem;
+      text-align: center;
+
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+  }
+
+  .sidebar {
+    grid-area: side;
+
+    @media (max-width: 768px) {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      background-color: var(--bg-color);
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      transform: translateY(100%);
+      transition: transform 0.3s ease-in-out;
+      padding: 1rem;
+
+      &.drawerOpen {
+        transform: translateY(0);
+      }
+    }
+  }
+
+  .drawer-backdrop {
+    display: none;
+
+    @media (max-width: 768px) {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 99;
+    }
+  }
+
+  .mobile-drawer-toggle-button {
+    display: none;
+
+    @media (max-width: 768px) {
+      display: flex;
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 98;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      border-radius: 2rem;
+    }
+  }
+
+  .main {
+    grid-area: main;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      height: 3rem;
+    }
+  }
+
+  .user-loading-spinner {
+    --size: 2.2rem;
+    height: var(--size);
+    width: var(--size);
+  }
+
+  .container :global(.page-loading) {
+    justify-self: center;
+
+    --size: 4rem;
+    height: var(--size);
+    width: var(--size);
+  }
+
+  .no-recipes-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+
+    height: 100%;
+    width: 100%;
+
+    color: var(--app-theme-gray-dark);
+
+    .sad-logo {
+      font-size: 32px;
+    }
+  }
+
+  .recipe-list {
+    li {
+      list-style-type: none;
+
+      margin-bottom: 1rem;
+    }
+  }
+
+  .recipe-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .recipe-card-container {
+    height: 500px;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+
+    :global(.pagination-input) {
+      width: 3.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+
+      // Remove number arrows
+      // TODO: this seems bad, maybe i should re-do this
+      :global(input::-webkit-outer-spin-button),
+      :global(input::-webkit-inner-spin-button) {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      :global(input[type='number']) {
+        -moz-appearance: textfield;
+        text-align: center;
+        padding: 0.25rem;
+      }
+    }
+
+    :global(.pagination-button) {
+      padding: 0 0.5rem;
+    }
+
+    .pagination-total {
+      color: var(--app-theme-gray-dark);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      gap: 0.25rem;
+      margin-bottom: 6rem;
+    }
+  }
+</style>

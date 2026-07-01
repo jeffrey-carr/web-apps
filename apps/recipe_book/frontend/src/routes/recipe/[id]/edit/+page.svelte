@@ -25,7 +25,7 @@
   };
 
   const goToRecipe = (newSlug?: string) => {
-    goto(`/recipe/${newSlug ?? recipe.slug}`);
+    goto(`/recipe/${newSlug ?? recipe.slug}`, { replaceState: true });
   };
 
   const edit = async (formData: RecipeFormData) => {
@@ -98,7 +98,7 @@
       message: 'Recipe updated successfully.',
     });
 
-    goto(`/recipe/${recipe.slug}`);
+    goToRecipe(response.slug);
   };
 </script>
 

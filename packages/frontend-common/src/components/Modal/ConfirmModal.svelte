@@ -26,6 +26,7 @@
     loadingAccept = true;
     await onAccept?.();
     loadingAccept = false;
+    open = false;
   };
 
   const decline = () => {
