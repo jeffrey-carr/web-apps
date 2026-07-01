@@ -453,7 +453,7 @@
       transition: transform 0.3s ease-in-out;
       padding: 1rem;
 
-      &.drawerOpen {
+      &.drawer-open {
         transform: translateY(0);
       }
     }
