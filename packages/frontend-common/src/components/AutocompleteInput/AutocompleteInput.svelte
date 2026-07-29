@@ -52,6 +52,7 @@
 {/snippet}
 {#snippet renderInput()}
   <Input
+    class={styles.innerInput}
     id="autocomplete-input"
     bind:value
     {...rest}

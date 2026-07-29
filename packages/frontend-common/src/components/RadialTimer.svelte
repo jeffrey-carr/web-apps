@@ -1,7 +1,7 @@
 <script lang="ts">
   let { until }: { until?: number } = $props();
   let progress = $state(100);
-  let intervalId: number;
+  let intervalId: ReturnType<typeof setInterval>;
 
   $effect(() => {
     if (!until) return;

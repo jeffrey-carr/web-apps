@@ -1,5 +1,6 @@
 .wrapper {
-  display: block;
+  display: inline-flex;
+  justify-content: center;
   position: relative;
   width: 100%;
 }
@@ -26,6 +27,7 @@
 
 .option {
   padding: 0;
+
   .optionButton {
     height: 100%;
     width: 100%;

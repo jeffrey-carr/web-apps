@@ -26,7 +26,7 @@
   const id = generateUUID();
   let errMessage = $state('');
   let hasError = $derived(errMessage.length > 0 || (message ?? '').length > 0);
-  let validationDebounceTimer: number;
+  let validationDebounceTimer: ReturnType<typeof setTimeout>;
 
   const handleInputChanged = (e: Event) => {
     const target = e.currentTarget as HTMLInputElement;

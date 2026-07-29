@@ -4,23 +4,35 @@
   let {
     icon = 'left-arrow',
     theme = 'primary',
+    href,
     onclick,
     children,
   }: {
     icon?: 'left-arrow' | 'right-arrow' | 'account';
     theme?: 'primary' | 'secondary';
+    href?: string;
     onclick?: () => void;
     children?: () => any;
   } = $props();
 </script>
 
+{#snippet internals()}
+  {#if icon != null}
+    <ReactiveIcon {icon} />
+  {/if}
+  <span class="text">{@render children?.()}</span>
+{/snippet}
+
 <div class="container">
-  <button class={`button ${theme}`} {onclick}>
-    {#if icon != null}
-      <ReactiveIcon {icon} />
-    {/if}
-    <span class="text">{@render children?.()}</span>
-  </button>
+  {#if href}
+    <a class={`button ${theme}`} {href}>
+      {@render internals()}
+    </a>
+  {:else}
+    <button class={`button ${theme}`} {onclick}>
+      {@render internals()}
+    </button>
+  {/if}
 </div>
 
 <style lang="scss">
@@ -55,6 +67,7 @@
     background-color: transparent;
     // color: var(--text-color);
     color: orange;
+    text-decoration: none;
     border: 1px solid var(--main-color);
     border-radius: 50%;
     cursor: pointer;

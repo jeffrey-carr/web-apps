@@ -2,6 +2,7 @@ export * from './apps';
 export * from './errors';
 export * from './network';
 export * from './notification';
+export * from './reactiveIcon';
 export { Stack } from './stack';
 export * from './time';
 export * from './user';

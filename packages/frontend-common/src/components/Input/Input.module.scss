@@ -4,6 +4,7 @@ input::-webkit-inner-spin-button {
   margin: 0;
 }
 input[type='number'] {
+  appearance: textfield;
   -moz-appearance: textfield; /* Firefox */
 }
 
@@ -17,11 +18,13 @@ input[type='number'] {
 }
 
 .input {
+  box-sizing: border-box;
   width: 100%;
 
   padding: 0.5rem;
   line-height: 1rem;
 
+  background-color: var(--bg-color-surface);
   border: 1px solid var(--app-theme-border-color);
   border-radius: 5px;
 

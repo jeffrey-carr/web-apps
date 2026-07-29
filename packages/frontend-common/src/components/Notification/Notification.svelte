@@ -20,7 +20,7 @@
   let closing = $state(false);
   let containerClass = $derived(`container ${level} ${closing ? 'transition-out' : ''}`);
   let timerPercentage = $state(100);
-  let closeTimeoutID = $state<number>();
+  let closeTimeoutID = $state<ReturnType<typeof setTimeout>>();
 
   const onClose = () => {
     closing = true;

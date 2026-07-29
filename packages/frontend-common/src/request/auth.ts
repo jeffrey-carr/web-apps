@@ -1,14 +1,12 @@
 import {
   App,
   Apps,
-  Environment,
   GlobalRoutes,
   METHODS,
   prodEnvironment,
-  RouteInformation,
   ServerError,
-  User,
 } from '../types';
+import type { Environment, RouteInformation, User } from '../types';
 import { AUTH_COOKIE_NAME } from '../constants/auth';
 import { getAppURL, makeRequest } from '../utils';
 
