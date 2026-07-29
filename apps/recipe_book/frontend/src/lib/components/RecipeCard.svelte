@@ -95,7 +95,7 @@
     </div>
 
     <div class="tags">
-      {#each recipe.tags as tag (tag.uuid)}
+      {#each recipe.tags ?? [] as tag (tag.uuid)}
         <Tag data={tag} />
       {/each}
     </div>
