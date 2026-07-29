@@ -16,5 +16,7 @@
     border-radius: 25px;
 
     font-size: 0.75rem;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 </style>

@@ -100,7 +100,7 @@
       {/each}
     </div>
 
-    <div class="open-button">
+    <div class="action-buttons">
       <Button href={recipeLink}>Open recipe</Button>
     </div>
   </div>
@@ -110,11 +110,18 @@
   .container {
     display: grid;
     gap: 0.5rem;
-
     grid-template-columns: 200px 1fr;
+    grid-template-rows: minmax(0, 1fr);
+
+    width: 100%;
+    max-width: 750px;
+    max-height: 300px;
+    overflow: hidden;
 
     border: 1px solid var(--app-theme-border-color);
-    border-radius: 5px;
+    border-radius: var(--app-theme-border-radius-m);
+
+    background-color: var(--bg-color-surface);
   }
 
   .image {
@@ -137,13 +144,13 @@
   .content {
     display: grid;
 
-    grid-template-columns: 1fr auto auto;
-    grid-template-rows: auto auto 1fr auto;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
     grid-template-areas:
-      'title title actions'
-      'author cook-time .'
-      'desc desc desc'
-      'tags tags open-button';
+      'title title title user-actions'
+      'author cook-time . .'
+      'desc desc desc desc'
+      'tags tags action-buttons action-buttons';
 
     padding: 0.5rem;
   }
@@ -183,7 +190,7 @@
   }
 
   .actions {
-    grid-area: actions;
+    grid-area: user-actions;
 
     display: flex;
     justify-content: end;
@@ -198,7 +205,7 @@
         cursor: pointer;
       }
 
-      .delete-icon {
+      :global(.delete-icon) {
         height: 1.5rem;
         width: 1.5rem;
       }
@@ -207,8 +214,20 @@
 
   .description {
     grid-area: desc;
+    flex-grow: 0;
+    min-height: 0;
 
-    padding: 1rem;
+    padding: 1rem 1rem 30px 1rem;
+
+    overflow-y: auto;
+
+    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 30px), transparent 100%);
+    mask-image: linear-gradient(to bottom, black calc(100% - 30px), transparent 100%);
+
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
   .tags {
     grid-area: tags;
@@ -217,20 +236,35 @@
     display: flex;
     gap: 0.25rem;
 
-    margin-bottom: 0.25rem;
+    margin: 0px 1rem 0.25rem 0px;
+    padding-right: 30px;
+
+    overflow: auto;
+
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 30px), transparent 100%);
+    mask-image: linear-gradient(to right, black calc(100% - 30px), transparent 100%);
+
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
   .cook-time {
     grid-area: cook-time;
     align-self: end;
   }
-  .open-button {
-    grid-area: open-button;
+  .action-buttons {
+    grid-area: action-buttons;
     align-self: end;
+    padding: 1rem 0 0 1rem;
   }
 
   @media (max-width: 945px) {
     .container {
       grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+      height: auto;
+      max-height: none;
     }
 
     .image {
@@ -247,12 +281,12 @@
       grid-template-columns: 1fr;
       grid-template-rows: auto auto auto auto auto auto;
       grid-template-areas:
-        'actions'
+        'user-actions'
         'title'
         'author'
         'desc'
         'tags'
-        'open-button';
+        'action-buttons';
       gap: 0.5rem;
     }
 
@@ -277,9 +311,13 @@
     .tags {
       flex-wrap: wrap;
       justify-content: center;
+      margin: 0.5rem 0;
+      padding-right: 0;
+      -webkit-mask-image: none;
+      mask-image: none;
     }
 
-    .open-button {
+    .action-buttons {
       margin-top: 1rem;
       width: 100%;
 

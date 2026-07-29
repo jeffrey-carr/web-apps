@@ -3,6 +3,10 @@
   height: 100%;
   padding: 2.5rem;
 
+  h1 {
+    text-align: center;
+  }
+
   @media (max-width: 768px) {
     padding: 1rem;
   }

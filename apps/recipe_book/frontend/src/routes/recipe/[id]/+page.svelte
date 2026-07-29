@@ -58,10 +58,6 @@
     recipeImgFailed = false;
   });
 
-  const goHome = async () => {
-    await goto('/');
-  };
-
   const goToEditRecipe = async () => {
     if (!recipe) return;
     await goto(`/recipe/${recipe.slug}/edit`);
@@ -89,7 +85,7 @@
       title: 'Recipe deleted',
       message: `${recipe.name} was deleted. Poof!`,
     });
-    await goHome();
+    await goto('/');
   };
 
   const onFavorite = async () => {
@@ -186,7 +182,7 @@
 ></video>
 
 <main class={styles.container}>
-  <ExpandButton onclick={goHome}>Back to home</ExpandButton>
+  <ExpandButton href="/">Back to home</ExpandButton>
   <div class={styles.header}>
     <h1>{recipe.name}</h1>
     {#if recipe.status === 'draft'}
@@ -199,15 +195,6 @@
         alt={`Image of ${recipe.name}`}
         onerror={() => (recipeImgFailed = true)}
       />
-    {/if}
-    {#if userState.user}
-      <div class={styles.userActions}>
-        <FavoriteButton isFavorited={recipe.isFavorited} {onFavorite} />
-        {#if userState.user.isAdmin || userState.user.uuid === recipe.authorUUID}
-          <EditButton edit={goToEditRecipe} />
-          <DeleteButton {onDelete} />
-        {/if}
-      </div>
     {/if}
     <div class={styles.authorAndCookTime}>
       <div class={styles.author}>
@@ -227,6 +214,15 @@
         </div>
       {/if}
     </div>
+    {#if userState.user}
+      <div class={styles.userActions}>
+        <FavoriteButton isFavorited={recipe.isFavorited} {onFavorite} />
+        {#if userState.user.isAdmin || userState.user.uuid === recipe.authorUUID}
+          <EditButton edit={goToEditRecipe} />
+          <DeleteButton {onDelete} />
+        {/if}
+      </div>
+    {/if}
     <div class={styles.tagsContainer}>
       {#each recipe.tags ?? [] as tag (tag.uuid)}
         <Tag data={tag} />

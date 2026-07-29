@@ -1,8 +1,34 @@
 <script lang="ts">
   import styles from './styles.module.scss';
-  import type { Ingredient } from '$lib/types/recipe';
+  import {
+    PLURALIZED_INGREDIENT_UNITS,
+    type Ingredient,
+    type IngredientUnit,
+  } from '$lib/types/recipe';
 
   let { ingredients }: { ingredients: Ingredient[] } = $props();
+
+  const stringifyIngredient = (ingredient: Ingredient): string => {
+    let str = '';
+
+    if (ingredient.amountStr) {
+      str += ingredient.amountStr + ' ';
+    }
+
+    if (ingredient.unit) {
+      if (strIsPlural(ingredient.amountStr)) {
+        str += PLURALIZED_INGREDIENT_UNITS[ingredient.unit as IngredientUnit];
+      } else {
+        str += ingredient.unit;
+      }
+    }
+
+    return str.trim();
+  };
+
+  const strIsPlural = (str: string): boolean => {
+    return str !== '0' && str !== '1' && str.toLowerCase().trim() !== 'one';
+  };
 </script>
 
 <table class={styles.ingredientTable}>
@@ -23,7 +49,7 @@
         </td>
         <td class={styles.amount}>
           {#if ingredient.amountStr !== '0'}
-            {`${ingredient.amountStr ?? ''} ${ingredient.unit}${(ingredient.amount ?? 0) > 1 ? 's' : ''}`.trim()}
+            {`${stringifyIngredient(ingredient)}`}
           {/if}
         </td>
       </tr>

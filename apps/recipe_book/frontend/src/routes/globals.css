@@ -1,47 +1,37 @@
 :root {
-  /* App colors */
+  --bg-color: #fdf0e0;
+  --bg-color-light: #f0e6d3;
+  --bg-color-surface: #fffcf5;
+  --bg-color-overlay: #f3ead8;
 
-  /* Backgrounds */
-  --bg-color: #f7f6f3; /* Canvas background */
-  --bg-color-light: #e3e6e6; /* Side panels */
-  --bg-color-surface: #e0eec6; /* Card surfaces */
-  --bg-color-overlay: #e8edf2; /* Search / input background */
-
-  /* Core tones */
   --white: #ffffff;
-  --black: #2d2d2d; /* Primary text */
-  --rust: #e76f51; /* Accent (favorite / highlight) */
-  --red: #e76f51;
-  --green: #6ba368; /* Primary accent (fresh herb green) */
-  --yellow: #f4a261; /* Warm accent */
-  --blue: #457b9d; /* Timer / utility color */
-  --mauve: #f0efe9; /* Subtle neutral surface */
-  --rosewater: #fdf1ec; /* Hover highlight */
-  --sky: #e7f1f6; /* Soft panel highlight */
-  --periwinkle: #eef4f7; /* Timer background */
+  --black: #3d2b1f;
+  --rust: #c8553d;
+  --red: #c8553d;
+  --green: #6b8f71;
+  --yellow: #f4b942;
+  --blue: #457b9d;
+  --mauve: #f2e8d9;
+  --rosewater: #fffcf5;
+  --sky: #edf4ef;
+  --periwinkle: #f0ead8;
   --ebony-clay: #1f1f1f;
-  --gray: #e6e6e6; /* Borders */
-  --gray-light: #ebebe4;
-  --gray-dark: #767676; /* Secondary text */
+  --gray: #e8d5c4;
+  --gray-light: #f0e0cc;
+  --gray-dark: #8b6b5a;
 
   --default-transition-ms: 120ms;
 
-  /* Main theme colors */
-
-  --app-theme-secondary: #b2d39c; /* Main UI accent */
-  --app-theme-primary: #243e36; /* Secondary accent */
   --app-theme-tertiary: #7ca982; /* Utility accent (timers, etc) */
+  --app-theme-primary: #243e36;
+  --app-theme-secondary: #b2d39c;
 
   --app-theme-text-primary: var(--app-theme-primary);
   --app-theme-text-secondary: var(--app-theme-secondary);
 
-  /* Basic colors */
-
   --app-theme-gray: var(--gray);
   --app-theme-gray-light: var(--gray-light);
   --app-theme-gray-dark: var(--gray-dark);
-
-  /* Special colors */
 
   --app-theme-info: var(--blue);
   --app-theme-info-light: #e4eef4;
@@ -51,7 +41,7 @@
   --app-theme-success-light: #e8f3e7;
 
   --app-theme-warning: var(--yellow);
-  --app-theme-warning-light: #fdebdc;
+  --app-theme-warning-light: #fde8c0;
 
   --app-theme-danger: var(--red);
   --app-theme-danger-light: #f7d7cf;
@@ -64,13 +54,12 @@
   --app-theme-overlay: var(--bg-color-surface);
   --app-theme-overlay-light: var(--app-theme-gray-light);
 
-  /* Component colors */
-
   --app-theme-border-color: var(--gray-dark);
+  --app-theme-border-radius-l: 25px;
+  --app-theme-border-radius-m: 10px;
+  --app-theme-border-radius-s: 5px;
 
-  /* This is the font used for special headers like custom banners, h1, etc. */
   --app-theme-header-font: 'Atma';
-
   /* This is the main font for the app. Used for paragraphs, labels, etc. */
   --app-theme-font: 'Quicksand';
   /* The readable font is meant to be easy to read for utility. Used for button text, etc. */

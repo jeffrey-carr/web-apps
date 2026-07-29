@@ -37,8 +37,22 @@ export const INGREDIENT_UNITS = [
   'lb',
   'clove',
   'bunch',
-];
+] as const;
 export type IngredientUnit = (typeof INGREDIENT_UNITS)[number];
+export const PLURALIZED_INGREDIENT_UNITS: Record<IngredientUnit, string> = {
+  '': '',
+  'tsp': 'tsp',
+  'tbsp': 'tbsp',
+  'oz': 'oz',
+  'floz': 'floz',
+  'cup': 'cups',
+  'pint': 'pints',
+  'quart': 'quarts',
+  'gallon': 'gallons',
+  'lb': 'lbs',
+  'clove': 'cloves',
+  'bunch': 'bunches',
+};
 
 export type RecipeCreateRequest = {
   name: string;

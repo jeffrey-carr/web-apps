@@ -107,7 +107,7 @@
 </svelte:head>
 
 <main class={styles.container}>
-  <ExpandButton onclick={goToRecipe}>Back to Recipe</ExpandButton>
+  <ExpandButton onclick={() => goToRecipe()}>Back to Recipe</ExpandButton>
 
   <h1>Edit Recipe</h1>
   <RecipeForm onSubmit={edit} {initialData} backHref={`/recipe/${recipe.slug}`} />

@@ -19,13 +19,9 @@
     searchRecipes,
     unFavoriteRecipe,
   } from '$lib/requests/recipe';
-  import { MainSidebar, RecipeCard } from '$lib/components';
+  import { MainFilters, MainHeader, RecipeCard } from '$lib/components';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
-  import { userState } from '$lib/globals/user.svelte';
-  import { greetUser } from '$lib/mappers/greeting';
   import type { Recipe, SearchOptions, Tag } from '$lib/types/recipe';
-  import UserProfileButton from '$lib/components/UserProfileButton/UserProfileButton.svelte';
-  import clsx from 'clsx';
   import { makeSearchQueryString } from '$lib/mappers/recipe';
   import { constructLoginURL } from '$lib/mappers/requests';
 
@@ -117,8 +113,6 @@
 
     loadData();
   });
-
-  let loginURL = $derived(constructLoginURL(PUBLIC_ENVIRONMENT, page));
 
   const onFavoriteRecipe = async (recipeUUID: string): Promise<void> => {
     let result;
@@ -273,38 +267,8 @@
 </ConfirmModal>
 
 <main class="container">
-  <div class="header">
-    <div class="title">
-      <h1>Jean's Recipe Book</h1>
-      <span>A Jeffrey Carr jawn</span>
-    </div>
-
-    <div class="user-container">
-      {#if userState.isLoading}
-        <Spinner class="user-loading-spinner" />
-      {:else if userState.user != null}
-        <UserProfileButton user={userState.user} />
-        <p>{greetUser(userState.user.fName)}</p>
-      {:else}
-        <Button size="sm" variant="secondary" shape="round" href={loginURL}>Log in</Button>
-      {/if}
-    </div>
-  </div>
-
-  <div class={clsx('sidebar', { ['drawer-open']: drawerOpen })}>
-    <MainSidebar
-      user={userState.user}
-      {tags}
-      onApplyFilters={onUpdateFilters}
-      {loadingTags}
-      nameValue={nameSearchValue}
-      bind:selectedTags
-      bind:inverseTags
-      favoritesOnlyValue={favoritesOnlySearchValue}
-      includeDraftsValue={includeDraftsSearchValue}
-      {loginURL}
-    />
-  </div>
+  <MainHeader />
+  <MainFilters {loadingTags} {tags} {onUpdateFilters} startingOpts={data.searchOpts} />
 
   {#if drawerOpen}
     <div
@@ -382,138 +346,26 @@
 
 <style lang="scss">
   .container {
-    display: grid;
-    grid-template-columns: 1fr 3fr 1fr;
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      'head head head'
-      'main main side';
-    gap: 3.35rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
 
     height: 100%;
     width: 100%;
-
-    padding: 1rem;
-
-    @media (max-width: 768px) {
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-areas:
-        'head'
-        'main';
-      gap: 1rem;
-    }
-  }
-
-  .header {
-    grid-area: head;
-    display: grid;
-    grid-template-columns: subgrid;
-    grid-template-areas: 'title title user';
-
-    @media (max-width: 768px) {
-      grid-template-columns: minmax(0, 1fr) auto;
-      grid-template-areas: 'title user';
-    }
-
-    .title {
-      grid-area: title;
-      min-width: 0;
-      overflow-wrap: break-word;
-    }
-
-    .user-container {
-      grid-area: user;
-      align-self: center;
-      justify-self: center;
-      margin-right: 1rem;
-
-      height: 4rem;
-      text-align: center;
-
-      @media (max-width: 768px) {
-        display: none;
-      }
-    }
-  }
-
-  .sidebar {
-    grid-area: side;
-
-    @media (max-width: 768px) {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      z-index: 100;
-      background-color: var(--bg-color);
-      border-top-left-radius: 15px;
-      border-top-right-radius: 15px;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-      transform: translateY(100%);
-      transition: transform 0.3s ease-in-out;
-      padding: 1rem;
-
-      &.drawer-open {
-        transform: translateY(0);
-      }
-    }
   }
 
   .drawer-backdrop {
     display: none;
-
-    @media (max-width: 768px) {
-      display: block;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      z-index: 99;
-    }
   }
 
   .mobile-drawer-toggle-button {
     display: none;
-
-    @media (max-width: 768px) {
-      display: flex;
-      position: fixed;
-      bottom: 1rem;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 98;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-      border-radius: 2rem;
-    }
   }
 
   .main {
     grid-area: main;
     width: 100%;
-    min-width: 0;
-  }
-
-  .header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .button-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-
-      height: 3rem;
-    }
-  }
-
-  .user-loading-spinner {
-    --size: 2.2rem;
-    height: var(--size);
-    width: var(--size);
   }
 
   .container :global(.page-loading) {
@@ -542,25 +394,15 @@
   }
 
   .recipe-list {
-    li {
-      list-style-type: none;
+    padding: 0 1rem; /* prevent horizontal overflow on small devices, remove default padding */
+    margin: 0;
 
+    li {
+      display: flex;
+      justify-content: center;
+      list-style-type: none;
       margin-bottom: 1rem;
     }
-  }
-
-  .recipe-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
-    width: 100%;
-  }
-
-  .recipe-card-container {
-    height: 500px;
-    width: 100%;
-    max-width: 300px;
   }
 
   .pagination-container {
@@ -577,7 +419,6 @@
       font-size: 0.9rem;
 
       // Remove number arrows
-      // TODO: this seems bad, maybe i should re-do this
       :global(input::-webkit-outer-spin-button),
       :global(input::-webkit-inner-spin-button) {
         -webkit-appearance: none;
@@ -586,6 +427,7 @@
 
       :global(input[type='number']) {
         -moz-appearance: textfield;
+        appearance: textfield;
         text-align: center;
         padding: 0.25rem;
       }
@@ -598,11 +440,6 @@
     .pagination-total {
       color: var(--app-theme-gray-dark);
       font-size: 0.9rem;
-    }
-
-    @media (max-width: 768px) {
-      gap: 0.25rem;
-      margin-bottom: 6rem;
     }
   }
 </style>
