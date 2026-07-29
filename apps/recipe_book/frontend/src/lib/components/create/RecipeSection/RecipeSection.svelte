@@ -115,7 +115,7 @@
   {/if}
 
   <div>
-    <h3 class={styles.title}>Ingredients</h3>
+    <h4 class={styles.title}>Ingredients</h4>
     <div class={styles.ingredientInput}>
       {#snippet ingredientTemplate(_: Ingredient, i: number)}
         <div class={styles.ingredient}>
