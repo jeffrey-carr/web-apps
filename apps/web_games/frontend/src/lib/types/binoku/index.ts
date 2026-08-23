@@ -1,5 +1,3 @@
-import { METHODS, type RouteInformation } from '@jeffrey-carr/frontend-common';
-
 /* Network */
 export type NewGameResponse = {
   board: number[][];

@@ -1,0 +1,9 @@
+root = "."
+tmp_dir = "output"
+
+[build]
+cmd = "npm run build"
+bin = "./output/app"
+include_ext = ["go"]
+exclude_dir = ["output"]
+

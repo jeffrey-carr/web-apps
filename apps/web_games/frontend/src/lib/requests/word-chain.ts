@@ -1,5 +1,9 @@
-import type { ValidateAnswerRequest, ValidateAnswerResponse, WordChainGameData } from "$lib/types/word-chain";
-import { makeRequest, METHODS, type RouteInformation } from "@jeffrey-carr/frontend-common";
+import type {
+  ValidateAnswerRequest,
+  ValidateAnswerResponse,
+  WordChainGameData,
+} from '$lib/types/word-chain';
+import { makeRequest, METHODS, type RouteInformation } from '@jeffrey-carr/frontend-common';
 
 const newGameInfo: RouteInformation = {
   path: '/api/word-chain/new-game',
@@ -11,10 +15,12 @@ export const newGame = async (): Promise<WordChainGameData> => {
 };
 
 const validateAnswerRouteInfo: RouteInformation = {
-  path: '/api/word-chain/validate-answer',
+  path: '/api/word-chain/validate-guess',
   method: METHODS.POST,
   credentials: 'optional',
 };
-export const validateAnswer = async (request: ValidateAnswerRequest): Promise<ValidateAnswerResponse> => {
+export const validateGuess = async (
+  request: ValidateAnswerRequest
+): Promise<ValidateAnswerResponse> => {
   return await makeRequest(validateAnswerRouteInfo, { body: request });
-}
+};

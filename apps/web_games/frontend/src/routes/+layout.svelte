@@ -8,7 +8,6 @@
     getUser,
     Notification,
     NOTIFICATION_LEVELS,
-    ServerError,
     Spinner,
     type NotificationLevel,
     type User,
@@ -108,9 +107,9 @@
     {#if loadingMessage}
       <div class="loading">
         <div class="spinner">
-          <Spinner />
+          <Spinner size="1.75rem" label={loadingMessage} />
         </div>
-        <span class="message">{loadingMessage}</span>
+        <!-- <span class="message">{loadingMessage}</span> -->
       </div>
     {:else}
       {@render children?.()}

@@ -1,5 +1,7 @@
 package utils
 
+import "math/rand/v2"
+
 // Fill fills an array with zeroed values
 func Fill[T any](length int) []T {
 	var items []T
@@ -71,4 +73,33 @@ func FilterAndMap[T any, K any](s []T, f func(item T) (K, bool)) []K {
 	}
 
 	return results
+}
+
+// PickRandom gets a random item from a slice
+func PickRandom[T any](s []T) T {
+	var ret T
+	if len(s) == 0 {
+		return ret
+	}
+
+	i := rand.IntN(len(s))
+	return s[i]
+}
+
+// Shuffle shuffles the content of a slice in-place
+func Shuffle[T any](s []T) {
+	rand.Shuffle(len(s), func(i, j int) {
+		s[i], s[j] = s[j], s[i]
+	})
+}
+
+func RemoveFirst[T any](s []T) T {
+	var val T
+	if len(s) == 0 {
+		return val
+	}
+
+	val = s[len(s)-1]
+	s = s[:len(s)-1]
+	return val
 }

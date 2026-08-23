@@ -5,14 +5,12 @@
     type WordChainGameData,
   } from '$lib/types/word-chain';
   import { Word } from '$lib/components/word-chain';
-  import { newGame as doNewGame, validateAnswer } from '$lib/requests/word-chain';
+  import { newGame as doNewGame, validateGuess } from '$lib/requests/word-chain';
   import {
     Button,
     Confetti,
-    METHODS,
     Modal,
     Spinner,
-    type RouteInformation,
     type ServerResponse,
   } from '@jeffrey-carr/frontend-common';
 
@@ -86,11 +84,11 @@
 
     const request: ValidateAnswerRequest = {
       guess,
-      payload: game,
+      encryptedState: game.encryptedState,
     };
     let response: ValidateAnswerResponse;
     try {
-      response = await validateAnswer(request);
+      response = await validateGuess(request);
     } catch (e) {
       const serverResponse = e as ServerResponse;
       console.error(`Error validating guess: ${serverResponse.data}`);
@@ -135,7 +133,7 @@
     </div>
 
     <div class="buttons-container">
-      <Button onclick={newGame}>New Game</Button>
+      <Button onclick={newGame} {loading}>New Game</Button>
     </div>
   </div>
 
@@ -143,18 +141,18 @@
     {#if loading}
       <div class="loading-container">
         <div class="spinner-container">
-          <Spinner theme="red" />
+          <Spinner theme="primary" size="1.7rem" />
         </div>
         Loading...
       </div>
     {:else if game}
-      {#each game.chain as word, i}
+      {#each game.chain as word, i (`${word}-${i}`)}
         <div class="word" id={word}>
           <Word
             {word}
             onUpdate={(newGuess: string) => updateGuess(newGuess, i)}
-            correct={i !== 0 && i < game.userProgress}
-            locked={i !== game.userProgress}
+            correct={i !== 0 && i < game.progress}
+            locked={i !== game.progress}
             timedOutUntil={timeouts[i]}
           />
         </div>
