@@ -1,23 +1,28 @@
-import type { makeRequestParams, RouteInformation } from "../types/network";
+import type { makeRequestParams, RouteInformation } from '../types/network';
 import { METHODS } from '../types/network';
-import type { Environment } from "../types";
-import { App, Apps, prodEnvironment } from "../types";
-import { ServerError } from "../types/errors";
+import type { Environment } from '../types';
+import { App, Apps, prodEnvironment } from '../types';
+import { ServerError } from '../types/errors';
 
 export const makeRequest = async <T, E = undefined>(
-  info: RouteInformation, 
-  params: makeRequestParams = {}, 
-  fetcher: typeof fetch = fetch,
-): Promise<T> => { 
+  info: RouteInformation,
+  params: makeRequestParams = {},
+  fetcher: typeof fetch = fetch
+): Promise<T> => {
   let headers: Record<string, string> = {};
   const isFormData = params?.body instanceof FormData;
 
-  if (info.method === METHODS.POST && !isFormData) {
+  if (
+    (info.method === METHODS.POST ||
+      info.method === METHODS.PUT ||
+      info.method === METHODS.PATCH) &&
+    !isFormData
+  ) {
     headers['Content-Type'] = 'application/json';
   }
   headers = { ...headers, ...params?.additionalHeaders };
-  
-  let query = "";
+
+  let query = '';
   if (params?.query) {
     const queryKeys = Object.keys(params?.query ?? {});
     for (let i = 0; i < queryKeys.length; i++) {
@@ -30,7 +35,7 @@ export const makeRequest = async <T, E = undefined>(
   if (query.length > 0) {
     pathWithQuery += `?${query}`;
   }
-  
+
   let body;
   if (params?.body) {
     if (isFormData) {
@@ -46,11 +51,11 @@ export const makeRequest = async <T, E = undefined>(
 
   let response = await fetcher(pathWithQuery, {
     method: info.method,
-    credentials, 
+    credentials,
     headers,
     body,
   });
-  
+
   // Just commenting because someday I'm predicting I'll return a non-200 that isn't an error
   // and this will be my told-you-so
   if (response.status !== 200) {
@@ -59,29 +64,28 @@ export const makeRequest = async <T, E = undefined>(
   }
 
   return await response.json();
-}
-
+};
 
 export const getAppURL = (environment: Environment, app: App): string => {
   const info = Apps[app];
   if (!info) {
-    return "";
+    return '';
   }
-  
+
   if (environment === prodEnvironment) {
     return `https://${info.subdomain}.jeffreycarr.dev`;
   }
-  
+
   return `http://${info.subdomain}.jeffreycarr.local:${info.devPort}`;
 };
 
 export const getErrorFromServer = <T = undefined>(e: unknown): ServerError<T> => {
   if (e instanceof ServerError) {
-      return e;
-    } else {
-      return {
-        status: 500,
-        message: "Unknown error",
-      } as ServerError<T>;
-    }
-}
+    return e;
+  } else {
+    return {
+      status: 500,
+      message: 'Unknown error',
+    } as ServerError<T>;
+  }
+};

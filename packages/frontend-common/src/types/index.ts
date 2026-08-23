@@ -6,7 +6,7 @@ export * from './reactiveIcon';
 export { Stack } from './stack';
 export * from './time';
 export * from './user';
-export type { AppInfo } from './apps';
+export * from './apps';
 
 export type ServerResponse<T = undefined> = {
   status: number;

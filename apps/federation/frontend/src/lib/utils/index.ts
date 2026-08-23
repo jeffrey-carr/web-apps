@@ -1,27 +1,36 @@
-import { PUBLIC_ENVIRONMENT } from "$env/static/public";
-import { Apps, prodEnvironment, type App, type AppInfo, type Environment } from "@jeffrey-carr/frontend-common";
+import { PUBLIC_ENVIRONMENT } from '$env/static/public';
+import {
+  Apps,
+  buildAppURL,
+  prodEnvironment,
+  type App,
+  type AppInfo,
+  type Environment,
+} from '@jeffrey-carr/frontend-common';
 
 export const isValidEmail = (email: string): string => {
-  const regexp = new RegExp(/(^[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~]+[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~.]+[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~])@([a-zA-Z0-9\-]+).(com|org|net|edu|gov|mil)$/gm);
+  const regexp = new RegExp(
+    /(^[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~]+[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~.]+[a-zA-Z0-9!#$%&'*+\-\/=?^_`{|}~])@([a-zA-Z0-9\-]+).(com|org|net|edu|gov|mil)$/gm
+  );
   // parts[0] = full email address (e.g. jeffrey.carr98@gmail.com)
   // parts[1] = jeffrey.carr98
   // parts[2] = gmail
   // parts[3] = com
   const parts = regexp.exec(email);
   if (parts == null) {
-    return "Email is required";
+    return 'Email is required';
   }
 
-  return "";
-}
+  return '';
+};
 
 export const isValidPassword = (password: string): string => {
   password = password.trim();
   if (password.length < 12) {
-    return "Password must be at least 12 characters";
+    return 'Password must be at least 12 characters';
   }
 
-  return "";
+  return '';
 };
 
 export const isValidName = (fName: string): string => {
@@ -29,30 +38,22 @@ export const isValidName = (fName: string): string => {
   if (fName.length === 0) {
     return 'Name is required';
   }
-  
+
   const regexp = new RegExp(/^[a-zA-Z\-\s]+$/);
   if (!regexp.test(fName)) {
-    return "Name can only container letters, spaces, or hyphens";
+    return 'Name can only container letters, spaces, or hyphens';
   }
 
-  return "";
-};
-
-export const buildAppURL = (environment: Environment, app: AppInfo): string => {
-  if (environment !== prodEnvironment) {
-    return `http://${app.subdomain}.jeffreycarr.local:${app.devPort}`;
-  }
-  
-  return `https://${app.subdomain}.jeffreycarr.dev`;
+  return '';
 };
 
 export const buildRerouteURL = (app: App, path?: string): string => {
-    if (!app) return '';
+  if (!app) return '';
 
-    let route = buildAppURL(PUBLIC_ENVIRONMENT, Apps[app]);
-    if (path != null) {
-      route = `${route}/${path}`;
-    }
+  let route = buildAppURL(PUBLIC_ENVIRONMENT, Apps[app]);
+  if (path != null) {
+    route = `${route}/${path}`;
+  }
 
-    return route;
-  };
+  return route;
+};

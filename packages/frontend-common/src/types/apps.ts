@@ -1,9 +1,10 @@
+import { Environment, prodEnvironment } from '../types/';
+
 export enum App {
   Auth = 'Auth', // Represents backend-auth requests
   Federation = 'Federation',
   WebGames = 'WebGames',
-  Calendar = 'Calendar',
-  RecipeBook = 'RecipeBook'
+  RecipeBook = 'RecipeBook',
 }
 
 export type AppInfo = {
@@ -24,20 +25,15 @@ export const Apps: Record<App, AppInfo> = {
     devPort: '5175',
   },
   WebGames: {
-    friendlyName: 'Jeff\'s Web Games',
+    friendlyName: "Jeff's Web Games",
     subdomain: 'games',
-    devPort: '5173',
-  },
-  Calendar: {
-    friendlyName: 'Jeff\'s Calendar Creator',
-    subdomain: 'calendar',
     devPort: '5173',
   },
   RecipeBook: {
     friendlyName: "Jean's Recipe Book",
-    subdomain: "recipe",
-    devPort: '5173',
-  }
+    subdomain: 'recipe',
+    devPort: '5176',
+  },
 };
 
 export const APP_QUERY_PARAM = 'app';
@@ -46,4 +42,12 @@ export const PATH_QUERY_PARAM = 'path';
 
 export const isValidApp = (value: string): boolean => {
   return Object.values(App).includes(value as App);
+};
+
+export const buildAppURL = (environment: Environment, app: AppInfo): string => {
+  if (environment !== prodEnvironment) {
+    return `http://${app.subdomain}.jeffreycarr.local:${app.devPort}`;
+  }
+
+  return `https://${app.subdomain}.jeffreycarr.dev`;
 };

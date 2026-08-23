@@ -28,7 +28,7 @@
     if (app) {
       goto(buildAppRoute(app));
     } else if (data.goto) {
-      goto(`/?goto=${goto}`);
+      goto(`/?goto=${data.goto}`);
     } else if (data.app) {
       goto(buildAppRoute(data.app));
     }
@@ -49,6 +49,7 @@
 
   <div class="app-container">
     {@render appCard(App.WebGames)}
+    {@render appCard(App.RecipeBook)}
     {@render card(() => goto('/account'), 'Your Account')}
   </div>
 </main>

@@ -16,7 +16,7 @@
   {#if loading}
     <div class="loading-container">
       <div class="spinner">
-        <Spinner />
+        <Spinner size="1.5rem" />
       </div>
       Loading your info...
     </div>

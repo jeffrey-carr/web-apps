@@ -16,6 +16,14 @@
   let showCreate = $state(false);
   let pop = $state(false);
 
+  $effect(() => {
+    if (userState.isLoading) return;
+
+    if (userState.user != null) {
+      goto('/account');
+    }
+  });
+
   const toggleCreate = () => {
     showCreate = !showCreate;
     pop = true;

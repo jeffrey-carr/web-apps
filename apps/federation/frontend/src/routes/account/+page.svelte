@@ -62,7 +62,8 @@
       return;
     }
 
-    goto('/?goto=account');
+    userState.user = undefined;
+    await goto('/?goto=account');
   };
 
   const onUpdatePassword = async (password: string, newPassword: string): Promise<boolean> => {
