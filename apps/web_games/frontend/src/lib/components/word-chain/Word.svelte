@@ -24,7 +24,8 @@
   let revealedLetters = $derived(word.split('').filter(letter => letter !== HIDDEN_LETTER));
   let guess = $state('');
   let fullGuess = $derived(revealedLetters.join('') + guess);
-  let displayGuess = $state(word.split(''));
+  let initialWord = word.split('');
+  let displayGuess = $state(initialWord);
 
   let activeClass = $derived(locked ? '' : 'active');
   let timeoutClass = $state('');
