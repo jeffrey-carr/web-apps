@@ -27,7 +27,9 @@ RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 
+ARG APP
 COPY --from=build /app/server ./server
+COPY --from=build /app/apps/${APP}/backend/word_chain/dictionary.json ./word_chain/dictionary.json
 
 ENV PORT=8080
 EXPOSE 8080
