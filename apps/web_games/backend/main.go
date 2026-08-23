@@ -51,11 +51,6 @@ func loadConfig() types.Config {
 		panic(err)
 	}
 
-	wordChainEncryptionFile, err := loadEnv("WORD_CHAIN_ENCRYPTION_FILE", true)
-	if err != nil {
-		panic(err)
-	}
-
 	federationAPIKey, err := loadEnv("FEDERATION_API_KEY", true)
 	if err != nil {
 		panic(err)
@@ -65,7 +60,7 @@ func loadConfig() types.Config {
 		Environment:             loadEnvWithFallback("ENVIRONMENT", constants.EnvDev),
 		Port:                    loadEnvWithFallback("PORT", "8080"),
 		MongoConnectionURL:      mongoConnectionURL,
-		WordChainEncryptionFile: wordChainEncryptionFile,
+		WordChainEncryptionFile: loadEnvWithFallback("WORD_CHAIN_ENCRYPTION_FILE", "word_chain_secret.txt"),
 		FederationAPIKey:        federationAPIKey,
 	}
 }
