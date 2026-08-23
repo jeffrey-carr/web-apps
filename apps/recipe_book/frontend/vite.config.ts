@@ -14,6 +14,7 @@ export default defineConfig(({ isSsrBuild }) => ({
     }
   },
   server: {
+    port: 5176,
     allowedHosts: ['recipe.jeffreycarr.local'],
     proxy: {
       '/api': {

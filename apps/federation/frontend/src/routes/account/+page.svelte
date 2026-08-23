@@ -62,14 +62,28 @@
       return;
     }
 
-    goto('/?goto=account');
+    userState.user = undefined;
+    await goto('/?goto=account');
   };
 
   const onUpdatePassword = async (password: string, newPassword: string): Promise<boolean> => {
     let response = await updatePassword(user.uuid, password, newPassword);
     if (response == null) return true;
 
-    console.error(response.message);
+    if (response.status === 401) {
+      notificationQueue.push({
+        level: 'error',
+        title: 'Invalid password',
+        message: 'Password is incorrect',
+      });
+    } else {
+      notificationQueue.push({
+        level: 'error',
+        title: 'Error updating password',
+        message: response.message,
+      });
+    }
+
     return false;
   };
 

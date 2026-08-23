@@ -12,9 +12,13 @@
     "prettier": "prettier --write .",
     "test-page": "turbo run dev --filter=test_app-frontend",
     "new-project": "cookiecutter -o apps/ templates/",
-    "dev:web-games": "turbo run dev --filter=web_games-frontend --filter=web_games-backend --filter=federation-frontend --filter=federation-backend --parallel",
-    "dev:federation": "docker compose -f apps/federation/docker-compose.yml up -d redis 2>/dev/null || true && turbo run dev --filter=federation-frontend --filter=federation-backend --parallel",
-    "dev:recipe-book": "docker compose -f apps/recipe_book/docker-compose.yml up -d redis && turbo run dev --filter=recipe_book-frontend --filter=recipe_book-backend --filter=federation-frontend --filter=federation-backend --parallel"
+    "dev:all": "npm run redis:all && turbo run dev --filter=web_games-* --filter=federation-* --filter=recipe_book-* --parallel",
+    "dev:web-games": "npm run redis:federation && turbo run dev --filter=web_games-* --filter=federation-* --parallel",
+    "dev:federation": "npm run redis:federation && turbo run dev --filter=federation-* --parallel",
+    "dev:recipe-book": "npm run redis:recipe-book && turbo run dev --filter=recipe_book-* --filter=federation-* --parallel",
+    "redis:federation": "docker compose -f apps/federation/docker-compose.yml up -d redis 2>/dev/null || true",
+    "redis:recipe-book": "docker compose -f apps/recipe_book/docker-compose.yml up -d redis",
+    "redis:all": "npm run redis:federation && npm run redis:recipe-book"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

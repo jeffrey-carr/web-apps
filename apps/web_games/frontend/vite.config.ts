@@ -15,6 +15,7 @@ export default defineConfig(({ isSsrBuild }) => ({
 		}
 	},
 	server: {
+		port: 5173,
 		allowedHosts: ['games.jeffreycarr.local'],
 		proxy: {
 			'/api': {

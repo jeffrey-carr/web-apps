@@ -1,10 +1,12 @@
 <script lang="ts">
   import {
     Button,
+    buildAppURL,
     CharacterIcon,
     CustomDropdown,
     type User,
     logout as doLogout,
+    Apps,
   } from '@jeffrey-carr/frontend-common';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
   import { notificationQueue } from '$lib/globals/notifications.svelte';
@@ -53,6 +55,11 @@
 {#snippet content()}
   <div class="dropdown">
     <Button href="/create" size="sm" variant="plain">New Recipe</Button>
+    <Button
+      href={`${buildAppURL(PUBLIC_ENVIRONMENT, Apps.Federation)}/account`}
+      size="sm"
+      variant="plain">My Account</Button
+    >
     <Button
       class="logout-button"
       onclick={onLogout}
