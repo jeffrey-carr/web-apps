@@ -1,5 +1,5 @@
-import { makeRequest, METHODS, type RouteInformation } from "@jeffrey-carr/frontend-common";
-import type { ValidateGameResponse } from "$lib/types/binoku";
+import { makeRequest, METHODS, type RouteInformation } from '@jeffrey-carr/frontend-common';
+import type { ValidateGameResponse } from '$lib/types/binoku';
 
 const newGameRouteInfo: RouteInformation = {
   path: '/api/binoku/new-game',
@@ -15,6 +15,6 @@ const validateAnswerRouteInfo: RouteInformation = {
   method: METHODS.POST,
   credentials: 'optional',
 };
-export const validateAnswer = async(board: number[][]): Promise<ValidateGameResponse> => {
-  return await makeRequest(validateAnswerRouteInfo, { body: { board } });
+export const validateAnswer = async (board: number[][]): Promise<ValidateGameResponse> => {
+  return await makeRequest(validateAnswerRouteInfo, { body: board });
 };

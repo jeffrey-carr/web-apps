@@ -7,6 +7,7 @@ import (
 	"net/url"
 )
 
+// RequestData represents request data
 type RequestData[T any] struct {
 	Request    *http.Request
 	Writer     *http.ResponseWriter
@@ -14,5 +15,8 @@ type RequestData[T any] struct {
 	Query      *url.Values
 	Body       *T
 }
+
+// RequestNoData represents a request with no data
+type RequestNoData = RequestData[struct{}]
 
 type EndpointFunc[T any, K any] func(context.Context, RequestData[T]) (*K, *errors.JHTTPError)

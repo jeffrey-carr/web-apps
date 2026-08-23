@@ -170,7 +170,7 @@
     {#if generating}
       <div class="loading-container">
         <div class="spinner-container">
-          <Spinner />
+          <Spinner size="1.5rem" />
         </div>
         <div class="loading-text">
           {#each { length: generatingLevel } as _, i}

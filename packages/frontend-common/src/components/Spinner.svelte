@@ -70,6 +70,7 @@
 
   .label {
     text-align: center;
+    white-space: nowrap;
   }
 
   @keyframes rotation {
