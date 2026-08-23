@@ -31,14 +31,14 @@
     timerPercentage = (remainingMs / duration) * 100;
   };
 
-  // svelte-ignore state_referenced_locally
-  let timer = new Timer(duration, onClose, onTimerUpdate);
+  $effect(() => {
+    const timer = new Timer(duration, onClose, onTimerUpdate);
+    timer.start();
 
-  timer.start();
-
-  onDestroy(() => {
-    timer.stop();
-    clearTimeout(closeTimeoutID);
+    return () => {
+      timer.stop();
+      clearTimeout(closeTimeoutID);
+    };
   });
 </script>
 
