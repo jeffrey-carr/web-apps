@@ -7,6 +7,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/schema v1.4.1
 	github.com/oracle/oci-go-sdk/v65 v65.102.0
+	github.com/redis/go-redis/v9 v9.20.1
+	github.com/sirupsen/logrus v1.10.1
 	go.mongodb.org/mongo-driver/v2 v2.3.0
 )
 
@@ -16,7 +18,6 @@ require (
 	github.com/gofrs/flock v0.10.0 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
-	github.com/redis/go-redis/v9 v9.20.1 // indirect
 	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect

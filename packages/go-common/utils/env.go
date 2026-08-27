@@ -35,5 +35,5 @@ func GetEnv() string {
 
 // IsProd returns whether the current environment is prod or not
 func IsProd() bool {
-	return GetEnv() == constants.EnvProd
+	return constants.Environment(GetEnv()) == constants.EnvProd
 }

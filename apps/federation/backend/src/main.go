@@ -15,6 +15,7 @@ import (
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/jhttp/middlewares"
+	"go-common/jlogging"
 	"go-common/services/jemail"
 	"go-common/services/jmongo"
 	"go-common/services/jredis"
@@ -66,7 +67,8 @@ func loadConfig() (types.Config, error) {
 		return fallback, nil
 	}
 
-	environment, _ := loadStr("ENVIRONMENT", true, globalConstants.EnvDev)
+	environmentStr, _ := loadStr("ENVIRONMENT", true, string(globalConstants.EnvDev))
+	environment := globalConstants.Environment(environmentStr)
 	port, _ := loadStr("PORT", true, "9999")
 	hourlyRateLimit, err := loadInt("HOURLY_RATE_LIMIT", true)
 	if err != nil {
@@ -105,6 +107,10 @@ func loadConfig() (types.Config, error) {
 	if err != nil {
 		return types.Config{}, err
 	}
+	oracleLogID, err := loadStr("ORACLE_LOG_ID", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
 	mongoConnectionURL, err := loadStr("MONGO_CONNECTION_URL", false, "")
 	if err != nil {
 		return types.Config{}, err
@@ -125,6 +131,7 @@ func loadConfig() (types.Config, error) {
 		OracleTenancy:       oracleTenancy,
 		OracleRegion:        oracleRegion,
 		OracleFingerprint:   oracleFingerprint,
+		OracleLogID:         oracleLogID,
 		RedisConnectionURL:  redisConnectionURL,
 	}, nil
 }
@@ -146,7 +153,7 @@ func main() {
 	}
 
 	fmt.Printf("Loaded config: %+v\n", config)
-	os.Setenv(globalConstants.EnvEnvironmentVar, config.Environment)
+	os.Setenv(globalConstants.EnvEnvironmentVar, string(config.Environment))
 
 	// MONGO CONNECTIONS //
 	mongoClient, err := mongo.Connect(options.Client().ApplyURI(config.MongoConnectionURL))
@@ -168,7 +175,7 @@ func main() {
 
 	// SERVICES //
 	apiService := services.NewAPI(apiKeyMongoCollection)
-	emailConfig := common.NewRawConfigurationProvider(
+	ociConfig := common.NewRawConfigurationProvider(
 		config.OracleTenancy,
 		config.OracleUser,
 		config.OracleRegion,
@@ -176,8 +183,13 @@ func main() {
 		oraclePrivateKey,
 		nil,
 	)
+	loggingHook, err := jlogging.NewLoggerHook(ociConfig, config.OracleLogID)
+	if err != nil {
+		panic(err)
+	}
+	loggingService := jlogging.NewLoggingService(loggingHook, config.Environment)
 	emailService, err := jemail.NewEmail(
-		emailConfig,
+		ociConfig,
 		"noreply@jeffreycarr.dev",
 		"The Jeffiverse",
 		config.OracleCompartmentID,
@@ -208,9 +220,9 @@ func main() {
 	apiKeyRateLimitingMiddleware := middlewares.NewAPIRateLimiterMiddleware(redisService)
 
 	// HANDLERS //
-	userHandler := handlers.NewUserHandler(userController)
-	authHandler := handlers.NewAuthHandler(authController)
-	adminHandler := handlers.NewAdminHandler(adminController, authController)
+	userHandler := handlers.NewUserHandler(userController, loggingService.NewLogger("userHandler", "handler"))
+	authHandler := handlers.NewAuthHandler(authController, loggingService.NewLogger("authHandler", jlogging.HandlerLayer))
+	adminHandler := handlers.NewAdminHandler(adminController, authController, loggingService.NewLogger("adminHandler", "handler"))
 
 	// ROUTER //
 	mux := http.NewServeMux()

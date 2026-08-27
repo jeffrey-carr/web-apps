@@ -7,11 +7,14 @@ import (
 	"go-common/jcontext"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
+	"go-common/jlogging"
 	globalTypes "go-common/types"
 	"go-common/utils"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 var badLoginErr = JHTTPErrors.NewBadRequestError("Invalid email or password")
@@ -19,12 +22,14 @@ var badLoginErr = JHTTPErrors.NewBadRequestError("Invalid email or password")
 // Auth handles auth requests
 type Auth struct {
 	controller auth.Controller
+	logger     jlogging.Logger
 }
 
 // NewAuthHandler creates a new Auth handler
-func NewAuthHandler(controller auth.Controller) Auth {
+func NewAuthHandler(controller auth.Controller, logger jlogging.Logger) Auth {
 	return Auth{
 		controller: controller,
+		logger:     logger,
 	}
 }
 
@@ -41,7 +46,7 @@ func (h *Auth) CreateUser(ctx context.Context, r jhttp.RequestData[auth.CreateUs
 		return nil, JHTTPErrors.NewBadRequestError(validationErr)
 	}
 
-	verificationToken, err := h.controller.CreateUser(ctx, request)
+	unverifiedUser, err := h.controller.CreateUser(ctx, request)
 	if err == auth.ErrEmailTaken {
 		return nil, JHTTPErrors.NewBadRequestError("An account with that email already exists")
 	}
@@ -49,7 +54,14 @@ func (h *Auth) CreateUser(ctx context.Context, r jhttp.RequestData[auth.CreateUs
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
-	return utils.Ptr(verificationToken), nil
+	h.logger.WithFields(logrus.Fields{
+		"email":     unverifiedUser.Email,
+		"firstName": unverifiedUser.FirstName,
+		"lastName":  unverifiedUser.LastName,
+		"character": unverifiedUser.Character,
+	}).Info("new user created")
+
+	return utils.Ptr(unverifiedUser.VerificationToken), nil
 }
 
 // VerifyEmail verifies a user's email with their verification token
@@ -97,11 +109,14 @@ func (h *Auth) Login(ctx context.Context, r jhttp.RequestData[auth.LoginRequest]
 	password := strings.TrimSpace(r.Body.Password)
 	user, err := h.controller.Login(ctx, email, password)
 	if err == auth.ErrBadLogin {
+		h.logger.WithField("email", email).Warn("failed login attempt")
 		return nil, badLoginErr
 	}
 	if err != nil {
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
+
+	h.logger.WithField(jlogging.UserUUIDLogLabel, user.UUID).Info("successful login")
 
 	cookie := auth.CreateAuthCookie(*user.Token, auth.CookieOpts{ExpiresAt: user.TokenValidTo})
 	http.SetCookie(*r.Writer, &cookie)
@@ -118,21 +133,26 @@ func (h *Auth) Logout(ctx context.Context, r jhttp.RequestData[auth.LogoutReques
 	if userPtr != nil {
 		user = *userPtr
 	}
+	logger := h.logger.WithField(jlogging.UserUUIDLogLabel, user.UUID)
 
 	logoutEverywhere := false
 	if r.Body != nil {
 		logoutEverywhere = r.Body.LogoutEverywhere
 	}
+	logger = logger.WithField("logoutEverywhere", logoutEverywhere)
 
 	if logoutEverywhere && ok {
 		err := h.controller.LogoutEverywhere(ctx, user)
 		if err != nil {
+			logger.WithError(err).Error("failed to logout")
 			return nil, JHTTPErrors.NewInternalServerError(err)
 		}
 	}
 
 	cookie := auth.CreateAuthCookie("", auth.CookieOpts{MaxAge: utils.Ptr(time.Duration(0))})
 	http.SetCookie(*r.Writer, &cookie)
+
+	logger.Info("successfully logged out")
 	return nil, nil
 }
 
@@ -154,6 +174,8 @@ func (h *Auth) UpdatePassword(ctx context.Context, r jhttp.RequestData[auth.Upda
 		return nil, JHTTPErrors.NewBadRequestError("Invalid user")
 	}
 
+	logger := h.logger.WithField(jlogging.UserUUIDLogLabel, userUUID)
+
 	authedUser, exists := jcontext.GetUser(ctx)
 	if !exists || (authedUser.UUID != userUUID && !authedUser.IsAdmin) {
 		return nil, JHTTPErrors.NewUnauthorizedError()
@@ -165,19 +187,27 @@ func (h *Auth) UpdatePassword(ctx context.Context, r jhttp.RequestData[auth.Upda
 
 	passwordValidationErr := auth.ValidatePassword(r.Body.NewPassword)
 	if passwordValidationErr != "" {
+		logger.
+			WithField("validationErr", passwordValidationErr).
+			Error("failed to update password: new password invalid")
 		return nil, JHTTPErrors.NewValidationError(passwordValidationErr)
 	}
 
 	err := h.controller.UpdatePassword(ctx, userUUID, *r.Body)
 	if err == globalTypes.ErrNotFound {
+		logger.Error("failed to update password: unknown user")
 		return nil, JHTTPErrors.NewBadRequestError("Unknown user")
 	}
 	if err == auth.ErrBadLogin {
+		logger.Error("failed to update password: invalid current password")
 		return nil, JHTTPErrors.NewUnauthorizedError()
 	}
 	if err != nil {
+		logger.WithError(err).Error("failed to update password")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
+
+	logger.Info("successfully updated password")
 
 	return nil, nil
 }

@@ -7,7 +7,7 @@ import (
 
 // GetAppURL gets the full URL of the app
 func GetAppURL() string {
-	if utils.GetEnv() == constants.EnvProd {
+	if constants.Environment(utils.GetEnv()) == constants.EnvProd {
 		return "https://login.jeffreycarr.dev"
 	}
 
