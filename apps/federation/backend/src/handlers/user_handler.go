@@ -7,19 +7,24 @@ import (
 	"go-common/jcontext"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
+	"go-common/jlogging"
 	globalTypes "go-common/types"
 	"go-common/utils"
+
+	"github.com/sirupsen/logrus"
 )
 
 // User represents a user handler
 type User struct {
 	controller user.Controller
+	logger     jlogging.Logger
 }
 
 // NewUserHandler creates a new User handler
-func NewUserHandler(controller user.Controller) User {
+func NewUserHandler(controller user.Controller, logger jlogging.Logger) User {
 	return User{
 		controller: controller,
+		logger:     logger,
 	}
 }
 
@@ -76,7 +81,12 @@ func (h *User) UpdateUser(ctx context.Context, r jhttp.RequestData[user.UpdateUs
 	}
 
 	request := *r.Body
+	logger := h.logger.WithFields(logrus.Fields{
+		jlogging.UserUUIDLogLabel: userUUID,
+		"request":                 request,
+	})
 	if validationErr := user.ValidateUpdateRequest(request); validationErr != "" {
+		logger.Error("invalid request")
 		return nil, JHTTPErrors.NewValidationError(validationErr)
 	}
 
@@ -85,8 +95,10 @@ func (h *User) UpdateUser(ctx context.Context, r jhttp.RequestData[user.UpdateUs
 		return nil, JHTTPErrors.NewNotFoundError(userUUID)
 	}
 	if err != nil {
+		logger.WithError(err).Error("failed to update user")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
+	logger.Info("updated user")
 	return utils.Ptr(utils.UserToCommonUser(updatedUser)), nil
 }

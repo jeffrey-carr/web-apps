@@ -83,7 +83,7 @@ func CreateAuthCookie(token string, opts CookieOpts) http.Cookie {
 		Path:     "/",
 	}
 
-	if os.Getenv(constants.EnvEnvironmentVar) == constants.EnvProd {
+	if constants.Environment(os.Getenv(constants.EnvEnvironmentVar)) == constants.EnvProd {
 		cookie.Secure = true
 		cookie.Domain = ".jeffreycarr.dev"
 	}

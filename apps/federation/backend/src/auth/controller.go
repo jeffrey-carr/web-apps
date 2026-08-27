@@ -41,7 +41,7 @@ var (
 type Controller interface {
 	GetUserFromCookie(ctx context.Context, cookie *http.Cookie) (globalTypes.CommonUser, error)
 
-	CreateUser(ctx context.Context, request CreateUserRequest) (string, error)
+	CreateUser(ctx context.Context, request CreateUserRequest) (types.UnverifiedUser, error)
 	VerifyEmail(ctx context.Context, verificationToken string) (globalTypes.User, error)
 	Login(ctx context.Context, email, password string) (globalTypes.User, error)
 	ValidateToken(ctx context.Context, token string) (globalTypes.User, error)
@@ -94,18 +94,18 @@ func (c *controller) GetUserFromCookie(ctx context.Context, cookie *http.Cookie)
 }
 
 // CreateUser creates a new unverified user and returns their verification token
-func (c *controller) CreateUser(ctx context.Context, request CreateUserRequest) (string, error) {
+func (c *controller) CreateUser(ctx context.Context, request CreateUserRequest) (types.UnverifiedUser, error) {
 	taken, err := c.userController.IsEmailTaken(ctx, request.Email)
 	if err != nil {
-		return "", err
+		return types.UnverifiedUser{}, err
 	}
 	if taken {
-		return "", ErrEmailTaken
+		return types.UnverifiedUser{}, ErrEmailTaken
 	}
 
 	salt, hashedPassword, err := c.saltAndHashPassword(request.Password)
 	if err != nil {
-		return "", err
+		return types.UnverifiedUser{}, err
 	}
 
 	// To protect the user base and give me a reason to send emails (cool!) I require users to verify their
@@ -116,10 +116,10 @@ func (c *controller) CreateUser(ctx context.Context, request CreateUserRequest) 
 	user := CreateRequestToUnverifiedUser(request, hashedPassword, salt)
 	err = c.unverifiedUserMongo.InsertItem(ctx, user)
 	if mongo.IsDuplicateKeyError(err) {
-		return "", ErrEmailTaken
+		return types.UnverifiedUser{}, ErrEmailTaken
 	}
 	if err != nil {
-		return "", err
+		return types.UnverifiedUser{}, err
 	}
 
 	tz := "EST"
@@ -141,10 +141,10 @@ func (c *controller) CreateUser(ctx context.Context, request CreateUserRequest) 
 		To: []jemail.EmailRecipient{{Email: user.Email, Name: fullName}},
 	}, "Verify your email", emailStr)
 	if err != nil {
-		return "", err
+		return types.UnverifiedUser{}, err
 	}
 
-	return user.VerificationToken, nil
+	return user, nil
 }
 
 // VerifyEmail verifies that a user's email is real and stores their information in the permanent DB
