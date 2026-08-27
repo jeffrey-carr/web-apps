@@ -152,7 +152,6 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Loaded config: %+v\n", config)
 	os.Setenv(globalConstants.EnvEnvironmentVar, string(config.Environment))
 
 	// MONGO CONNECTIONS //
