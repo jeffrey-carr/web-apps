@@ -13,16 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// OCILoggingHook is a special hook for a logger to write
-// to that publishes to OCI
-type OCILoggingHook interface {
-	// Levels reports the levels this logging hook
-	// pays attention to
-	Levels() []logrus.Level
-	// Fire is called on every log entry
-	Fire(*logrus.Entry) error
-}
-
 type ociLoggingHook struct {
 	client loggingingestion.LoggingClient
 	logs   chan loggingingestion.LogEntry
@@ -33,7 +23,7 @@ type ociLoggingHook struct {
 	batchTimeout time.Duration
 }
 
-func NewLoggerHook(config common.ConfigurationProvider, logID string) (OCILoggingHook, error) {
+func NewOCILoggingHook(config common.ConfigurationProvider, logID string) (LoggingHook, error) {
 	client, err := loggingingestion.NewLoggingClientWithConfigurationProvider(config)
 	if err != nil {
 		return nil, err

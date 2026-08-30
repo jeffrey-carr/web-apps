@@ -30,13 +30,15 @@ type loggingService struct {
 
 // NewLoggingService creates a new JLogger logger
 func NewLoggingService(
-	hook OCILoggingHook,
 	appName string,
+	hooks ...LoggingHook,
 ) LoggingService {
 	log := logrus.New()
-	customFormatter := NewJFormatter(appName)
-	log.SetFormatter(customFormatter)
-	log.AddHook(hook)
+	log.SetFormatter(&logrus.JSONFormatter{})
+	log.AddHook(NewNamespacedHook("app", appName))
+	for _, hook := range hooks {
+		log.AddHook(hook)
+	}
 
 	environment := os.Getenv(constants.EnvEnvironmentVar)
 	if environment != string(constants.EnvProd) {

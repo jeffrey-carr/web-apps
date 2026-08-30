@@ -137,12 +137,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	axiomLoggingHook, axiomLoggingHookCloser, err := jlogging.NewAxoimLoggerHook(config.AxiomAPIKey, config.AxiomDataset)
+	axiomLoggingHook, axiomLoggingHookCloser, err := jlogging.NewAxiomLoggingHook(config.AxiomAPIKey, config.AxiomDataset)
 	if err != nil {
 		panic(err)
 	}
 	defer axiomLoggingHookCloser()
-	loggingService := jlogging.NewLoggingService(axiomLoggingHook, "recipe_book")
+	loggingService := jlogging.NewLoggingService("recipe_book", axiomLoggingHook)
 
 	// MIDDLEWARES //
 	userMiddleware := middlewares.NewGetUser(nil, federationSDK)

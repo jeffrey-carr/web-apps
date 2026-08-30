@@ -21,4 +21,6 @@ type Config struct {
 	OracleRegion        string `json:"oracle_region"`
 	OracleLogID         string `json:"oracle_log_id"`
 	RedisConnectionURL  string `json:"redisConnectionURL"`
+	AxiomAPIKey         string `json:"axiomAPIKey"`
+	AxiomDataset        string `json:"axiomDataset"`
 }

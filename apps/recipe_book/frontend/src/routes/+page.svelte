@@ -289,7 +289,7 @@
 
   <div class="main">
     {#if loadingRecipes}
-      <Spinner class="page-loading" label="Loading recipes..." />
+      <Spinner class="page-loading" size="2rem" label="Loading recipes..." />
     {:else if !recipes || recipes.length === 0}
       <div class="no-recipes-container">
         <p class="sad-logo">:(</p>

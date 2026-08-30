@@ -107,15 +107,19 @@ func loadConfig() (types.Config, error) {
 	if err != nil {
 		return types.Config{}, err
 	}
-	oracleLogID, err := loadStr("ORACLE_LOG_ID", false, "")
-	if err != nil {
-		return types.Config{}, err
-	}
 	mongoConnectionURL, err := loadStr("MONGO_CONNECTION_URL", false, "")
 	if err != nil {
 		return types.Config{}, err
 	}
 	redisConnectionURL, err := loadStr("REDIS_CONNECTION_URL", true, "redis://redis:6379")
+	if err != nil {
+		return types.Config{}, err
+	}
+	axiomAPIKey, err := loadStr("AXIOM_API_KEY", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	axiomDataset, err := loadStr("AXIOM_DATASET", false, "")
 	if err != nil {
 		return types.Config{}, err
 	}
@@ -131,8 +135,9 @@ func loadConfig() (types.Config, error) {
 		OracleTenancy:       oracleTenancy,
 		OracleRegion:        oracleRegion,
 		OracleFingerprint:   oracleFingerprint,
-		OracleLogID:         oracleLogID,
 		RedisConnectionURL:  redisConnectionURL,
+		AxiomAPIKey:         axiomAPIKey,
+		AxiomDataset:        axiomDataset,
 	}, nil
 }
 
@@ -182,11 +187,12 @@ func main() {
 		oraclePrivateKey,
 		nil,
 	)
-	loggingHook, err := jlogging.NewLoggerHook(ociConfig, config.OracleLogID)
+	loggingHook, axiomLoggingHookCloser, err := jlogging.NewAxiomLoggingHook(config.AxiomAPIKey, config.AxiomDataset)
 	if err != nil {
 		panic(err)
 	}
-	loggingService := jlogging.NewLoggingService(loggingHook, config.Environment)
+	defer axiomLoggingHookCloser()
+	loggingService := jlogging.NewLoggingService("federation", loggingHook)
 	emailService, err := jemail.NewEmail(
 		ociConfig,
 		"noreply@jeffreycarr.dev",
