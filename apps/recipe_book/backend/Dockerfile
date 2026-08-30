@@ -1,5 +1,5 @@
 # apps/recipe_book/backend/Dockerfile
-FROM golang:1.25-alpine AS build
+FROM golang:1.27-alpine AS build
 
 # Which app are we building (e.g. federation, recipe_book, etc.)
 ARG APP
