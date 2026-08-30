@@ -6,13 +6,17 @@ import (
 	"go-common/jcontext"
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
+	"go-common/jlogging"
 	"go-common/types"
 	"go-common/utils"
 	"net/http"
 	"net/url"
+	"recipe-book/domains"
 	"recipe-book/domains/files"
 	"strconv"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -25,12 +29,14 @@ const (
 // Handler represents the recipe handler
 type Handler struct {
 	controller Controller
+	logger     jlogging.Logger
 }
 
 // NewHandler creates a new Recipe handler
-func NewHandler(controller Controller) Handler {
+func NewHandler(controller Controller, logger jlogging.Logger) Handler {
 	return Handler{
 		controller: controller,
+		logger:     logger,
 	}
 }
 
@@ -40,9 +46,14 @@ func (h Handler) Create(ctx context.Context, r jhttp.RequestData[struct{}]) (*Cr
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
 	}
+	logger := h.logger.WithFields(logrus.Fields{
+		domains.ActionLogKey:      "create",
+		jlogging.UserUUIDLogLabel: user.UUID,
+	})
 
 	err := r.Request.ParseMultipartForm(files.MaxSizeMB << 20)
 	if err != nil {
+		logger.Error("recipe creation failed because request form was too large")
 		return nil, JHTTPErrors.NewBadRequestError("File is too large")
 	}
 
@@ -50,15 +61,22 @@ func (h Handler) Create(ctx context.Context, r jhttp.RequestData[struct{}]) (*Cr
 	if httpErr != nil {
 		return nil, httpErr
 	}
+	logger.WithField("request", request)
 
 	if validationErr := ValidateRecipeCreateRequest(request); validationErr != "" {
+		logger.WithField("validationErr", validationErr).Error("create requset is not valid")
 		return nil, JHTTPErrors.NewValidationError(validationErr)
 	}
 
 	recipe, err := h.controller.CreateRecipe(ctx, user, request, imageCreateRequest)
 	if err != nil {
+		logger.WithError(err).Error("failed to create recipe")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
+	logger.WithFields(logrus.Fields{
+		RecipeUUIDLogKey: recipe.UUID,
+		"recipeName":     recipe.Name,
+	}).Info("created recipe")
 
 	return &CreateRecipeResponse{Slug: recipe.Slug}, nil
 }
@@ -69,14 +87,20 @@ func (h Handler) Update(ctx context.Context, r jhttp.RequestData[struct{}]) (*Pu
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
 	}
+	logger := h.logger.WithFields(logrus.Fields{
+		domains.ActionLogKey:      "update",
+		jlogging.UserUUIDLogLabel: user.UUID,
+	})
 
 	recipeUUID := r.Query.Get("recipe")
 	if recipeUUID == "" {
 		return nil, JHTTPErrors.NewBadRequestError("Recipe UUID is required")
 	}
+	logger.WithField(RecipeUUIDLogKey, recipeUUID)
 
 	err := r.Request.ParseMultipartForm(files.MaxSizeMB << 20)
 	if err != nil {
+		logger.Error("update request too large")
 		return nil, JHTTPErrors.NewBadRequestError("File is too large")
 	}
 
@@ -84,8 +108,10 @@ func (h Handler) Update(ctx context.Context, r jhttp.RequestData[struct{}]) (*Pu
 	if httpErr != nil {
 		return nil, httpErr
 	}
+	logger.WithField("request", request)
 
 	if validationErr := ValidateRecipeUpdateRequest(request); validationErr != "" {
+		logger.WithField("validationErr", validationErr).Error("update requset is invalid")
 		return nil, JHTTPErrors.NewValidationError(validationErr)
 	}
 
@@ -94,20 +120,25 @@ func (h Handler) Update(ctx context.Context, r jhttp.RequestData[struct{}]) (*Pu
 		return nil, JHTTPErrors.NewNotFoundError(recipeUUID)
 	}
 	if err != nil {
+		logger.WithError(err).Error("failed to get recipe")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
 	if !user.IsAdmin && existingRecipe.AuthorUUID != user.UUID {
+		logger.Error("user is not authorized to update recipe")
 		return nil, JHTTPErrors.NewForbiddenError()
 	}
 
 	updatedRecipe, err := h.controller.UpdateRecipe(ctx, existingRecipe, request, imageCreateRequest)
 	if err != nil {
+		logger.WithError(err).Error("failed to update recipe")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
+	logger.Info("updated recipe")
 
 	publicRecipe, err := h.controller.GetPublicRecipe(ctx, updatedRecipe.UUID)
 	if err != nil {
+		logger.WithError(err).Error("failed to fill out public recipe")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
@@ -120,42 +151,44 @@ func (h Handler) DeleteRecipe(ctx context.Context, r jhttp.RequestData[struct{}]
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
 	}
+	logger := h.logger.WithFields(logrus.Fields{
+		domains.ActionLogKey:      "delete",
+		jlogging.UserUUIDLogLabel: user.UUID,
+	})
 
 	recipeUUID := r.Query.Get(RecipeIDQueryParameterName)
 	if recipeUUID == "" {
 		return nil, JHTTPErrors.NewBadRequestError("Recipe UUID is required")
 	}
+	logger = logger.WithField(RecipeUUIDLogKey, recipeUUID)
 
-	// If the user is an admin, we can skip fetching the recipe and just delete the thing
-	if user.IsAdmin {
-		return nil, h.deleteRecipe(ctx, recipeUUID)
+	if !user.IsAdmin {
+		rec, err := h.controller.GetRecipe(ctx, recipeUUID)
+		if err == types.ErrNotFound {
+			return nil, JHTTPErrors.NewNotFoundError(recipeUUID)
+		}
+		if err != nil {
+			logger.WithError(err).Error("failed to get user")
+			return nil, JHTTPErrors.NewInternalServerError(err)
+		}
+
+		if user.UUID != rec.AuthorUUID {
+			logger.Error("user is not authorized to delete recipe")
+			return nil, JHTTPErrors.NewUnauthorizedError()
+		}
 	}
 
-	rec, err := h.controller.GetRecipe(ctx, recipeUUID)
+	err := h.controller.DeleteRecipe(ctx, recipeUUID)
 	if err == types.ErrNotFound {
 		return nil, JHTTPErrors.NewNotFoundError(recipeUUID)
 	}
 	if err != nil {
+		logger.WithError(err).Error("failed to delete recipe")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
-	if user.UUID != rec.AuthorUUID {
-		return nil, JHTTPErrors.NewUnauthorizedError()
-	}
-
-	return nil, h.deleteRecipe(ctx, recipeUUID)
-}
-
-func (h Handler) deleteRecipe(ctx context.Context, recipeUUID string) *JHTTPErrors.JHTTPError {
-	err := h.controller.DeleteRecipe(ctx, recipeUUID)
-	if err == types.ErrNotFound {
-		return JHTTPErrors.NewNotFoundError(recipeUUID)
-	}
-	if err != nil {
-		return JHTTPErrors.NewInternalServerError(err)
-	}
-
-	return nil
+	logger.Info("deleted recipe")
+	return nil, nil
 }
 
 // FavoriteRecipe saves a recipe to a user's list of favorite recipes. Supports both UUID and slug identifiers
@@ -164,17 +197,23 @@ func (h Handler) FavoriteRecipe(ctx context.Context, r jhttp.RequestData[struct{
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
 	}
+	logger := h.logger.WithFields(logrus.Fields{
+		domains.ActionLogKey:      "favorite",
+		jlogging.UserUUIDLogLabel: user.UUID,
+	})
 
 	recipeID := r.Query.Get(RecipeIDQueryParameterName)
 	if recipeID == "" {
 		return nil, JHTTPErrors.NewBadRequestError("Recipe ID is required")
 	}
+	logger = logger.WithField(RecipeUUIDLogKey, recipeID)
 
 	fav, err := h.controller.FavoriteRecipe(ctx, user, recipeID)
 	if err == ErrAlreadyFavorited {
 		return nil, JHTTPErrors.NewBadRequestError("Recipe is already favorited")
 	}
 	if err != nil {
+		logger.WithError(err).Error("failed to favorite recipe")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
@@ -187,17 +226,23 @@ func (h Handler) UnFavoriteRecipe(ctx context.Context, r jhttp.RequestData[struc
 	if !ok {
 		return nil, JHTTPErrors.NewUnauthorizedError()
 	}
+	logger := h.logger.WithFields(logrus.Fields{
+		domains.ActionLogKey:      "unfavorite",
+		jlogging.UserUUIDLogLabel: user.UUID,
+	})
 
 	recipeID := r.Query.Get(RecipeIDQueryParameterName)
 	if recipeID == "" {
 		return nil, JHTTPErrors.NewBadRequestError("Recipe ID is required")
 	}
+	logger = logger.WithField(RecipeUUIDLogKey, recipeID)
 
 	err := h.controller.UnFavoriteRecipe(ctx, user, recipeID)
 	if err == ErrNotFavorited {
 		return nil, JHTTPErrors.NewBadRequestError("Recipe is not favorited")
 	}
 	if err != nil {
+		logger.WithError(err).Error("failed to unfavorite recipe")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
@@ -210,12 +255,17 @@ func (h Handler) GetUserFavorites(ctx context.Context, r jhttp.RequestData[struc
 	if !ok {
 		return nil, JHTTPErrors.NewBadRequestError("User is not logged in.")
 	}
+	logger := h.logger.WithFields(logrus.Fields{
+		domains.ActionLogKey:      "getUserFavorites",
+		jlogging.UserUUIDLogLabel: user.UUID,
+	})
 
 	favorites, err := h.controller.GetAllUserFavorites(ctx, user.UUID)
 	if err == types.ErrNotFound {
 		return nil, JHTTPErrors.NewNotFoundError(user.UUID)
 	}
 	if err != nil {
+		logger.WithError(err).Error("failed to get user favorites")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
@@ -228,11 +278,16 @@ func (h Handler) Get(ctx context.Context, r jhttp.RequestData[struct{}]) (*Publi
 	if !ok {
 		return nil, JHTTPErrors.NewBadRequestError("Recipe ID is required")
 	}
+	logger := h.logger.WithFields(logrus.Fields{
+		domains.ActionLogKey: "getUserFavorites",
+		RecipeUUIDLogKey:     recipeID,
+	})
 
 	recipe, err := h.controller.GetPublicRecipe(ctx, recipeID)
 	if err == types.ErrNotFound {
 		return nil, JHTTPErrors.NewNotFoundError(recipeID)
 	} else if err != nil {
+		logger.WithError(err).Error("failed to get recipe")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
@@ -253,6 +308,10 @@ func (h Handler) Get(ctx context.Context, r jhttp.RequestData[struct{}]) (*Publi
 func (h Handler) GetAllTags(ctx context.Context, r jhttp.RequestData[struct{}]) (*[]Tag, *JHTTPErrors.JHTTPError) {
 	tags, err := h.controller.GetAllTags(ctx)
 	if err != nil {
+		h.logger.
+			WithField(domains.ActionLogKey, "getAllTags").
+			WithError(err).
+			Error("failed to get all tags")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
@@ -265,6 +324,10 @@ func (h Handler) Search(ctx context.Context, r jhttp.RequestData[struct{}]) (*Pa
 	if httpErr != nil {
 		return nil, httpErr
 	}
+	logger := h.logger.WithFields(logrus.Fields{
+		domains.ActionLogKey: "search",
+		"options":            opts,
+	})
 
 	user, userLoggedIn := jcontext.GetUser(ctx)
 	if opts.FavoritesOnly || opts.IncludeDrafts {
@@ -278,6 +341,7 @@ func (h Handler) Search(ctx context.Context, r jhttp.RequestData[struct{}]) (*Pa
 		return nil, JHTTPErrors.NewNotFoundError(opts)
 	}
 	if err != nil {
+		logger.WithError(err).Error("failed to search recipes")
 		return nil, JHTTPErrors.NewInternalServerError(err)
 	}
 
@@ -291,6 +355,7 @@ func (h Handler) Search(ctx context.Context, r jhttp.RequestData[struct{}]) (*Pa
 	if utils.Any(recipes, func(rec PublicRecipe) bool {
 		return rec.Status == StatusDraft && rec.AuthorUUID != user.UUID
 	}) {
+		logger.Error("unexpected draft recipe was returned in the search request")
 		return nil, JHTTPErrors.NewUnauthorizedError()
 	}
 
@@ -389,7 +454,7 @@ func formDataToRequest[T any](r *http.Request, requestKey string) (T, *files.Cre
 		Name: handler.Filename,
 		// MIME is hidden in a map that looks like:
 		// map[Content-Disposition:[form-data; name="image"; filename="Screenshot 2026-04-09 at 5.40.27 PM.png"] Content-Type:[image/png]]
-		// Get will pull that value out of the array for us
+		// Get will pull that value out of the map for us
 		MIME:       handler.Header.Get("Content-Type"),
 		Size:       handler.Size,
 		Visibility: files.PublicVisibility,

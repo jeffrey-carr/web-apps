@@ -8,6 +8,7 @@ import (
 	"go-common/jhttp"
 	JHTTPErrors "go-common/jhttp/errors"
 	"go-common/jhttp/middlewares"
+	"go-common/jlogging"
 	"go-common/services/jcloudinary"
 	"go-common/services/jmongo"
 	"go-common/services/jredis"
@@ -38,7 +39,13 @@ func loadConfig() (types.Config, error) {
 		return fallback, nil
 	}
 
-	environment, _ := loadStr("RECIPE_BOOK_ENVIRONMENT", true, globalConstants.EnvDev)
+	var environment globalConstants.Environment
+	environmentStr, _ := loadStr("RECIPE_BOOK_ENVIRONMENT", true, string(globalConstants.EnvDev))
+	if environmentStr == string(globalConstants.EnvProd) {
+		environment = globalConstants.EnvProd
+	} else {
+		environment = globalConstants.EnvDev
+	}
 	port, _ := loadStr("RECIPE_BOOK_PORT", true, "")
 	if port == "" {
 		port, _ = loadStr("PORT", true, "8080")
@@ -55,6 +62,14 @@ func loadConfig() (types.Config, error) {
 	if err != nil {
 		return types.Config{}, err
 	}
+	axiomAPIKey, err := loadStr("AXIOM_API_KEY", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
+	axiomDataset, err := loadStr("AXIOM_DATASET", false, "")
+	if err != nil {
+		return types.Config{}, err
+	}
 	redisFallback := "redis://localhost:6379"
 	if environment == globalConstants.EnvProd {
 		redisFallback = "redis://redis:6379"
@@ -67,6 +82,8 @@ func loadConfig() (types.Config, error) {
 		MongoURL:           mongoConnectionURL,
 		FederationAPIKey:   federationAPIKey,
 		CloudinaryAPIKey:   cloudinaryAPIKey,
+		AxiomAPIKey:        axiomAPIKey,
+		AxiomDataset:       axiomDataset,
 		RedisConnectionURL: redisConnectionURL,
 	}, nil
 }
@@ -88,7 +105,7 @@ func main() {
 		panic(fmt.Errorf("could not load config %w", err))
 	}
 
-	os.Setenv(globalConstants.EnvEnvironmentVar, config.Environment)
+	os.Setenv(globalConstants.EnvEnvironmentVar, string(config.Environment))
 
 	// SERVICES //
 	mongoClient, err := mongo.Connect(options.Client().ApplyURI(config.MongoURL))
@@ -120,6 +137,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	axiomLoggingHook, axiomLoggingHookCloser, err := jlogging.NewAxoimLoggerHook(config.AxiomAPIKey, config.AxiomDataset)
+	if err != nil {
+		panic(err)
+	}
+	defer axiomLoggingHookCloser()
+	loggingService := jlogging.NewLoggingService(axiomLoggingHook, "recipe_book")
 
 	// MIDDLEWARES //
 	userMiddleware := middlewares.NewGetUser(nil, federationSDK)
@@ -131,11 +154,11 @@ func main() {
 	recipeRepo := recipe.NewRepository(recipeMongoCollection, userFavoritesMongoCollection, tagMongoCollection)
 
 	// CONTROLLERS //
-	filesController := files.NewController(cloudinaryService, filesRepo)
+	filesController := files.NewController(loggingService.NewLogger("files", "controller"), cloudinaryService, filesRepo)
 	recipeController := recipe.NewController(federationSDK, recipeRepo, filesController)
 
 	// HANDLERS //
-	recipeHandler := recipeDomain.NewHandler(recipeController)
+	recipeHandler := recipeDomain.NewHandler(recipeController, loggingService.NewLogger("recipe", "handler"))
 
 	// ROUTER //
 	defaultBuilder := jhttp.NewEndpointBuilder(
