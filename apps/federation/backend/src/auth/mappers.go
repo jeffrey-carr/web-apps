@@ -9,7 +9,6 @@ import (
 	"go-common/constants"
 	"go-common/utils"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -83,7 +82,7 @@ func CreateAuthCookie(token string, opts CookieOpts) http.Cookie {
 		Path:     "/",
 	}
 
-	if constants.Environment(os.Getenv(constants.EnvEnvironmentVar)) == constants.EnvProd {
+	if utils.GetEnv() == constants.EnvProd {
 		cookie.Secure = true
 		cookie.Domain = ".jeffreycarr.dev"
 	}

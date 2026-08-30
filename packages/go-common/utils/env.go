@@ -29,8 +29,8 @@ func ReadEnv(path string) (map[string]string, error) {
 }
 
 // GetEnv gets the current environment
-func GetEnv() string {
-	return os.Getenv(constants.EnvEnvironmentVar)
+func GetEnv() constants.Environment {
+	return constants.Environment(os.Getenv(constants.EnvEnvironmentVar))
 }
 
 // IsProd returns whether the current environment is prod or not

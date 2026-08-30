@@ -2,6 +2,7 @@ package jlogging
 
 import (
 	"go-common/constants"
+	"os"
 
 	"github.com/sirupsen/logrus"
 )
@@ -30,12 +31,17 @@ type loggingService struct {
 // NewLoggingService creates a new JLogger logger
 func NewLoggingService(
 	hook OCILoggingHook,
-	environment constants.Environment,
+	appName string,
 ) LoggingService {
 	log := logrus.New()
-	log.SetFormatter(&logrus.JSONFormatter{})
+	customFormatter := NewJFormatter(appName)
+	log.SetFormatter(customFormatter)
 	log.AddHook(hook)
 
+	environment := os.Getenv(constants.EnvEnvironmentVar)
+	if environment != string(constants.EnvProd) {
+		environment = string(constants.EnvDev)
+	}
 	baseLog := log.WithField("environment", environment)
 
 	return &loggingService{baseLog: baseLog}
