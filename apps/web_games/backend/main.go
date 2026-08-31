@@ -8,6 +8,7 @@ import (
 	"go-common/constants"
 	"go-common/jhttp"
 	"go-common/jhttp/middlewares"
+	"go-common/jlogging"
 	"go-common/services/jencryption"
 	"go-common/services/jmongo"
 	"go-common/utils"
@@ -56,12 +57,24 @@ func loadConfig() types.Config {
 		panic(err)
 	}
 
+	axiomAPIKey, err := loadEnv("AXIOM_API_KEY", true)
+	if err != nil {
+		panic(err)
+	}
+
+	axiomDataset, err := loadEnv("AXIOM_DATASET", true)
+	if err != nil {
+		panic(err)
+	}
+
 	return types.Config{
-		Environment:             loadEnvWithFallback("ENVIRONMENT", constants.EnvDev),
+		Environment:             constants.Environment(loadEnvWithFallback("ENVIRONMENT", string(constants.EnvDev))),
 		Port:                    loadEnvWithFallback("PORT", "8080"),
 		MongoConnectionURL:      mongoConnectionURL,
 		WordChainEncryptionFile: loadEnvWithFallback("WORD_CHAIN_ENCRYPTION_FILE", "word_chain_secret.txt"),
 		FederationAPIKey:        federationAPIKey,
+		AxiomAPIKey:             axiomAPIKey,
+		AxiomDataset:            axiomDataset,
 	}
 }
 
@@ -145,6 +158,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	axiomLoggingHook, axiomLoggingHookCloser, err := jlogging.NewAxiomLoggingHook(config.AxiomAPIKey, config.AxiomDataset)
+	if err != nil {
+		panic(err)
+	}
+	defer axiomLoggingHookCloser()
+	loggingService := jlogging.NewLoggingService("web_games", axiomLoggingHook)
 
 	// MIDDLEWARES
 	userMiddleware := middlewares.NewGetUser(nil, federationSDK)
@@ -163,9 +182,9 @@ func main() {
 	userController := user.NewController(statsController)
 
 	// HANDLERS //
-	binokuHandler := binokuDomain.NewHandler(binokuController, statsController)
-	wordChainHandler := wordChainDomain.NewHandler(wordChainController, statsController)
-	userHandler := userDomain.NewHandler(userController)
+	binokuHandler := binokuDomain.NewHandler(binokuController, statsController, loggingService.NewLogger("binoku", "handler"))
+	wordChainHandler := wordChainDomain.NewHandler(wordChainController, statsController, loggingService.NewLogger("word_chain", "handler"))
+	userHandler := userDomain.NewHandler(userController, loggingService.NewLogger("user", "handler"))
 
 	// ROUTER //
 	defaultBuilder := jhttp.NewEndpointBuilder(

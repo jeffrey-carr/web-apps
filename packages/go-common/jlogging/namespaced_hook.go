@@ -25,6 +25,7 @@ func (jh *jNamespacedHook) Fire(entry *logrus.Entry) error {
 
 	globalKeys := map[string]bool{
 		"environment":    true,
+		"layer":          true,
 		UserUUIDLogLabel: true,
 	}
 
