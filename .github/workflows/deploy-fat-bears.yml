@@ -97,6 +97,10 @@ jobs:
                 exit 1
               fi
             fi
+            
+            # Ensure target directory exists and has correct permissions before rsync
+            sudo mkdir -p /opt/apps/${{ env.APP_NAME }}
+            sudo chown -R ${{ vars.SSH_USERNAME || 'ubuntu' }}:${{ vars.SSH_USERNAME || 'ubuntu' }} /opt/apps/${{ env.APP_NAME }}
 
       - name: Rsync Application Files
         uses: easingthemes/ssh-deploy@v5.1.0
