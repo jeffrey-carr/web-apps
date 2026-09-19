@@ -4,7 +4,7 @@ map $http_upgrade $connection_upgrade {
 }
 
 server {
-    server_name fatbears.jeffreycarr.dev www.fatbears.jeffreycarr.dev;
+    server_name bears.jeffreycarr.dev www.bears.jeffreycarr.dev;
 
     # Set the maximum allowed size of the client request body
     client_max_body_size 10M;
@@ -34,21 +34,21 @@ server {
 
     # TEMPORARILY COMMENTED OUT FOR INITIAL SETUP
     # listen 443 ssl;
-    # ssl_certificate /etc/letsencrypt/live/fatbears.jeffreycarr.dev/fullchain.pem;
-    # ssl_certificate_key /etc/letsencrypt/live/fatbears.jeffreycarr.dev/privkey.pem;
+    # ssl_certificate /etc/letsencrypt/live/bears.jeffreycarr.dev/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/bears.jeffreycarr.dev/privkey.pem;
     # include /etc/letsencrypt/options-ssl-nginx.conf;
     # ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
 server {
     listen 80;
-    server_name fatbears.jeffreycarr.dev www.fatbears.jeffreycarr.dev;
+    server_name bears.jeffreycarr.dev www.bears.jeffreycarr.dev;
 
     # TEMPORARILY COMMENTED OUT FOR INITIAL SETUP
-    # if ($host = www.fatbears.jeffreycarr.dev) {
+    # if ($host = www.bears.jeffreycarr.dev) {
     #     return 301 https://$host$request_uri;
     # }
-    # if ($host = fatbears.jeffreycarr.dev) {
+    # if ($host = bears.jeffreycarr.dev) {
     #     return 301 https://$host$request_uri;
     # }
     # return 404;
