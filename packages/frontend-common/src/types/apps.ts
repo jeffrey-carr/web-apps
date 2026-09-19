@@ -5,6 +5,7 @@ export enum App {
   Federation = 'Federation',
   WebGames = 'WebGames',
   RecipeBook = 'RecipeBook',
+  FatBears = 'FatBears',
 }
 
 export type AppInfo = {
@@ -33,6 +34,11 @@ export const Apps: Record<App, AppInfo> = {
     friendlyName: "Jean's Recipe Book",
     subdomain: 'recipe',
     devPort: '5176',
+  },
+  FatBears: {
+    friendlyName: 'Fat Bears Tournament',
+    subdomain: 'bears',
+    devPort: '5177',
   },
 };
 

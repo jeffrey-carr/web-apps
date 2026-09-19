@@ -1,0 +1,31 @@
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+import path from 'path';
+import dns from 'node:dns';
+
+dns.setDefaultResultOrder('ipv4first');
+
+export default defineConfig(({ isSsrBuild }) => ({
+  plugins: [sveltekit()],
+  build: {
+    rollupOptions: {
+      output: {
+        codeSplitting: isSsrBuild === true ? false : true,
+      },
+    },
+  },
+  server: {
+    port: 5177,
+    allowedHosts: ['bears.jeffreycarr.local'],
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true,
+        xfwd: true,
+      },
+    },
+    fs: {
+      allow: [path.resolve(__dirname, '../../../packages/frontend-common')],
+    },
+  },
+}));

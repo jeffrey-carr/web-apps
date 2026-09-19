@@ -1,0 +1,113 @@
+:root {
+	--bg-color: #112830; /* Dark teal/river night */
+	--text-color: #f5f0e6; /* Creamy off-white */
+	--primary-color: #ff7f50; /* Salmon */
+	--secondary-color: #8b5a2b; /* Bear brown */
+	--box-bg: #1a3c40; /* Slightly lighter dark teal */
+	--box-border: #ff7f50; /* Salmon border */
+	--input-bg: #f5f0e6;
+	--input-text: #000;
+	--button-bg: #ff7f50;
+	--button-hover: #ff6347;
+	--button-text: #fff;
+	--text-shadow: 2px 2px 0 #000;
+
+	/* frontend-common overrides */
+	--app-theme-header-font: 'Press Start 2P', cursive;
+	--app-theme-font: 'Press Start 2P', cursive;
+	
+	--app-theme-info: var(--primary-color);
+	--app-theme-info-light: var(--box-bg);
+	--app-theme-info-dark: #fff;
+
+	--app-theme-success: #4caf50;
+	--app-theme-success-light: var(--box-bg);
+
+	--app-theme-danger: #f44336;
+	--app-theme-danger-light: var(--box-bg);
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background-color: var(--bg-color);
+	color: var(--text-color);
+	font-family: 'Press Start 2P', cursive;
+	line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin-top: 0;
+}
+
+a {
+	color: var(--primary-color);
+	text-decoration: none;
+	text-shadow: 1px 1px 0px #000;
+}
+a:hover {
+	text-decoration: underline;
+}
+
+.pixel-box {
+	background-color: var(--box-bg);
+	border: 4px solid var(--box-border);
+	padding: 1rem;
+	box-shadow: 6px 6px 0 #000;
+}
+
+.pixel-input {
+	font-family: 'Press Start 2P', cursive;
+	background-color: var(--input-bg);
+	color: var(--input-text);
+	border: 4px solid var(--secondary-color);
+	padding: 0.5rem;
+	outline: none;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.pixel-button {
+	font-family: 'Press Start 2P', cursive;
+	background-color: var(--button-bg);
+	color: var(--button-text);
+	border: 4px solid #fff;
+	box-shadow: 4px 4px 0 #000;
+	padding: 0.5rem 1rem;
+	cursor: pointer;
+	text-transform: uppercase;
+}
+.pixel-button:hover:not(:disabled) {
+	background-color: var(--button-hover);
+	transform: translate(2px, 2px);
+	box-shadow: 2px 2px 0 #000;
+}
+.pixel-button:disabled {
+	background-color: #555;
+	color: #999;
+	cursor: not-allowed;
+}
+
+/* Force frontend-common Notification to match pixel aesthetic */
+div.container.info,
+div.container.success,
+div.container.error,
+div.container.warning {
+	border-width: 4px !important;
+	border-radius: 0 !important;
+	box-shadow: 6px 6px 0 #000 !important;
+}
+
+div.container .title {
+	text-shadow: 2px 2px 0 #000;
+}
+
+div.container .close-button {
+	border: none !important;
+	color: var(--primary-color) !important;
+}
+
+div.container .close-button:hover {
+	color: #fff !important;
+	background: none !important;
+}
