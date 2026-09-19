@@ -32,24 +32,22 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    # TEMPORARILY COMMENTED OUT FOR INITIAL SETUP
-    # listen 443 ssl;
-    # ssl_certificate /etc/letsencrypt/live/bears.jeffreycarr.dev/fullchain.pem;
-    # ssl_certificate_key /etc/letsencrypt/live/bears.jeffreycarr.dev/privkey.pem;
-    # include /etc/letsencrypt/options-ssl-nginx.conf;
-    # ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/bears.jeffreycarr.dev/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/bears.jeffreycarr.dev/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
 server {
+    if ($host = www.bears.jeffreycarr.dev) {
+        return 301 https://$host$request_uri;
+    }
+    if ($host = bears.jeffreycarr.dev) {
+        return 301 https://$host$request_uri;
+    }
+
     listen 80;
     server_name bears.jeffreycarr.dev www.bears.jeffreycarr.dev;
-
-    # TEMPORARILY COMMENTED OUT FOR INITIAL SETUP
-    # if ($host = www.bears.jeffreycarr.dev) {
-    #     return 301 https://$host$request_uri;
-    # }
-    # if ($host = bears.jeffreycarr.dev) {
-    #     return 301 https://$host$request_uri;
-    # }
-    # return 404;
+    return 404;
 }
