@@ -32,22 +32,24 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    listen 443 ssl;
-    ssl_certificate /etc/letsencrypt/live/fatbears.jeffreycarr.dev/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/fatbears.jeffreycarr.dev/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    # TEMPORARILY COMMENTED OUT FOR INITIAL SETUP
+    # listen 443 ssl;
+    # ssl_certificate /etc/letsencrypt/live/fatbears.jeffreycarr.dev/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/fatbears.jeffreycarr.dev/privkey.pem;
+    # include /etc/letsencrypt/options-ssl-nginx.conf;
+    # ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 
 server {
-    if ($host = www.fatbears.jeffreycarr.dev) {
-        return 301 https://$host$request_uri;
-    }
-    if ($host = fatbears.jeffreycarr.dev) {
-        return 301 https://$host$request_uri;
-    }
-
     listen 80;
     server_name fatbears.jeffreycarr.dev www.fatbears.jeffreycarr.dev;
-    return 404;
+
+    # TEMPORARILY COMMENTED OUT FOR INITIAL SETUP
+    # if ($host = www.fatbears.jeffreycarr.dev) {
+    #     return 301 https://$host$request_uri;
+    # }
+    # if ($host = fatbears.jeffreycarr.dev) {
+    #     return 301 https://$host$request_uri;
+    # }
+    # return 404;
 }
