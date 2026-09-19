@@ -6,6 +6,7 @@ on:
       - "federation-v*"
       - "recipe_book-v*"
       - "web_games-v*"
+      - "fat-bears-v*"
 
 jobs:
   deploy-federation:
@@ -27,6 +28,14 @@ jobs:
   deploy-web-games:
     if: startsWith(github.ref_name, 'web_games-v')
     uses: ./.github/workflows/deploy-web-games.yml
+    secrets: inherit
+    permissions:
+      contents: read
+      packages: write
+
+  deploy-fat-bears:
+    if: startsWith(github.ref_name, 'fat-bears-v') || startsWith(github.ref_name, 'fat_bears-v')
+    uses: ./.github/workflows/deploy-fat-bears.yml
     secrets: inherit
     permissions:
       contents: read

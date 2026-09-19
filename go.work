@@ -1,6 +1,7 @@
-go 1.27
+go 1.27.0
 
 use (
+	./apps/fat-bears/backend
 	./apps/federation/backend/src
 	./apps/recipe_book/backend
 	./apps/web_games/backend

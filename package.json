@@ -16,6 +16,7 @@
     "dev:web-games": "npm run redis:federation && turbo run dev --filter=web_games-* --filter=federation-* --parallel",
     "dev:federation": "npm run redis:federation && turbo run dev --filter=federation-* --parallel",
     "dev:recipe-book": "npm run redis:recipe-book && turbo run dev --filter=recipe_book-* --filter=federation-* --parallel",
+    "dev:fat-bears": "npm run redis:federation && turbo run dev --filter=federation-* --filter=fat_bears-* --parallel",
     "redis:federation": "docker compose -f apps/federation/docker-compose.yml up -d redis 2>/dev/null || true",
     "redis:recipe-book": "docker compose -f apps/recipe_book/docker-compose.yml up -d redis",
     "redis:all": "npm run redis:federation && npm run redis:recipe-book"

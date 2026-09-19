@@ -50,6 +50,7 @@
   <div class="app-container">
     {@render appCard(App.WebGames)}
     {@render appCard(App.RecipeBook)}
+    {@render appCard(App.FatBears)}
     {@render card(() => goto('/account'), 'Your Account')}
   </div>
 </main>
