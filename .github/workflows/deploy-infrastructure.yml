@@ -10,8 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        app: [federation, recipe_book, web_games, fat-bears]
-    environment: ${{ matrix.app }}
+        include:
+          - app: federation
+            env: federation
+          - app: recipe_book
+            env: recipe_book
+          - app: web_games
+            env: web_games
+          - app: fat-bears
+            env: fat_bears
+    environment: ${{ matrix.env }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

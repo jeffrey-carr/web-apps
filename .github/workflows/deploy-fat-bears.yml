@@ -63,7 +63,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: [build-backend, build-frontend]
-    environment: fat-bears
+    environment: fat_bears
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
