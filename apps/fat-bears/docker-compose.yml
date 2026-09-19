@@ -1,0 +1,20 @@
+services:
+  fat_bears_frontend:
+    image: ghcr.io/jeffrey-carr/fat-bears-frontend:latest
+    container_name: fat_bears_frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    ports:
+      - '127.0.0.1:3003:3000'
+
+  fat_bears_backend:
+    image: ghcr.io/jeffrey-carr/fat-bears-backend:latest
+    container_name: fat_bears_backend
+    restart: unless-stopped
+    volumes:
+      - ./backend/docker.env:/app/.env:ro
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    ports:
+      - '127.0.0.1:3103:8080'
