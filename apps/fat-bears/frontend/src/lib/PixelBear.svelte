@@ -19,13 +19,13 @@
 		{ base: '#5e432f', dark: '#382619', snout: '#967459' }  // Chocolate
 	];
 
-	$: p = id !== null ? palettes[Math.floor(pseudoRandom(id) * palettes.length)] : palettes[0];
+	$: p = id != null ? palettes[Math.floor(pseudoRandom(id) * palettes.length)] : palettes[0];
 	
-	$: hasScar = id !== null && pseudoRandom(id + 1) > 0.7;
-	$: hasGlasses = id !== null && pseudoRandom(id + 2) > 0.8;
-	$: eyeColor = id !== null && pseudoRandom(id + 3) > 0.95 ? '#f00' : '#000';
-	$: hasBowtie = id !== null && pseudoRandom(id + 4) > 0.6;
-	$: bowtieColor = id !== null ? `hsl(${Math.floor(pseudoRandom(id + 5) * 360)}, 80%, 50%)` : '#f00';
+	$: hasScar = id != null && pseudoRandom(id + 1) > 0.7;
+	$: hasGlasses = id != null && pseudoRandom(id + 2) > 0.8;
+	$: eyeColor = id != null && pseudoRandom(id + 3) > 0.95 ? '#f00' : '#000';
+	$: hasBowtie = id != null && pseudoRandom(id + 4) > 0.6;
+	$: bowtieColor = id != null ? `hsl(${Math.floor(pseudoRandom(id + 5) * 360)}, 80%, 50%)` : '#f00';
 </script>
 
 <svg width="48" height="48" viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated; width: 100%; height: auto; max-width: 64px;">

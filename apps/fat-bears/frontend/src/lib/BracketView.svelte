@@ -487,7 +487,7 @@
 		border: 3px solid #8e231e;
 		padding: 0.25rem;
 		border-radius: 6px;
-		width: 90px;
+		width: 105px;
 		text-align: center;
 		box-shadow: 2px 2px 0px rgba(0,0,0,0.3);
 		display: flex;
@@ -545,9 +545,8 @@
 		font-size: 0.55rem;
 		line-height: 1.1;
 		width: 100%;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		white-space: normal;
+		word-break: break-word;
 		text-shadow: 1px 1px 0 #000;
 		color: #ffd700;
 		margin-bottom: 2px;
@@ -557,9 +556,8 @@
 		font-size: 0.65rem;
 		line-height: 1.1;
 		width: 100%;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		white-space: normal;
+		word-break: break-word;
 		text-shadow: 1px 1px 0 #000;
 	}
 
