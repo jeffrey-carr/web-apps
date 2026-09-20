@@ -106,7 +106,7 @@
             <CharacterIcon character={user.character} />
           </div>
         </div>
-        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
           <a
             href="https://explore.org/fat-bear-week"
             target="_blank"

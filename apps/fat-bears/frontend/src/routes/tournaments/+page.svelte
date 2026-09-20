@@ -39,28 +39,28 @@
 	}
 </script>
 
-<div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; padding: 2rem; overflow-y: auto;">
-	<div style="display: flex; gap: 2rem; width: 100%; max-width: 800px; flex-direction: column;">
+<div style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100%; padding: 1rem; overflow-y: auto;">
+	<div style="display: flex; gap: 1rem; width: 100%; max-width: 800px; flex-direction: column;">
 		
 		{#if data.tournaments && data.tournaments.length > 0}
-			<div class="pixel-box" style="padding: 2rem;">
+			<div class="pixel-box" style="padding: 1rem;">
 				<h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center;">My Tournaments</h2>
 				<div style="display: flex; flex-direction: column; gap: 1rem;">
 					{#each data.tournaments as tournament}
-						<div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-color); border: 2px solid var(--box-border); border-radius: 4px;">
-							<div>
-								<div style="font-weight: bold; font-size: 1.2rem;">{tournament.title}</div>
-								<div style="font-size: 0.8rem; color: #aaa;">Code: {tournament.joinCode}</div>
+						<div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-color); border: 2px solid var(--box-border); border-radius: 4px; gap: 1rem;">
+							<div style="flex: 1; min-width: 0;">
+								<div style="font-weight: bold; font-size: 1.2rem; word-break: break-word;">{tournament.title}</div>
+								<div style="font-size: 0.8rem; color: #aaa; word-break: break-all;">Code: {tournament.joinCode}</div>
 							</div>
-							<a href="/tournament/{tournament.joinCode}" class="pixel-button" style="text-decoration: none;">View</a>
+							<a href="/tournament/{tournament.joinCode}" class="pixel-button" style="text-decoration: none; flex-shrink: 0;">View</a>
 						</div>
 					{/each}
 				</div>
 			</div>
 		{/if}
 
-		<div style="display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center;">
-			<div class="pixel-box" style="text-align: center; padding: 2rem; flex: 1; min-width: 300px;">
+		<div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+			<div class="pixel-box" style="text-align: center; padding: 1rem; flex: 1 1 100%;">
 				<h2 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Join a Tournament</h2>
 				<input type="text" class="pixel-input" bind:value={joinCode} placeholder="Enter Join Code" style="font-size: 1rem; padding: 0.75rem; text-align: center; margin-bottom: 1rem; width: 100%; box-sizing: border-box;" />
 				<button class="pixel-button" on:click={joinTournament} style="font-size: 1rem; padding: 0.75rem 1.5rem; width: 100%;">
@@ -68,7 +68,7 @@
 				</button>
 			</div>
 
-			<div class="pixel-box" style="text-align: center; padding: 2rem; flex: 1; min-width: 300px;">
+			<div class="pixel-box" style="text-align: center; padding: 1rem; flex: 1 1 100%;">
 				<h3 style="font-size: 1.5rem; margin-bottom: 1.5rem;">Or create your own!</h3>
 				<input type="text" class="pixel-input" bind:value={newTournamentTitle} placeholder="Tournament Title" style="font-size: 1rem; padding: 0.75rem; text-align: center; margin-bottom: 1rem; width: 100%; box-sizing: border-box;" />
 				<button class="pixel-button" on:click={createTournament} disabled={creating} style="font-size: 1rem; padding: 0.75rem 1.5rem; width: 100%;">

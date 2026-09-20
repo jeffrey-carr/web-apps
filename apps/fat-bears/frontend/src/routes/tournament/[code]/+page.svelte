@@ -186,10 +186,10 @@
 
 <div style="max-width: 900px; margin: 0 auto; padding: 2rem;">
 	<div class="pixel-box" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
-		<div style="display: flex; justify-content: space-between; align-items: center;">
-			<h2 style="margin: 0; font-size: 2rem;">{tournament.title}</h2>
-			<div style="text-align: right;">
-				<div style="font-weight: bold; font-size: 1.2rem; color: var(--primary-color);">Code: {tournament.joinCode}</div>
+		<div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+			<h2 style="margin: 0; font-size: 2rem; flex: 1; min-width: 0; word-break: break-word;">{tournament.title}</h2>
+			<div style="text-align: right; flex-shrink: 0;">
+				<div style="font-weight: bold; font-size: 1.2rem; color: var(--primary-color); word-break: break-all;">Code: {tournament.joinCode}</div>
 				<button class="pixel-button" style="font-size: 0.7rem; padding: 0.25rem 0.5rem; margin-top: 0.25rem;" on:click={() => copyToClipboard(tournament.joinCode)}>Copy Code</button>
 			</div>
 		</div>
@@ -198,7 +198,7 @@
 		{/if}
 		
 		{#if canEdit || userBracket}
-			<div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+			<div style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
 				{#if canEdit}
 					<button class="pixel-button" style="background-color: #f44336; font-size: 0.8rem; padding: 0.5rem 1rem;" on:click={performDelete}>Delete Tournament</button>
 				{/if}
