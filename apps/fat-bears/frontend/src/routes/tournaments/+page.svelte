@@ -47,12 +47,12 @@
 				<h2 style="font-size: 1.5rem; margin-bottom: 1.5rem; text-align: center;">My Tournaments</h2>
 				<div style="display: flex; flex-direction: column; gap: 1rem;">
 					{#each data.tournaments as tournament}
-						<div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-color); border: 2px solid var(--box-border); border-radius: 4px; gap: 1rem;">
+						<div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-color); border: 2px solid var(--box-border); border-radius: 4px; gap: 0.5rem;">
 							<div style="flex: 1; min-width: 0;">
-								<div style="font-weight: bold; font-size: 1.2rem; word-break: break-word;">{tournament.title}</div>
-								<div style="font-size: 0.8rem; color: #aaa; word-break: break-all;">Code: {tournament.joinCode}</div>
+								<div style="font-weight: bold; font-size: 1rem; word-break: break-word;">{tournament.title}</div>
+								<div style="font-size: 0.7rem; color: #aaa; word-break: break-all;">Code: {tournament.joinCode}</div>
 							</div>
-							<a href="/tournament/{tournament.joinCode}" class="pixel-button" style="text-decoration: none; flex-shrink: 0;">View</a>
+							<a href="/tournament/{tournament.joinCode}" class="pixel-button" style="text-decoration: none; flex-shrink: 0; font-size: 0.7rem; padding: 0.25rem 0.5rem;">View</a>
 						</div>
 					{/each}
 				</div>

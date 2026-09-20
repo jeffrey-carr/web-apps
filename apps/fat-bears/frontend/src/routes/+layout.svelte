@@ -95,18 +95,18 @@
 {:else}
   <div class="layout-container" style="display: flex; flex-direction: column; min-height: 100vh;">
     <header style="display: flex; justify-content: flex-end; padding: 1rem; padding-bottom: 0;">
-      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; max-width: 100%;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <strong style="text-shadow: var(--text-shadow); color: white;"
+          <strong style="text-shadow: var(--text-shadow); color: white; word-break: break-word; text-align: right;"
             >{user.fName} {user.lName}</strong
           >
           <div
-            style="width: 32px; height: 32px; border: 2px solid var(--primary-color); border-radius: 50%; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center;"
+            style="width: 32px; height: 32px; border: 2px solid var(--primary-color); border-radius: 50%; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;"
           >
             <CharacterIcon character={user.character} />
           </div>
         </div>
-        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
+        <div style="display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap; width: 100%;">
           <a
             href="https://explore.org/fat-bear-week"
             target="_blank"
