@@ -21,9 +21,9 @@ export function treeToMap(tree: TreeNode | any): Record<string, any[]> {
 
 	if (!tree) return m;
 
-	const getWinner = (node: TreeNode | null) => {
+	const getWinner = (node: TreeNode | any) => {
 		if (!node || !node.winner || node.winner.id === 0) return null;
-		return node.winner;
+		return { ...node.winner, leftVotes: node.leftVotes, rightVotes: node.rightVotes };
 	};
 
 	m.finals[2] = getWinner(tree);
@@ -61,66 +61,39 @@ export function treeToMap(tree: TreeNode | any): Record<string, any[]> {
 
 export function mapToTree(m: Record<string, any[]>): TreeNode {
 	const b = (id: number) => ({ id, nickname: '' });
+	const w = (m: Record<string, any[]>, region: string, index: number) => {
+		const choice = m[region]?.[index];
+		return choice ? { id: choice.id, nickname: choice.nickname, leftVotes: choice.leftVotes, rightVotes: choice.rightVotes } : null;
+	};
+	const makeNode = (region: string, index: number, left: TreeNode | null, right: TreeNode | null): TreeNode => {
+		const winner = w(m, region, index);
+		return { winner, leftVotes: winner?.leftVotes, rightVotes: winner?.rightVotes, left, right };
+	};
+	const makeStatic = (id: number) => ({ winner: b(id), left: null, right: null });
 
 	return {
-		winner: m.finals?.[2] || null,
-		left: {
-			winner: m.finals?.[0] || null,
-			left: {
-				winner: m.northwest?.[2] || null,
-				left: { 
-					winner: m.northwest?.[0] || null, 
-					left: { winner: b(132), left: null, right: null }, 
-					right: { winner: b(284), left: null, right: null } 
-				},
-				right: { 
-					winner: m.northwest?.[1] || null, 
-					left: { winner: b(806), left: null, right: null }, 
-					right: { winner: b(901), left: null, right: null } 
-				}
-			},
-			right: {
-				winner: m.southwest?.[2] || null,
-				left: { 
-					winner: m.southwest?.[0] || null, 
-					left: { winner: b(909), left: null, right: null }, 
-					right: { winner: b(428), left: null, right: null } 
-				},
-				right: { 
-					winner: m.southwest?.[1] || null, 
-					left: { winner: b(131), left: null, right: null }, 
-					right: { winner: b(910), left: null, right: null } 
-				}
-			}
-		},
-		right: {
-			winner: m.finals?.[1] || null,
-			left: {
-				winner: m.northeast?.[2] || null,
-				left: { 
-					winner: m.northeast?.[0] || null, 
-					left: { winner: b(694), left: null, right: null }, 
-					right: { winner: b(620), left: null, right: null } 
-				},
-				right: { 
-					winner: m.northeast?.[1] || null, 
-					left: { winner: b(610), left: null, right: null }, 
-					right: { winner: b(89), left: null, right: null } 
-				}
-			},
-			right: {
-				winner: m.southeast?.[2] || null,
-				left: { 
-					winner: m.southeast?.[0] || null, 
-					left: { winner: b(32), left: null, right: null }, 
-					right: { winner: b(164), left: null, right: null } 
-				},
-				right: { 
-					winner: m.southeast?.[1] || null, 
-					left: { winner: b(151), left: null, right: null }, 
-					right: { winner: b(903), left: null, right: null } 
-				}
-			}
-		}
+		winner: w(m, 'finals', 2),
+		leftVotes: w(m, 'finals', 2)?.leftVotes,
+		rightVotes: w(m, 'finals', 2)?.rightVotes,
+		left: makeNode('finals', 0,
+			makeNode('northwest', 2,
+				makeNode('northwest', 0, makeStatic(132), makeStatic(284)),
+				makeNode('northwest', 1, makeStatic(806), makeStatic(901))
+			),
+			makeNode('southwest', 2,
+				makeNode('southwest', 0, makeStatic(909), makeStatic(428)),
+				makeNode('southwest', 1, makeStatic(131), makeStatic(910))
+			)
+		),
+		right: makeNode('finals', 1,
+			makeNode('northeast', 2,
+				makeNode('northeast', 0, makeStatic(694), makeStatic(620)),
+				makeNode('northeast', 1, makeStatic(610), makeStatic(89))
+			),
+			makeNode('southeast', 2,
+				makeNode('southeast', 0, makeStatic(32), makeStatic(164)),
+				makeNode('southeast', 1, makeStatic(151), makeStatic(903))
+			)
+		)
 	};
 }

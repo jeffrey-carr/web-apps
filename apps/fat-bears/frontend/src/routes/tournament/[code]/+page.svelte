@@ -184,7 +184,7 @@
 	
 </script>
 
-<div style="max-width: 900px; margin: 0 auto; padding: 1rem;">
+<div style="max-width: 1400px; margin: 0 auto; padding: 1rem;">
 	<div class="pixel-box" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
 		<div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
 			<h2 style="margin: 0; font-size: 1.5rem; flex: 1 1 100%; min-width: 0; word-break: break-word;">{tournament.title}</h2>

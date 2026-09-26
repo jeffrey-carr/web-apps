@@ -44,7 +44,7 @@
 		const cleanedChoices: Record<string, any[]> = {};
 		for (const region of ['northwest', 'northeast', 'southwest', 'southeast', 'finals']) {
 			const typedRegion = region as keyof typeof goldenChoices;
-			cleanedChoices[typedRegion] = (goldenChoices[typedRegion] || []).map(b => b ? { id: b.id, nickname: b.nickname || '' } : null);
+			cleanedChoices[typedRegion] = (goldenChoices[typedRegion] || []).map(b => b ? { id: b.id, nickname: b.nickname || '', leftVotes: b.leftVotes || 0, rightVotes: b.rightVotes || 0 } : null);
 		}
 
 		try {
@@ -66,7 +66,7 @@
 		updating = false;
 	}
 
-	function handleSelect(region: string, index: number, val: number) {
+	function handleSelect(region: string, index: number, val: number, leftVotes?: number, rightVotes?: number) {
 		const typedRegion = region as keyof typeof goldenChoices;
 		if (val === 0) {
 			if (goldenChoices[typedRegion]) {
@@ -78,7 +78,7 @@
 		const bear = availableBears.find(b => b.id === val);
 		if (bear) {
 			if (!goldenChoices[typedRegion]) goldenChoices[typedRegion] = [];
-			goldenChoices[typedRegion][index] = { id: bear.id, nickname: bear.nickname };
+			goldenChoices[typedRegion][index] = { id: bear.id, nickname: bear.nickname, leftVotes, rightVotes };
 			goldenChoices = { ...goldenChoices }; // Trigger Svelte reactivity
 		}
 	}
@@ -89,12 +89,12 @@
 		<h2>Checking permissions...</h2>
 	</div>
 {:else}
-	<div class="pixel-box" style="max-width: 900px; margin: 0 auto;">
+	<div class="pixel-box" style="max-width: 1400px; margin: 0 auto;">
 		<h2 style="margin-top: 0;">👑 Admin: Update Golden Bracket</h2>
 		<p>Set the correct winners as the tournament progresses.</p>
 
 		<div style="margin-top: 2rem;">
-			<BracketView choices={goldenChoices} editing={true} onSelect={handleSelect} />
+			<BracketView choices={goldenChoices} editing={true} adminMode={true} onSelect={handleSelect} />
 		</div>
 
 		<div style="margin-top: 2rem; text-align: center;">

@@ -48,7 +48,9 @@ type Tournament struct {
 
 // BracketTree represents the tree that holds bracket data
 type BracketTree[T any] struct {
-	Winner T               `json:"winner" bson:"winner"`
-	Left   *BracketTree[T] `json:"left" bson:"left"`
-	Right  *BracketTree[T] `json:"right" bson:"right"`
+	Winner     T               `json:"winner" bson:"winner"`
+	LeftVotes  int             `json:"leftVotes" bson:"leftVotes"`
+	RightVotes int             `json:"rightVotes" bson:"rightVotes"`
+	Left       *BracketTree[T] `json:"left" bson:"left"`
+	Right      *BracketTree[T] `json:"right" bson:"right"`
 }

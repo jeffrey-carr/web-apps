@@ -9,20 +9,32 @@
 		southeast: [null, null, null],
 		finals: [null, null, null]
 	};
+	export let adminMode = false;
 	export let goldenBracket: any = null;
 	export let editing = false;
-	export let onSelect: (region: string, index: number, val: number) => void = () => {};
+	export let onSelect: (region: string, index: number, val: number, leftVotes?: number, rightVotes?: number) => void = () => {};
 
 	let selectingFor: { region: string, index: number } | null = null;
+	let leftVotesInput: number | null = null;
+	let rightVotesInput: number | null = null;
 
 	function openSelector(region: string, index: number) {
 		if (!editing) return;
 		selectingFor = { region, index };
+		leftVotesInput = null;
+		rightVotesInput = null;
+		if (adminMode) {
+			const existing = getChoice(choices, region, index);
+			if (existing) {
+				leftVotesInput = existing.leftVotes || null;
+				rightVotesInput = existing.rightVotes || null;
+			}
+		}
 	}
 
 	function handleSelection(bearId: number) {
 		if (selectingFor) {
-			onSelect(selectingFor.region, selectingFor.index, bearId);
+			onSelect(selectingFor.region, selectingFor.index, bearId, leftVotesInput || undefined, rightVotesInput || undefined);
 			selectingFor = null;
 		}
 	}
@@ -75,6 +87,54 @@
 	function getBearNickname(b: any) {
 		return b?.nickname || '';
 	}
+
+	
+	function getActualWinner(region: string, index: number) {
+		if (adminMode || !goldenBracket || !goldenBracket.choices) return null;
+		const officialChoice = getChoice(goldenBracket.choices, region, index);
+		if (officialChoice && officialChoice.id) {
+			return getBearName(officialChoice);
+		}
+		return null;
+	}
+function getBearVotes(region: string, round: string, index: number) {
+		const sourceChoices = adminMode ? choices : goldenBracket?.choices;
+		if (!sourceChoices) return null;
+
+		let targetRegion = region;
+		let targetIndex = -1;
+		let isLeft = false;
+
+		if (round === 'r0') {
+			targetIndex = Math.floor(index / 2);
+			isLeft = index % 2 === 0;
+		} else if (round === 'r1') {
+			targetIndex = 2;
+			isLeft = index === 0;
+		} else if (round === 'r2') {
+			targetRegion = 'finals';
+			if (region === 'northwest' || region === 'southwest') {
+				targetIndex = 0;
+				isLeft = region === 'northwest';
+			} else {
+				targetIndex = 1;
+				isLeft = region === 'northeast';
+			}
+		} else if (round === 'r3') {
+			targetRegion = 'finals';
+			targetIndex = 2;
+			isLeft = index === 0;
+		} else {
+			return null;
+		}
+
+		const matchWinner = getChoice(sourceChoices, targetRegion, targetIndex);
+		if (!matchWinner) return null;
+		
+		const votes = isLeft ? matchWinner.leftVotes : matchWinner.rightVotes;
+		if (votes) return votes.toLocaleString();
+		return null;
+	}
 </script>
 
 <div class="bracket-wrapper">
@@ -92,6 +152,9 @@
 								{/if}
 								<div class="bear-icon"><PixelBear id={startingBears[region][i]?.id} /></div>
 								<div class="bear-name">{getBearName(startingBears[region][i])}</div>
+								{#if getBearVotes(region, 'r0', i)}
+									<div style="font-size: 0.55rem; color: #ffd700; margin-top: 2px;">{getBearVotes(region, 'r0', i)}</div>
+								{/if}
 							</div>
 						</div>
 					{/each}
@@ -111,6 +174,14 @@
 								{/if}
 								<div class="bear-icon"><PixelBear id={getChoice(choices, region, i)?.id} /></div>
 								<div class="bear-name">{getBearName(getChoice(choices, region, i))}</div>
+								{#if getBearVotes(region, 'r1', i)}
+									<div style="font-size: 0.5rem; color: #ffd700; margin-top: 2px;">{getBearVotes(region, 'r1', i)}</div>
+								{/if}
+								{#if getActualWinner(region, i) && getCorrectness(region, i, getChoice(choices, region, i)) === 'incorrect'}
+									<div style="font-size: 0.55rem; color: #ffcccc; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px; line-height: 1;">
+										Winner: {getActualWinner(region, i).replace('Bear ', '')}
+									</div>
+								{/if}
 							</div>
 						</div>
 					{/each}
@@ -129,12 +200,22 @@
 								{/if}
 								<div class="bear-icon"><PixelBear id={getChoice(choices, region, 2)?.id} /></div>
 								<div class="bear-name">{getBearName(getChoice(choices, region, 2))}</div>
+								{#if getBearVotes(region, 'r2', 2)}
+									<div style="font-size: 0.5rem; color: #ffd700; margin-top: 2px;">{getBearVotes(region, 'r2', 2)}</div>
+								{/if}
+								{#if getActualWinner(region, 2) && getCorrectness(region, 2, getChoice(choices, region, 2)) === 'incorrect'}
+									<div style="font-size: 0.55rem; color: #ffcccc; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px; line-height: 1;">
+										Winner: {getActualWinner(region, 2).replace('Bear ', '')}
+									</div>
+								{/if}
 						</div>
 					</div>
 				</div>
 			</div>
 		{/each}
 	</div>
+
+	<div class="connector left-connector"></div>
 
 	<div class="bracket-center">
 		<div class="quadrant finals-quad">
@@ -152,6 +233,14 @@
 								{/if}
 								<div class="bear-icon"><PixelBear id={getChoice(choices, 'finals', 0)?.id} /></div>
 								<div class="bear-name">{getBearName(getChoice(choices, 'finals', 0))}</div>
+								{#if getBearVotes('finals', 'r3', 0)}
+									<div style="font-size: 0.5rem; color: #ffd700; margin-top: 2px;">{getBearVotes('finals', 'r3', 0)}</div>
+								{/if}
+								{#if getActualWinner('finals', 0) && getCorrectness('finals', 0, getChoice(choices, 'finals', 0)) === 'incorrect'}
+									<div style="font-size: 0.55rem; color: #ffcccc; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px; line-height: 1;">
+										Winner: {getActualWinner('finals', 0).replace('Bear ', '')}
+									</div>
+								{/if}
 					</div>
 				</div>
 			</div>
@@ -171,6 +260,11 @@
 								{/if}
 								<div class="bear-icon"><PixelBear id={getChoice(choices, 'finals', 2)?.id} /></div>
 								<div class="bear-name" style="color: #000;">{getBearName(getChoice(choices, 'finals', 2))}</div>
+								{#if getActualWinner('finals', 2) && getCorrectness('finals', 2, getChoice(choices, 'finals', 2)) === 'incorrect'}
+									<div style="font-size: 0.55rem; color: #ffcccc; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px; line-height: 1;">
+										Winner: {getActualWinner('finals', 2).replace('Bear ', '')}
+									</div>
+								{/if}
 					</div>
 				</div>
 			</div>
@@ -189,11 +283,21 @@
 								{/if}
 								<div class="bear-icon"><PixelBear id={getChoice(choices, 'finals', 1)?.id} /></div>
 								<div class="bear-name">{getBearName(getChoice(choices, 'finals', 1))}</div>
+								{#if getBearVotes('finals', 'r3', 1)}
+									<div style="font-size: 0.5rem; color: #ffd700; margin-top: 2px;">{getBearVotes('finals', 'r3', 1)}</div>
+								{/if}
+								{#if getActualWinner('finals', 1) && getCorrectness('finals', 1, getChoice(choices, 'finals', 1)) === 'incorrect'}
+									<div style="font-size: 0.55rem; color: #ffcccc; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px; line-height: 1;">
+										Winner: {getActualWinner('finals', 1).replace('Bear ', '')}
+									</div>
+								{/if}
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
+
+	<div class="connector right-connector"></div>
 
 	<div class="bracket-side right-side">
 		{#each ['northeast', 'southeast'] as region}
@@ -212,6 +316,14 @@
 								{/if}
 								<div class="bear-icon"><PixelBear id={getChoice(choices, region, 2)?.id} /></div>
 								<div class="bear-name">{getBearName(getChoice(choices, region, 2))}</div>
+								{#if getBearVotes(region, 'r2', 2)}
+									<div style="font-size: 0.5rem; color: #ffd700; margin-top: 2px;">{getBearVotes(region, 'r2', 2)}</div>
+								{/if}
+								{#if getActualWinner(region, 2) && getCorrectness(region, 2, getChoice(choices, region, 2)) === 'incorrect'}
+									<div style="font-size: 0.55rem; color: #ffcccc; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px; line-height: 1;">
+										Winner: {getActualWinner(region, 2).replace('Bear ', '')}
+									</div>
+								{/if}
 						</div>
 					</div>
 				</div>
@@ -230,6 +342,14 @@
 								{/if}
 								<div class="bear-icon"><PixelBear id={getChoice(choices, region, i)?.id} /></div>
 								<div class="bear-name">{getBearName(getChoice(choices, region, i))}</div>
+								{#if getBearVotes(region, 'r1', i)}
+									<div style="font-size: 0.5rem; color: #ffd700; margin-top: 2px;">{getBearVotes(region, 'r1', i)}</div>
+								{/if}
+								{#if getActualWinner(region, i) && getCorrectness(region, i, getChoice(choices, region, i)) === 'incorrect'}
+									<div style="font-size: 0.55rem; color: #ffcccc; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px; line-height: 1;">
+										Winner: {getActualWinner(region, i).replace('Bear ', '')}
+									</div>
+								{/if}
 							</div>
 						</div>
 					{/each}
@@ -244,6 +364,9 @@
 								{/if}
 								<div class="bear-icon"><PixelBear id={startingBears[region][i]?.id} /></div>
 								<div class="bear-name">{getBearName(startingBears[region][i])}</div>
+								{#if getBearVotes(region, 'r0', i)}
+									<div style="font-size: 0.55rem; color: #ffd700; margin-top: 2px;">{getBearVotes(region, 'r0', i)}</div>
+								{/if}
 							</div>
 						</div>
 					{/each}
@@ -260,11 +383,23 @@
 			<h3>Select a Bear</h3>
 			<div class="bear-grid">
 				<!-- Limit choices to the bears that can actually reach this slot -->
-				{#each getValidOptions(choices, selectingFor.region, selectingFor.index) as b}
-					<button class="pixel-button" on:click={() => handleSelection(b.id)} style="display: flex; flex-direction: column; align-items: center; padding: 0.5rem; line-height: 1.2;">
-						<div style="width: 48px; height: 48px;"><PixelBear id={b.id} /></div>
-						<span style="font-size: 0.8rem; margin-top: 0.5rem;">{getBearName(b)}</span>
-					</button>
+				{#each getValidOptions(choices, selectingFor.region, selectingFor.index) as b, optionIndex}
+					<div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+						<button class="pixel-button" on:click={() => handleSelection(b.id)} style="display: flex; flex-direction: column; align-items: center; padding: 0.5rem; line-height: 1.2; width: 100%;">
+							<div style="width: 48px; height: 48px;"><PixelBear id={b.id} /></div>
+							<span style="font-size: 0.8rem; margin-top: 0.5rem;">{getBearName(b)}</span>
+						</button>
+						{#if adminMode}
+							<div style="width: 100%;">
+								<label style="font-size: 0.6rem;">{optionIndex === 0 ? 'Top' : 'Bottom'} Votes:</label>
+								{#if optionIndex === 0}
+									<input type="number" class="pixel-input" bind:value={leftVotesInput} placeholder="0" style="font-size: 0.8rem;" />
+								{:else}
+									<input type="number" class="pixel-input" bind:value={rightVotesInput} placeholder="0" style="font-size: 0.8rem;" />
+								{/if}
+							</div>
+						{/if}
+					</div>
 				{/each}
 			</div>
 			{#if getValidOptions(choices, selectingFor.region, selectingFor.index).length === 0}
@@ -317,9 +452,66 @@
 		display: flex;
 		flex-direction: column;
 		justify-content: space-around;
-		flex: 1;
 		gap: 2rem;
 		scroll-snap-align: start;
+		position: relative;
+	}
+
+	/* Huge brackets connecting r2 to r3 */
+	.connector {
+		flex: 1;
+		position: relative;
+		min-width: 2rem;
+	}
+	
+	.left-connector::before {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 50%;
+		top: calc((100% - 2rem) / 4);
+		bottom: calc((100% - 2rem) / 4);
+		border-top: 2px solid #fff;
+		border-bottom: 2px solid #fff;
+		border-right: 2px solid #fff;
+		border-radius: 0 6px 6px 0;
+		z-index: 10;
+		pointer-events: none;
+	}
+	.left-connector::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		right: 0;
+		top: 50%;
+		border-top: 2px solid #fff;
+		z-index: 10;
+		pointer-events: none;
+	}
+
+	.right-connector::before {
+		content: '';
+		position: absolute;
+		left: 50%;
+		right: 0;
+		top: calc((100% - 2rem) / 4);
+		bottom: calc((100% - 2rem) / 4);
+		border-top: 2px solid #fff;
+		border-bottom: 2px solid #fff;
+		border-left: 2px solid #fff;
+		border-radius: 6px 0 0 6px;
+		z-index: 10;
+		pointer-events: none;
+	}
+	.right-connector::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 50%;
+		top: 50%;
+		border-top: 2px solid #fff;
+		z-index: 10;
+		pointer-events: none;
 	}
 
 	.bracket-center {
@@ -397,14 +589,16 @@
 		border-bottom-right-radius: 6px;
 	}
 	/* Inward horizontal connecting lines */
-	.left-side .quadrant .r1 .match::before,
-	.left-side .quadrant .r2 .match::before {
+	.left-side .quadrant .r1 .node::before,
+	.left-side .quadrant .r2 .node::before {
 		content: '';
 		position: absolute;
 		left: -0.75rem;
 		width: 0.75rem;
 		border-top: 2px solid #fff;
 		top: 50%;
+		display: block;
+		z-index: 10;
 	}
 
 	/* Lines - Right Side */
@@ -433,14 +627,16 @@
 		border-bottom-left-radius: 6px;
 	}
 	/* Inward horizontal connecting lines */
-	.right-side .quadrant .r1 .match::before,
-	.right-side .quadrant .r2 .match::before {
+	.right-side .quadrant .r1 .node::before,
+	.right-side .quadrant .r2 .node::before {
 		content: '';
 		position: absolute;
 		right: -0.75rem;
 		width: 0.75rem;
 		border-top: 2px solid #fff;
 		top: 50%;
+		display: block;
+		z-index: 10;
 	}
 
 	/* Finals Lines */
