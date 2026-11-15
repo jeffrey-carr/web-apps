@@ -258,7 +258,8 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem 1rem;
 
       .chain-word {
         font-size: 1.2rem;

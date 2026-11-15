@@ -232,8 +232,39 @@
     gap: 1.5rem;
 
     width: min(440px, 88vw);
+    max-width: calc(100dvw - 2rem);
     padding: 2.25rem 2rem 2rem;
     text-align: center;
+  }
+
+  @media (max-width: 768px) {
+    .rematch-board {
+      gap: 1rem;
+      padding: 1.5rem 1.25rem 1.25rem;
+    }
+
+    .rope-assembly {
+      &.left {
+        left: 2rem;
+      }
+
+      &.right {
+        right: 2rem;
+      }
+    }
+
+    .challenger-section {
+      padding: 1rem;
+      gap: 0.75rem;
+
+      .avatar-frame {
+        --size: 4.75rem;
+      }
+
+      .challenge-message {
+        font-size: 1rem;
+      }
+    }
   }
 
   .rope-assembly {
