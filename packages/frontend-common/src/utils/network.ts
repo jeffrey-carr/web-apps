@@ -1,7 +1,7 @@
 import type { makeRequestParams, RouteInformation } from '../types/network';
 import { METHODS } from '../types/network';
 import type { Environment } from '../types';
-import { App, Apps, prodEnvironment } from '../types';
+import { App, Apps, prodEnvironment, stagingEnvironment } from '../types';
 import { ServerError } from '../types/errors';
 
 export const makeRequest = async <T, E = undefined>(
@@ -74,6 +74,9 @@ export const getAppURL = (environment: Environment, app: App): string => {
 
   if (environment === prodEnvironment) {
     return `https://${info.subdomain}.jeffreycarr.dev`;
+  }
+  if (environment === stagingEnvironment) {
+    return `http://${info.subdomain}.lab.test`;
   }
 
   return `http://${info.subdomain}.jeffreycarr.local:${info.devPort}`;

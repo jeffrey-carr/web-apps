@@ -37,3 +37,8 @@ func GetEnv() constants.Environment {
 func IsProd() bool {
 	return constants.Environment(GetEnv()) == constants.EnvProd
 }
+
+// IsStaging returns whether the current environment is staging or not
+func IsStaging() bool {
+	return constants.Environment(GetEnv()) == constants.EnvStaging
+}

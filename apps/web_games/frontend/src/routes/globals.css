@@ -45,6 +45,10 @@
   --app-theme-overlay: var(--bg-color-overlay);
   --app-theme-overlay-light: var(--bg-color-overlay);
 
+  --border-radius-sm: 5px;
+  --border-radius-md: 10px;
+  --border-radius-lg: 13px;
+
   /* This is the font used for special headers like custom banners, h1, etc. */
   /* --app-theme-header-font: 'Luckiest Guy'; */
   --app-theme-header-font: 'Monoton';
@@ -60,6 +64,12 @@
 * {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -82,14 +92,15 @@ h4,
 h5,
 h6 {
   color: var(--app-theme-text-primary);
-  font-family: var(--app-theme-header-font);
   font-weight: 400;
 }
 h1 {
-  font-size: 4rem;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-family: var(--app-theme-header-font);
 }
 h2 {
-  font-size: 2rem;
+  font-size: 3.3rem;
+  font-family: var(--app-theme-font);
 }
 h3 {
   font-size: 1.5rem;

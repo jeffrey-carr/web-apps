@@ -1,3 +1,7 @@
 package word_chain
 
-const TargetChainLength = 7
+const (
+	// TargetChainLength is the length a word chain should be
+	TargetChainLength       = 7
+	IncorrectPenaltySeconds = 5
+)

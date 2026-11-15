@@ -3,9 +3,7 @@
   import { page } from '$app/state';
   import { ExpandButton, ReactiveIcon } from '@jeffrey-carr/frontend-common';
   import { Sidebar } from './index';
-  import type { User } from '@jeffrey-carr/frontend-common';
 
-  let { user, loadingUser }: { user?: User | null; loadingUser?: boolean } = $props();
   let height = $state('5rem');
   let bar = $state<HTMLDivElement>();
   let path = $state(page.url.pathname);
@@ -65,8 +63,6 @@
     { title: 'Word Chain', action: wordChain },
   ]}
   bind:open={isSidebarOpen}
-  {loadingUser}
-  {user}
 />
 
 <style lang="scss">
@@ -92,6 +88,7 @@
   .title {
     color: var(--app-theme-text-secondary);
     font-family: var(--app-theme-readable-font);
+    white-space: nowrap;
   }
 
   .button {

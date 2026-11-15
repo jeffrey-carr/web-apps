@@ -6,6 +6,8 @@ type Environment string
 const (
 	// EnvProd represents the prod environment
 	EnvProd Environment = "prod"
+	// EnvStaging represents the homelab staging environment
+	EnvStaging Environment = "staging"
 	// EnvDev represents the dev environment
 	EnvDev            Environment = "dev"
 	EnvEnvironmentVar string      = "ENVIRONMENT"

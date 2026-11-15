@@ -1,7 +1,6 @@
 package jhttp
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"go-common/jhttp/errors"
@@ -40,7 +39,7 @@ func NewEndpoint[T any, E any](
 			pathValues[key] = value
 		}
 
-		ctx := context.Background()
+		ctx := r.Context()
 		var middlewareErr *errors.JHTTPError
 		// Add on common headers first, that way they can be clobbered by custom headers
 		ctx, _ = middlewares.AddCommonHeaders{}.Apply(ctx, w, r)

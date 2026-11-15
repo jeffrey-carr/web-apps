@@ -17,22 +17,21 @@
 
   import styles from './sidebar.module.scss';
   import clsx from 'clsx';
+  import { userState } from '$lib/globals/user.svelte';
 
   let {
     title,
     open = $bindable(),
     items,
-    user,
-    loadingUser,
   }: {
     title?: string;
     open: boolean;
     items: SidebarItem[];
-    user?: User | null;
-    loadingUser?: boolean;
   } = $props();
 
   let loadingLogout = $state(false);
+  let loadingUser = $derived(userState.isLoading);
+  let user = $derived(userState.user);
 
   const handleClick = (action: SidebarAction) => {
     if (typeof action === 'string') {

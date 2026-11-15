@@ -8,9 +8,10 @@ export * from './network';
 export * from './random';
 export * from './tuple';
 export * from './strings';
+export * from './sse';
 
 export const ping = (): string => {
-  return "pong!";
+  return 'pong!';
 };
 
 export const sleep = (ms: number): Promise<void> => {
@@ -19,24 +20,22 @@ export const sleep = (ms: number): Promise<void> => {
 
 export const generateGreeting = (): string => {
   return getRandomElement([
-    "Hello",
-    "Hi",
-    "Hey",
-    "Yo",
-    "Sup",
-    "Howdy",
-    "Ahoy",
-    "Greetings",
-    "Welcome",
-    "Hola",
-    "Aloha",
-    "Salutations",
-    "Hiya",
+    'Hello',
+    'Hi',
+    'Hey',
+    'Yo',
+    'Sup',
+    'Howdy',
+    'Ahoy',
+    'Greetings',
+    'Welcome',
+    'Hola',
+    'Aloha',
+    'Salutations',
+    'Hiya',
     "G'day",
-    "Heya",
-    "Heyo",
-    "Yello",
+    'Heya',
+    'Heyo',
+    'Yello',
   ]);
 };
-
-

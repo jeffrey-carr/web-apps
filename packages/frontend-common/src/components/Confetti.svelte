@@ -62,7 +62,6 @@
     // Update confetti position
     confetti = confetti.map(piece => updateConfetti(piece));
     // Clear trash confetti
-    const before = confetti.length;
     confetti = confetti.filter(piece => piece.sizePx > 0 && piece.y < (canvas?.height ?? 500));
 
     // Fill in more confetti
@@ -83,7 +82,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 5;
+    z-index: 0;
 
     display: flex;
     justify-content: center;

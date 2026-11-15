@@ -85,6 +85,9 @@ func CreateAuthCookie(token string, opts CookieOpts) http.Cookie {
 	if utils.GetEnv() == constants.EnvProd {
 		cookie.Secure = true
 		cookie.Domain = ".jeffreycarr.dev"
+	} else if utils.GetEnv() == constants.EnvStaging {
+		cookie.Secure = false
+		cookie.Domain = ".lab.test"
 	}
 
 	return cookie

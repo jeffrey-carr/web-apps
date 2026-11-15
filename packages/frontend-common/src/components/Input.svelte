@@ -57,6 +57,7 @@
     margin: 0;
   }
   input[type='number'] {
+    appearance: textfield;
     -moz-appearance: textfield; /* Firefox */
   }
 
@@ -90,6 +91,10 @@
       outline: none;
       border: 1px solid var(--app-theme-primary);
       box-shadow: 0 0 10px var(--app-theme-primary);
+    }
+
+    &::placeholder {
+      color: var(--app-theme-text-secondary);
     }
   }
 

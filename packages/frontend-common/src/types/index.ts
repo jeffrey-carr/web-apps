@@ -7,6 +7,7 @@ export { Stack } from './stack';
 export * from './time';
 export * from './user';
 export * from './apps';
+export * from './sse';
 
 export type ServerResponse<T = undefined> = {
   status: number;
@@ -21,4 +22,5 @@ export type GoServerResponse = {
 
 export type Environment = string;
 export const devEnvironment: Environment = 'dev';
+export const stagingEnvironment: Environment = 'staging';
 export const prodEnvironment: Environment = 'prod';

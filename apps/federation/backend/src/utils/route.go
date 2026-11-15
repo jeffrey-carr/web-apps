@@ -10,6 +10,9 @@ func GetAppURL() string {
 	if constants.Environment(utils.GetEnv()) == constants.EnvProd {
 		return "https://login.jeffreycarr.dev"
 	}
+	if constants.Environment(utils.GetEnv()) == constants.EnvStaging {
+		return "http://login.lab.test"
+	}
 
 	return "http://login.jeffreycarr.local:5175"
 }

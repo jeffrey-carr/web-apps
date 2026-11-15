@@ -3,6 +3,7 @@ package errors
 import (
 	"fmt"
 	"net/http"
+	"time"
 )
 
 // JHTTPError is a custom error that is returned by all Jeffrey Carr
@@ -35,12 +36,13 @@ func NewBadRequestError(msg string) *JHTTPError {
 	}
 }
 
+// NotFoundData is the data returned in a NotFound error
+type NotFoundData[T any] struct {
+	Requested T `json:"requested"`
+}
+
 // NewNotFoundError creates a new HTTP Not Found error
 func NewNotFoundError[T any](requested T) *JHTTPError {
-	type NotFoundData[T any] struct {
-		Requested T `json:"requested"`
-	}
-
 	return &JHTTPError{
 		StatusCode: http.StatusNotFound,
 		Message:    "Not found",
@@ -59,6 +61,19 @@ func NewInternalServerError(err error) *JHTTPError {
 		StatusCode: http.StatusInternalServerError,
 		Message:    "Internal server error",
 		Data:       errMsg,
+	}
+}
+
+type ServiceUnavailableData struct {
+	RequestAfterUnix int64 `json:"requestAfterUnix"`
+}
+
+// NewServiceUnavailableError returns a new Service Unavailable error
+func NewServiceUnavailableError(requestAfter time.Time) *JHTTPError {
+	return &JHTTPError{
+		StatusCode: http.StatusServiceUnavailable,
+		Message:    "Service unavailable",
+		Data:       ServiceUnavailableData{RequestAfterUnix: requestAfter.Unix()},
 	}
 }
 

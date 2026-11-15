@@ -16,7 +16,8 @@
 	"dependencies": {
 		"@jeffrey-carr/frontend-common": "file:../../../packages/frontend-common",
 		"@sveltejs/adapter-node": "^5.5.4",
-		"clsx": "^2.1.1"
+		"clsx": "^2.1.1",
+		"gsap": "^3.15.1"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "^2.57.1",
