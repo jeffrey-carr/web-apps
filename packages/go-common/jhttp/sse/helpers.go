@@ -7,9 +7,11 @@ import (
 	"fmt"
 	jerrors "go-common/jhttp/errors"
 	"net/http"
+	"time"
 )
 
 const defaultBufferSize = 128
+const keepAliveInterval = 30 * time.Second
 
 // HandleNewConnection handles new SSE connections
 //
@@ -29,17 +31,27 @@ func HandleNewConnection(ctx context.Context, writer *http.ResponseWriter) (func
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no")
 	w.WriteHeader(http.StatusOK)
 	sendConnectedMessage(w, flusher)
 
 	comms := make(chan string, defaultBufferSize)
 
 	return func() {
+		ticker := time.NewTicker(keepAliveInterval)
+		defer ticker.Stop()
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case msg := <-comms:
+			case <-ticker.C:
+				fmt.Fprint(w, ": keepalive\n\n")
+				flusher.Flush()
+			case msg, ok := <-comms:
+				if !ok {
+					return
+				}
 				fmt.Fprint(w, msg)
 				flusher.Flush()
 			}

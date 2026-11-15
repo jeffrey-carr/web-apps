@@ -3395,7 +3395,7 @@ class JC {
       }
   }
   async disconnect() {
-    await Oo(this.disconnectEndpoint), this.eventSource && (this.eventSource.close(), this.eventSource = void 0), console.log("updating status to disconnected"), this.updateStatus("disconnected");
+    await Oo(this.disconnectEndpoint), this.eventSource && (this.eventSource.close(), this.eventSource = void 0), this.updateStatus("disconnected");
   }
   getStatus() {
     return this.status;
@@ -3405,11 +3405,10 @@ class JC {
     return new Promise((e, n) => {
       const r = new EventSource(this.endpoint.path);
       r.onopen = () => {
-        console.log("Connection opened, waiting for first message");
+        console.log("Connection opened, waiting for server response");
       }, r.onerror = (i) => {
         console.error("Error from BE", i), this.disconnect(), n(i);
       }, r.onmessage = (i) => {
-        console.log("received message", i);
         let s;
         try {
           s = JSON.parse(i.data);
@@ -3454,7 +3453,7 @@ class JC {
   }
   updateStatus(e) {
     var n;
-    console.log(`received updated status to broadcast: ${e}`), this.status = e, (n = this.onstatuschange) == null || n.call(this, e);
+    this.status = e, (n = this.onstatuschange) == null || n.call(this, e);
   }
 }
 const $C = () => "pong!", b0 = (t) => new Promise((e) => setTimeout(e, t)), GC = () => c0([
@@ -3509,7 +3508,7 @@ function YC(t, e) {
     w(r).clearRect(0, 0, w(n).width, w(n).height);
     for (const v of d)
       h(w(r), v);
-    d = d.map((v) => f(v)), d.length, d = d.filter((v) => {
+    d = d.map((v) => f(v)), d = d.filter((v) => {
       var y;
       return v.sizePx > 0 && v.y < (((y = w(n)) == null ? void 0 : y.height) ?? 500);
     }), d.push(...u(c - d.length)), requestAnimationFrame(p);
