@@ -4,6 +4,7 @@ import {
   GlobalRoutes,
   METHODS,
   prodEnvironment,
+  stagingEnvironment,
   ServerError,
 } from '../types';
 import type { Environment, RouteInformation, User } from '../types';
@@ -14,11 +15,14 @@ const getBackendAuthURL = (environment: Environment): string => {
   const subdomain = Apps.Auth.subdomain;
   const port = Apps.Auth.devPort;
 
-  if (environment !== prodEnvironment) {
-    return `http://${subdomain}.jeffreycarr.local:${port}`;
+  if (environment === prodEnvironment) {
+    return `https://${subdomain}.jeffreycarr.dev`;
+  }
+  if (environment === stagingEnvironment) {
+    return `http://${subdomain}.lab.test`;
   }
 
-  return `https://${subdomain}.jeffreycarr.dev`;
+  return `http://${subdomain}.jeffreycarr.local:${port}`;
 };
 
 const getAuthRouteInfo = (environment: Environment): RouteInformation => {

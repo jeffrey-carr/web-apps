@@ -1,6 +1,8 @@
 package word_chain
 
 import (
+	"go-common/jhttp/sse"
+	"go-common/types"
 	"go-common/utils"
 	"maps"
 	"slices"
@@ -48,4 +50,110 @@ func CountRevealed(word string) int {
 // CleanWord cleans up a word
 func CleanWord(word string) string {
 	return strings.ToLower(strings.TrimSpace(word))
+}
+
+// ConstructPlayerJoinedMessage creates a player joined message for a user
+func ConstructPlayerJoinedMessage(user types.CommonUser, isHost bool) sse.Message[playerJoinedData] {
+	return sse.Message[playerJoinedData]{
+		Level:  sse.MessageLevelInfo,
+		Action: sseActionPlayerJoined,
+		Data: playerJoinedData{
+			UUID:      user.UUID,
+			Name:      user.FName,
+			Character: user.Character,
+			IsHost:    isHost,
+		},
+	}
+}
+
+// ConstructPlayerLeftMessage creates a player left message for a user
+func ConstructPlayerLeftMessage(user types.CommonUser) sse.Message[playerLeftData] {
+	return sse.Message[playerLeftData]{
+		Level:  sse.MessageLevelInfo,
+		Action: sseActionPlayerLeft,
+		Data: playerLeftData{
+			UUID: user.UUID,
+		},
+	}
+}
+
+// ConstructGameStartMessage creates a game start message
+func ConstructGameStartMessage(initialData GameState) sse.Message[gameStartData] {
+	return sse.Message[gameStartData]{
+		Level:  sse.MessageLevelInfo,
+		Action: sseActionGameStart,
+		Data:   initialData,
+	}
+}
+
+// ConstructPlayerProgressMessage creates a player progress message
+func ConstructPlayerProgressMessage(
+	playerUUID string,
+	correct bool,
+	progress int,
+	penaltyInSeconds int,
+	revealedLetters int,
+) sse.Message[playerProgressData] {
+	return sse.Message[playerProgressData]{
+		Level:  sse.MessageLevelInfo,
+		Action: sseActionProgressUpdate,
+		Data: playerProgressData{
+			PlayerUUID:       playerUUID,
+			Correct:          correct,
+			Progress:         progress,
+			PenaltyInSeconds: penaltyInSeconds,
+			RevealedLetters:  revealedLetters,
+		},
+	}
+}
+
+// ConstructPlayerWinMessage constructs a player win message
+func ConstructPlayerWinMessage(user types.CommonUser, lobby sse.Lobby[GameSession]) sse.Message[playerWinData] {
+	var chain []string
+	playerData := map[string]playerWinIndividualData{}
+	for userUUID, userData := range lobby.Users {
+		gameData, ok := lobby.GameData[userUUID]
+		if !ok {
+			continue
+		}
+		if chain == nil {
+			chain = gameData.Chain
+		}
+
+		playerData[userUUID] = playerWinIndividualData{
+			Name:           userData.User.FName,
+			Character:      userData.User.Character,
+			FinalProgress:  gameData.State.Progress,
+			DisconnectedAt: userData.DisconnectedAt,
+		}
+	}
+
+	return sse.Message[playerWinData]{
+		Level:  sse.MessageLevelInfo,
+		Action: sseActionPlayerWin,
+		Data: playerWinData{
+			WinningUUID: user.UUID,
+			Chain:       chain,
+			PlayerData:  playerData,
+		},
+	}
+}
+
+// ConstructProposeRematchMessage constructs a new propose rematch message
+func ConstructProposeRematchMessage() sse.Message[*struct{}] {
+	return sse.Message[*struct{}]{
+		Level:  sse.MessageLevelInfo,
+		Action: sseActionProposeRematch,
+	}
+}
+
+// ConstructRespondRematchMessage constructs a reponse to a rematch proposal
+func ConstructRespondRematchMessage(accepted bool) sse.Message[rematchResponseData] {
+	return sse.Message[rematchResponseData]{
+		Level:  sse.MessageLevelInfo,
+		Action: sseActionRespondRematch,
+		Data: rematchResponseData{
+			Accepted: accepted,
+		},
+	}
 }

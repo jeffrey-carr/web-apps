@@ -138,6 +138,7 @@ func main() {
 	}
 
 	config := loadConfig()
+	os.Setenv(constants.EnvEnvironmentVar, string(config.Environment))
 
 	wordChainDictionary, err := loadDictionary("word_chain/dictionary.json")
 	if err != nil {
@@ -177,7 +178,11 @@ func main() {
 
 	// CONTROLLERS //
 	binokuController := binoku.NewController()
-	wordChainController := word_chain.NewController(wordChainDictionary, encryptionService)
+	wordChainController := word_chain.NewController(
+		federationSDK,
+		wordChainDictionary,
+		encryptionService,
+	)
 	statsController := stats.NewController(statsRepo)
 	userController := user.NewController(statsController)
 
@@ -215,6 +220,73 @@ func main() {
 		HandleEndpoint(mux)
 	jhttp.
 		NewEndpointFunction("/api/word-chain/validate-guess", wordChainHandler.ValidateGuess).
+		WithMethod(http.MethodPost).
+		WithBuilders(defaultBuilder).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction("/api/word-chain/new-lobby", wordChainHandler.CreateLobby).
+		WithMethod(http.MethodPost).
+		WithBuilders(defaultBuilder).
+		WithMiddlewares(authMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction(
+			fmt.Sprintf(
+				"/api/word-chain/lobby/{%s}/join",
+				wordChainDomain.LobbyCodePathVar,
+			),
+			wordChainHandler.JoinLobby,
+		).
+		WithPathKeys(wordChainDomain.LobbyCodePathVar).
+		WithMethod(http.MethodGet).
+		WithBuilders(defaultBuilder).
+		WithMiddlewares(authMiddleware).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction(
+			fmt.Sprintf(
+				"/api/word-chain/lobby/{%s}/leave",
+				wordChainDomain.LobbyCodePathVar,
+			),
+			wordChainHandler.LeaveLobby,
+		).
+		WithPathKeys(wordChainDomain.LobbyCodePathVar).
+		WithMethod(http.MethodGet).
+		WithBuilders(defaultBuilder).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction(
+			fmt.Sprintf(
+				"/api/word-chain/lobby/{%s}/start",
+				wordChainDomain.LobbyCodePathVar,
+			),
+			wordChainHandler.StartLobby,
+		).
+		WithPathKeys(wordChainDomain.LobbyCodePathVar).
+		WithMethod(http.MethodPost).
+		WithBuilders(defaultBuilder).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction(
+			fmt.Sprintf(
+				"/api/word-chain/lobby/{%s}/propose-rematch",
+				wordChainDomain.LobbyCodePathVar,
+			),
+			wordChainHandler.ProposeRematch,
+		).
+		WithPathKeys(wordChainDomain.LobbyCodePathVar).
+		WithMethod(http.MethodGet).
+		WithBuilders(defaultBuilder).
+		HandleEndpoint(mux)
+	jhttp.
+		NewEndpointFunction(
+			fmt.Sprintf(
+				"/api/word-chain/lobby/{%s}/respond-rematch",
+				wordChainDomain.LobbyCodePathVar,
+			),
+			wordChainHandler.RespondToRematchProposal,
+		).
+		WithPathKeys(wordChainDomain.LobbyCodePathVar).
 		WithMethod(http.MethodPost).
 		WithBuilders(defaultBuilder).
 		HandleEndpoint(mux)

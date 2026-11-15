@@ -1,3 +1,6 @@
+export * from './multiplayer';
+export * from './sse';
+
 export type Chain = string[];
 export type WordChainGameData = {
   uuid: string;
@@ -8,10 +11,22 @@ export type WordChainGameData = {
 
 export type ValidateAnswerRequest = {
   guess: string;
-  encryptedState: string;
+  lobbyCode?: string;
+  encryptedState?: string;
 };
 export type ValidateAnswerResponse = {
+  state: GameData;
+  encryptedState?: string;
   correct: boolean;
   victory: boolean;
-  game: WordChainGameData;
+  penaltyInSeconds?: number;
+};
+
+export type CreateLobbyResponse = {
+  code: string;
+};
+
+export type GameData = {
+  chain: string[];
+  progress: number;
 };

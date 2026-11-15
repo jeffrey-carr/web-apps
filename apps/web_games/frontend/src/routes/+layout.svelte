@@ -14,6 +14,7 @@
   } from '@jeffrey-carr/frontend-common';
   import { PUBLIC_ENVIRONMENT } from '$env/static/public';
   import { onMount } from 'svelte';
+  import { userState } from '$lib/globals/user.svelte';
 
   const routeToLoadingMessage = (nav: typeof navigating): string | null => {
     if (nav.to == null) return null;
@@ -31,7 +32,6 @@
 
   let { children }: { children?: () => any } = $props();
   let loadingUser = $state(true);
-  let user = $state<User | null>(null);
 
   let loadingMessage = $derived(routeToLoadingMessage(navigating));
 
@@ -40,16 +40,24 @@
 
   onMount(() => {
     const loadUser = async () => {
+      if (userState.user) {
+        return;
+      }
+
+      let user: User | null;
       try {
         user = await getUser(PUBLIC_ENVIRONMENT, App.WebGames);
       } catch (e) {
-        user = null;
+        userState.isLoading = false;
+        return;
       }
 
-      loadingUser = false;
+      userState.user = user;
+      userState.isLoading = false;
+      return;
     };
 
-    if (user != null) return;
+    if (userState.user != null) return;
 
     loadingUser = true;
     loadUser();
@@ -102,7 +110,7 @@
 </svelte:head>
 
 <main class="container">
-  <NavBar {user} {loadingUser} />
+  <NavBar />
   <div class="content">
     {#if loadingMessage}
       <div class="loading">
@@ -127,21 +135,16 @@
 
 <style lang="scss">
   .container {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: auto 1fr;
 
-    height: 100vh;
-    width: 100vw;
-    overflow-x: hidden;
-
-    margin: 0;
+    min-height: 100dvh;
 
     background-color: var(--app-theme-background);
   }
 
   .content {
-    flex: 1;
-    overflow-y: 100%;
+    min-height: 0;
   }
 
   .loading {

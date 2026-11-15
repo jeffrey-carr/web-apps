@@ -41,9 +41,12 @@ func loadConfig() (types.Config, error) {
 
 	var environment globalConstants.Environment
 	environmentStr, _ := loadStr("RECIPE_BOOK_ENVIRONMENT", true, string(globalConstants.EnvDev))
-	if environmentStr == string(globalConstants.EnvProd) {
+	switch environmentStr {
+	case string(globalConstants.EnvProd):
 		environment = globalConstants.EnvProd
-	} else {
+	case string(globalConstants.EnvStaging):
+		environment = globalConstants.EnvStaging
+	default:
 		environment = globalConstants.EnvDev
 	}
 	port, _ := loadStr("RECIPE_BOOK_PORT", true, "")
@@ -71,7 +74,7 @@ func loadConfig() (types.Config, error) {
 		return types.Config{}, err
 	}
 	redisFallback := "redis://localhost:6379"
-	if environment == globalConstants.EnvProd {
+	if environment != globalConstants.EnvDev {
 		redisFallback = "redis://redis:6379"
 	}
 	redisConnectionURL, _ := loadStr("RECIPE_BOOK_REDIS_CONNECTION_URL", true, redisFallback)

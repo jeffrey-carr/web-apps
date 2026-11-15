@@ -6,7 +6,6 @@ type GameSession struct {
 }
 
 type GameState struct {
-	UUID          string   `json:"uuid"`
 	RevealedChain []string `json:"chain"`
 	Progress      int      `json:"progress"`
 }
@@ -18,13 +17,18 @@ type GamePackage struct {
 
 // ValidateGuessRequest is the request to validate a word chain guess
 type ValidateGuessRequest struct {
-	Guess          string `json:"guess"`
+	Guess string `json:"guess"`
+	// LobbyCode is provided when the user is playing in a multiplayer game
+	LobbyCode string `json:"lobbyCode"`
+	// EncryptedState is provided when the user is playing in a singleplayer game
 	EncryptedState string `json:"encryptedState"`
 }
 
 // ValidateGuessResponse is the response to a validate guess request
 type ValidateGuessResponse struct {
-	Game    GamePackage `json:"game"`
-	Correct bool        `json:"correct"`
-	Victory bool        `json:"victory"`
+	State            GameState `json:"state"`
+	EncryptedState   string    `json:"encryptedState,omitempty"`
+	Correct          bool      `json:"correct"`
+	Victory          bool      `json:"victory"`
+	PenaltyInSeconds int       `json:"penaltyInSeconds"`
 }

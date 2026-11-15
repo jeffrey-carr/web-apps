@@ -1,4 +1,4 @@
-import { Environment, prodEnvironment } from '../types/';
+import { Environment, prodEnvironment, stagingEnvironment } from '../types/';
 
 export enum App {
   Auth = 'Auth', // Represents backend-auth requests
@@ -51,9 +51,12 @@ export const isValidApp = (value: string): boolean => {
 };
 
 export const buildAppURL = (environment: Environment, app: AppInfo): string => {
-  if (environment !== prodEnvironment) {
-    return `http://${app.subdomain}.jeffreycarr.local:${app.devPort}`;
+  if (environment === prodEnvironment) {
+    return `https://${app.subdomain}.jeffreycarr.dev`;
+  }
+  if (environment === stagingEnvironment) {
+    return `http://${app.subdomain}.lab.test`;
   }
 
-  return `https://${app.subdomain}.jeffreycarr.dev`;
+  return `http://${app.subdomain}.jeffreycarr.local:${app.devPort}`;
 };

@@ -7,6 +7,7 @@ import (
 	"go-common/types"
 	"go-common/utils"
 	"net/http"
+	"os"
 )
 
 // SDK is the official SDK for the Jeffiverse Federation API
@@ -29,8 +30,14 @@ func NewSDK(apiKey string) SDK {
 
 // GetAppURL gets the URL of the federation backend
 func GetAppURL() string {
+	if customURL := os.Getenv("FEDERATION_URL"); customURL != "" {
+		return customURL
+	}
 	if utils.IsProd() {
 		return "https://login.jeffreycarr.dev/api"
+	}
+	if utils.IsStaging() {
+		return "http://host.docker.internal:3101/api"
 	}
 
 	return "http://login.jeffreycarr.local:9999/api"

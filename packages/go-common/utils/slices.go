@@ -1,6 +1,11 @@
 package utils
 
-import "math/rand/v2"
+import (
+	"go-common/types"
+	"iter"
+	"math/rand/v2"
+	"slices"
+)
 
 // Fill fills an array with zeroed values
 func Fill[T any](length int) []T {
@@ -26,6 +31,22 @@ func Any[T any](s []T, f func(T) bool) bool {
 	}
 
 	return false
+}
+
+// All returns if all items in s cause f to return true
+func All[T any](s []T, f func(T) bool) bool {
+	return AllIter[T](slices.Values(s), f)
+}
+
+func AllIter[T any](s iter.Seq[T], f func(T) bool) bool {
+	for x := range s {
+		if !f(x) {
+			return false
+		}
+	}
+
+	return true
+
 }
 
 // Find finds the first item in s where f is true
@@ -93,6 +114,8 @@ func Shuffle[T any](s []T) {
 	})
 }
 
+// RemoveFirst removes the first item from the slice in-place
+// and returns the removed value
 func RemoveFirst[T any](s []T) T {
 	var val T
 	if len(s) == 0 {
@@ -102,4 +125,25 @@ func RemoveFirst[T any](s []T) T {
 	val = s[len(s)-1]
 	s = s[:len(s)-1]
 	return val
+}
+
+// Sum sums up the values of a variadic amount of numbers
+func Sum[T types.Number](nums ...T) T {
+	var total T
+	for _, n := range nums {
+		total += n
+	}
+
+	return total
+}
+
+// FlattenSlice flattens a slice
+func FlattenSlice[T any](s [][]T) []T {
+	var data []T
+
+	for _, row := range s {
+		data = append(data, row...)
+	}
+
+	return data
 }

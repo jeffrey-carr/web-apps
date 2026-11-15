@@ -28,9 +28,12 @@ type Config struct {
 func loadConfig() (Config, error) {
 	var environment constants.Environment
 	environmentStr := os.Getenv("FAT_BEARS_ENVIRONMENT")
-	if environmentStr == string(constants.EnvProd) {
+	switch environmentStr {
+	case string(constants.EnvProd):
 		environment = constants.EnvProd
-	} else {
+	case string(constants.EnvStaging):
+		environment = constants.EnvStaging
+	default:
 		environment = constants.EnvDev
 	}
 
@@ -73,6 +76,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	os.Setenv(constants.EnvEnvironmentVar, string(config.Environment))
 
 	loggingHook, loggingHookCloser, err := jlogging.NewAxiomLoggingHook(config.AxiomAPIKey, "app-logs")
 	if err != nil {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { until }: { until?: number } = $props();
+  let { until, onComplete }: { until?: number; onComplete?: () => void } = $props();
   let progress = $state(100);
   let intervalId: ReturnType<typeof setInterval>;
 
@@ -17,6 +17,7 @@
       if (remaining <= 0) {
         clearInterval(intervalId);
         progress = 0;
+        onComplete?.();
       }
     };
 
