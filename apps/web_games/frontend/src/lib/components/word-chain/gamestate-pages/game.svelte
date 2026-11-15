@@ -38,7 +38,7 @@
     chain={data.chain}
     progress={data.progress}
     {onMakeGuess}
-    {timedOutUntil}
+    bind:timedOutUntil
     {opponent}
     {opponentUpdate}
   />

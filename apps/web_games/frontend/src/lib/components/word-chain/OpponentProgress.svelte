@@ -285,6 +285,73 @@
     user-select: none;
   }
 
+  @media (max-width: 768px) {
+    .opponent-progress {
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+
+      width: 100%;
+      padding: 0.4rem 0.65rem;
+      border-radius: var(--border-radius-md);
+      background-color: color-mix(in srgb, var(--bg-color-light) 92%, transparent);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--app-theme-subtle);
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--bg-color-light) 75%, transparent);
+    }
+
+    .track-column {
+      flex-direction: row !important;
+      align-items: center;
+      gap: 0.25rem !important;
+      order: 2;
+    }
+
+    .row-slot {
+      height: auto !important;
+      width: auto !important;
+    }
+
+    .step-node {
+      width: 1.3rem !important;
+      height: 1.3rem !important;
+      font-size: 0.65rem !important;
+    }
+
+    .step-connector {
+      display: none;
+    }
+
+    .marker-lane {
+      min-width: 0 !important;
+      height: auto !important;
+      order: 1;
+    }
+
+    .marker-wrapper {
+      position: static !important;
+      height: auto !important;
+      transform: none !important;
+    }
+
+    .marker-card {
+      padding: 0.25rem 0.5rem !important;
+      gap: 0.45rem !important;
+      border-width: 1px !important;
+      box-shadow: none !important;
+    }
+
+    .avatar-wrapper {
+      width: 2rem !important;
+      height: 2rem !important;
+    }
+
+    .opponent-name {
+      font-size: 0.8rem !important;
+      max-width: 5.5rem !important;
+    }
+  }
+
   .track-column {
     display: flex;
     flex-direction: column;

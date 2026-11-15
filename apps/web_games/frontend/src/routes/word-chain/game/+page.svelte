@@ -93,7 +93,7 @@
       </div>
     </div>
   {:else if game}
-    <Game chain={game.chain} progress={game.progress} {onMakeGuess} {timedOutUntil} />
+    <Game chain={game.chain} progress={game.progress} {onMakeGuess} bind:timedOutUntil />
   {/if}
 </div>
 
